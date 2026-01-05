@@ -56,9 +56,9 @@ export default function Sidebar() {
     if (!role) return null; // Tránh render sai khi chưa load xong role
 
     return (
-        <aside className="w-64 bg-[#0f172a] text-white flex flex-col flex-shrink-0 h-screen sticky top-0">
+        <aside className="w-64 bg-[#0f172a] text-white flex flex-col shrink-0 h-screen sticky top-0">
             {/* ... Phần Logo ... */}
-            <div className="p-6">
+            <div className="p-6 flex justify-center">
                 <h1 className="text-2xl font-bold tracking-wide uppercase">VET<span className="text-emerald-500">FEED</span></h1>
             </div>
 
@@ -76,13 +76,13 @@ export default function Sidebar() {
             {/* Menu */}
             <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
                 {filteredMenu.map((item, index) => {
-                    const isActive = pathname === item.href;
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
                     return (
                         <Link
                             key={index}
                             href={item.href}
                             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group
-                ${isActive
+                                ${isActive
                                     ? 'bg-yellow-400 text-slate-900 font-semibol'
                                     : 'text-slate-200 hover:bg-white/10'
                                 }`}
