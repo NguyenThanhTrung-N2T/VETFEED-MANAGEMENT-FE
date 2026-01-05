@@ -16,7 +16,7 @@ export default function LoginPage() {
 
         // 2. Vẫn lưu LocalStorage (để Sidebar hiển thị tên/avatar cho tiện)
         localStorage.setItem('userRole', role);
-        localStorage.setItem('userName', role === 'admin' ? 'Nguyễn Văn A (Admin)' : 'Trần Thị B (Staff)');
+        localStorage.setItem('userName', role === 'admin' ? 'Nguyễn Văn A' : 'Trần Thị B');
 
         // 3. Chuyển hướng
         router.push('/dashboard');

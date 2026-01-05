@@ -1,184 +1,207 @@
+"use client";
 import React from 'react';
+import Link from 'next/link';
 import {
-    DollarSign, ShoppingBag, Users, AlertTriangle,
-    ArrowUpRight, Package, TrendingUp
+    ShoppingBag,
+    TrendingDown,
+    TrendingUp,
+    Package,
+    ShoppingCart,
+    ChevronRight,
+    BarChart3
 } from 'lucide-react';
 
 export default function DashboardPage() {
     return (
-        <div className="p-8 space-y-8 bg-[#eef2f6] min-h-full">
+        <div className="p-6 bg-[#eef2f6] min-h-screen font-sans space-y-6">
 
-            {/* 1. Header & Welcome */}
-            <div className="flex justify-between items-end">
-                <div>
-                    <h2 className="text-2xl font-bold text-slate-800">Tổng quan kinh doanh</h2>
-                    <p className="text-slate-500">Cập nhật số liệu mới nhất ngày hôm nay.</p>
-                </div>
-                <div className="text-sm text-slate-500 bg-white px-4 py-2 rounded-lg shadow-sm">
-                    Ngày: <span className="font-semibold text-slate-800">{new Date().toLocaleDateString('vi-VN')}</span>
+            {/* --- HEADER --- */}
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <div className="p-2 bg-slate-800 rounded-lg text-white">
+                        <BarChart3 size={24} />
+                    </div>
+                    Dashboard
+                </h1>
+                <div className="flex gap-3">
+                    <Link href="/ban-hang" className="flex items-center gap-2 px-6 py-2.5 bg-[#25396f] hover:bg-[#1e2e5a] text-white rounded-lg font-medium transition-all shadow-md">
+                        <ShoppingBag size={18} />
+                        Bán hàng
+                    </Link>
+                    <Link href="/nhap-hang" className="flex items-center gap-2 px-6 py-2.5 bg-[#25396f] hover:bg-[#1e2e5a] text-white rounded-lg font-medium transition-all shadow-md">
+                        <ShoppingCart size={18} />
+                        Nhập hàng
+                    </Link>
                 </div>
             </div>
 
-            {/* 2. Stats Cards (Thẻ thống kê) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* --- BANNER --- */}
+            <div className="w-full h-64 rounded-2xl overflow-hidden shadow-sm relative group">
+                <img
+                    src="https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=2074&auto=format&fit=crop"
+                    alt="Farm Banner"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-8">
+                    <div>
+                        <h2 className="text-white text-3xl font-bold mb-2">Xin chào!</h2>
+                        <p className="text-slate-200">Chúc bạn một ngày kinh doanh hiệu quả.</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* --- STATS CARDS --- */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
                 {/* Card 1: Doanh thu */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-sm font-medium text-slate-500">Doanh thu ngày</p>
-                            <h3 className="text-2xl font-bold text-slate-800 mt-1">12.5tr ₫</h3>
-                        </div>
-                        <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
-                            <DollarSign size={20} />
-                        </div>
-                    </div>
-                    <div className="mt-4 flex items-center text-sm text-emerald-600">
-                        <ArrowUpRight size={16} className="mr-1" />
-                        <span className="font-medium">+15%</span>
-                        <span className="text-slate-400 ml-1">so với hôm qua</span>
-                    </div>
-                </div>
-
-                {/* Card 2: Đơn hàng */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-sm font-medium text-slate-500">Đơn hàng mới</p>
-                            <h3 className="text-2xl font-bold text-slate-800 mt-1">24</h3>
-                        </div>
-                        <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
-                            <ShoppingBag size={20} />
-                        </div>
-                    </div>
-                    <div className="mt-4 flex items-center text-sm text-emerald-600">
-                        <ArrowUpRight size={16} className="mr-1" />
-                        <span className="font-medium">+4</span>
-                        <span className="text-slate-400 ml-1">đơn chờ xử lý</span>
-                    </div>
-                </div>
-
-                {/* Card 3: Khách hàng */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-sm font-medium text-slate-500">Khách hàng</p>
-                            <h3 className="text-2xl font-bold text-slate-800 mt-1">1,203</h3>
-                        </div>
-                        <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
-                            <Users size={20} />
-                        </div>
-                    </div>
-                    <div className="mt-4 flex items-center text-sm text-slate-500">
-                        <span>Đã thêm </span>
-                        <span className="font-medium text-slate-800 mx-1">5</span>
-                        <span>khách mới</span>
-                    </div>
-                </div>
-
-                {/* Card 4: Cảnh báo Tồn kho (Quan trọng cho cửa hàng thuốc) */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
-                    <div className="absolute right-0 top-0 h-full w-1 bg-orange-500"></div>
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-sm font-medium text-slate-500">Cảnh báo kho</p>
-                            <h3 className="text-2xl font-bold text-orange-600 mt-1">08</h3>
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-2 text-slate-500 font-medium text-sm">
+                            <BarChart3 size={16} className="text-blue-500" />
+                            Doanh thu hôm nay
                         </div>
-                        <div className="p-2 bg-orange-100 text-orange-600 rounded-lg">
-                            <AlertTriangle size={20} />
+                        <span className="flex items-center text-red-500 text-xs font-bold bg-red-50 px-2 py-1 rounded-full">
+                            <TrendingDown size={14} className="mr-1" /> 25%
+                        </span>
+                    </div>
+                    <h3 className="text-3xl font-bold text-slate-800 mb-2">1.200.000 <span className="text-base text-slate-400 font-normal">VNĐ</span></h3>
+                    {/* Mini Chart Line */}
+                    <svg className="w-full h-10 text-blue-100 fill-current" viewBox="0 0 100 20" preserveAspectRatio="none">
+                        <path d="M0 20 L0 10 Q10 5 20 12 T40 10 T60 15 T80 5 L100 12 L100 20 Z" />
+                        <path d="M0 10 Q10 5 20 12 T40 10 T60 15 T80 5 L100 12" fill="none" stroke="#3b82f6" strokeWidth="2" />
+                    </svg>
+                </div>
+
+                {/* Card 2: Số đơn hàng */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-2 text-slate-500 font-medium text-sm">
+                            <ShoppingCart size={16} className="text-purple-500" />
+                            Số đơn hàng hôm nay
+                        </div>
+                        <span className="flex items-center text-green-500 text-xs font-bold bg-green-50 px-2 py-1 rounded-full">
+                            <TrendingUp size={14} className="mr-1" /> 25%
+                        </span>
+                    </div>
+                    <h3 className="text-3xl font-bold text-slate-800 mb-2">36 <span className="text-base text-slate-400 font-normal">Đơn hàng</span></h3>
+                    {/* Mini Chart Line */}
+                    <svg className="w-full h-10 text-purple-100 fill-current" viewBox="0 0 100 20" preserveAspectRatio="none">
+                        <path d="M0 20 L0 15 Q20 18 40 10 T80 8 L100 5 L100 20 Z" />
+                        <path d="M0 15 Q20 18 40 10 T80 8 L100 5" fill="none" stroke="#8b5cf6" strokeWidth="2" />
+                    </svg>
+                </div>
+
+                {/* Card 3: Tồn kho */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-2 text-slate-500 font-medium text-sm">
+                            <Package size={16} className="text-orange-500" />
+                            Tồn kho
                         </div>
                     </div>
-                    <div className="mt-4 text-sm text-orange-600 font-medium">
-                        Sản phẩm sắp hết hạn/hết hàng
-                    </div>
+                    <h3 className="text-3xl font-bold text-slate-800 mb-2">3600 <span className="text-base text-slate-400 font-normal">Sản phẩm</span></h3>
+                    <svg className="w-full h-10 text-orange-100 fill-current" viewBox="0 0 100 20" preserveAspectRatio="none">
+                        <path d="M0 20 L0 12 C20 12 40 5 60 15 S 80 18 100 10 L100 20 Z" />
+                        <path d="M0 12 C20 12 40 5 60 15 S 80 18 100 10" fill="none" stroke="#f97316" strokeWidth="2" />
+                    </svg>
                 </div>
             </div>
 
-            {/* 3. Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* --- BOTTOM SECTION (Chart & List) --- */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                {/* LEFT: Đơn hàng gần đây (Chiếm 2 phần) */}
-                <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-bold text-slate-800">Đơn hàng vừa nhập</h3>
-                        <button className="text-sm text-emerald-600 font-medium hover:underline">Xem tất cả</button>
+                {/* LEFT: Bar Chart (Chiếm 2/3) */}
+                <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="font-bold text-slate-700 flex items-center gap-2">
+                            <div className="w-1 h-6 bg-green-500 rounded-full"></div>
+                            Doanh thu tổng quan
+                        </h3>
+                        <select className="text-xs border border-gray-200 rounded-md px-2 py-1 outline-none text-slate-500">
+                            <option>2024</option>
+                            <option>2023</option>
+                        </select>
                     </div>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead>
-                                <tr className="text-left text-xs text-slate-400 uppercase tracking-wider border-b border-slate-100">
-                                    <th className="pb-3 pl-2">Mã đơn</th>
-                                    <th className="pb-3">Khách hàng</th>
-                                    <th className="pb-3">Trạng thái</th>
-                                    <th className="pb-3 text-right">Tổng tiền</th>
-                                </tr>
-                            </thead>
-                            <tbody className="text-sm">
-                                {[1, 2, 3, 4, 5].map((item) => (
-                                    <tr key={item} className="hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0">
-                                        <td className="py-4 pl-2 font-medium text-slate-700">#DH-00{item}</td>
-                                        <td className="py-4 text-slate-600">Trại Heo Bình Minh</td>
-                                        <td className="py-4">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-semibold
-                        ${item === 1 ? 'bg-emerald-100 text-emerald-700' :
-                                                    item === 2 ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-600'}
-                      `}>
-                                                {item === 1 ? 'Hoàn thành' : item === 2 ? 'Đang giao' : 'Chờ xử lý'}
-                                            </span>
-                                        </td>
-                                        <td className="py-4 text-right font-medium text-slate-800">2.500.000₫</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                    {/* CSS Bar Chart */}
+                    <div className="h-64 flex items-end justify-between gap-2 md:gap-4 pt-4 border-b border-gray-100 pb-2">
+                        {[45, 60, 30, 20, 45, 70, 45, 80, 25, 95, 55, 10].map((height, index) => (
+                            <div key={index} className="flex flex-col items-center flex-1 group">
+                                {/* Tooltip ảo */}
+                                <div className="opacity-0 group-hover:opacity-100 mb-2 text-xs bg-slate-800 text-white px-2 py-1 rounded transition-opacity absolute transform -translate-y-8">
+                                    {height}tr
+                                </div>
+                                <div
+                                    style={{ height: `${height}%` }}
+                                    className={`w-full max-w-[30px] rounded-t-sm transition-all duration-500 hover:opacity-80
+                                ${index === 9 ? 'bg-[#3b82f6]' : 'bg-[#60a5fa]'} 
+                            `}
+                                ></div>
+                                <span className="text-[10px] text-slate-400 mt-2 font-medium">T{index + 1}</span>
+                            </div>
+                        ))}
                     </div>
+                    <p className="text-xs text-slate-400 mt-2">Đơn vị: Triệu VNĐ</p>
                 </div>
 
-                {/* RIGHT: Cảnh báo nhanh (Chiếm 1 phần) */}
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-bold text-slate-800">Cần chú ý</h3>
-                        <TrendingUp size={18} className="text-slate-400" />
+                {/* RIGHT: Expiring Products List (Chiếm 1/3) */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="font-bold text-slate-700 flex items-center gap-2">
+                            <div className="w-1 h-6 bg-green-500 rounded-full"></div>
+                            Sản phẩm sắp hết hạn
+                        </h3>
+                        <Link href="#" className="text-xs text-blue-500 hover:underline flex items-center">
+                            Xem tất cả <ChevronRight size={12} />
+                        </Link>
                     </div>
 
                     <div className="space-y-4">
                         {/* Item 1 */}
-                        <div className="flex gap-4 p-3 rounded-xl bg-red-50 border border-red-100">
-                            <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-red-500 shadow-sm flex-shrink-0">
-                                <AlertTriangle size={20} />
-                            </div>
+                        <div className="flex justify-between items-center p-3 rounded-xl border border-gray-50 hover:bg-slate-50 transition-colors">
                             <div>
-                                <p className="text-sm font-bold text-slate-800">Vaccine Dịch Tả</p>
-                                <p className="text-xs text-red-600 font-medium">Hết hạn trong 5 ngày tới</p>
+                                <p className="font-bold text-sm text-slate-800">Cám gà NCVP</p>
+                                <p className="text-xs text-slate-500 mt-0.5">100 ngày • Thức ăn chăn nuôi</p>
                             </div>
+                            <span className="bg-orange-100 text-orange-600 text-xs font-bold px-3 py-1 rounded-full">2 ngày</span>
                         </div>
 
                         {/* Item 2 */}
-                        <div className="flex gap-4 p-3 rounded-xl bg-orange-50 border border-orange-100">
-                            <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-orange-500 shadow-sm flex-shrink-0">
-                                <Package size={20} />
-                            </div>
+                        <div className="flex justify-between items-center p-3 rounded-xl border border-gray-50 hover:bg-slate-50 transition-colors">
                             <div>
-                                <p className="text-sm font-bold text-slate-800">Thức ăn CP 999</p>
-                                <p className="text-xs text-orange-600 font-medium">Tồn kho thấp (Còn 2 bao)</p>
+                                <p className="font-bold text-sm text-slate-800">Thóc cho gà NTT</p>
+                                <p className="text-xs text-slate-500 mt-0.5">100 ngày • Thức ăn chăn nuôi</p>
                             </div>
+                            <span className="bg-red-100 text-red-600 text-xs font-bold px-3 py-1 rounded-full">1 ngày</span>
                         </div>
 
                         {/* Item 3 */}
-                        <div className="flex gap-4 p-3 rounded-xl bg-blue-50 border border-blue-100">
-                            <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-blue-500 shadow-sm flex-shrink-0">
-                                <Users size={20} />
-                            </div>
+                        <div className="flex justify-between items-center p-3 rounded-xl border border-gray-50 hover:bg-slate-50 transition-colors">
                             <div>
-                                <p className="text-sm font-bold text-slate-800">Công nợ quá hạn</p>
-                                <p className="text-xs text-blue-600 font-medium">Anh Ba (Trại Gà) - 15tr</p>
+                                <p className="font-bold text-sm text-slate-800">Vaccine DQT</p>
+                                <p className="text-xs text-slate-500 mt-0.5">75 ngày • Thuốc thú y</p>
                             </div>
+                            <span className="bg-orange-100 text-orange-600 text-xs font-bold px-3 py-1 rounded-full">3 ngày</span>
+                        </div>
+
+                        {/* Item 4 */}
+                        <div className="flex justify-between items-center p-3 rounded-xl border border-gray-50 hover:bg-slate-50 transition-colors">
+                            <div>
+                                <p className="font-bold text-sm text-slate-800">Bioxide NTT</p>
+                                <p className="text-xs text-slate-500 mt-0.5">120 ngày • Thuốc thú y</p>
+                            </div>
+                            <span className="bg-yellow-100 text-yellow-600 text-xs font-bold px-3 py-1 rounded-full">5 ngày</span>
+                        </div>
+
+                        {/* Item 5 */}
+                        <div className="flex justify-between items-center p-3 rounded-xl border border-gray-50 hover:bg-slate-50 transition-colors">
+                            <div>
+                                <p className="font-bold text-sm text-slate-800">Flofen NCV</p>
+                                <p className="text-xs text-slate-500 mt-0.5">120 ngày • Thuốc thú y</p>
+                            </div>
+                            <span className="bg-orange-100 text-orange-600 text-xs font-bold px-3 py-1 rounded-full">2 ngày</span>
                         </div>
                     </div>
-
-                    <button className="w-full mt-6 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 font-medium transition-colors">
-                        Xem báo cáo chi tiết
-                    </button>
                 </div>
 
             </div>
