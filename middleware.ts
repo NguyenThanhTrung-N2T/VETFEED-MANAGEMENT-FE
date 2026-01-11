@@ -1,48 +1,45 @@
+// middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// 1. Định nghĩa các Route cần bảo vệ (Private)
-const protectedRoutes = ['/dashboard', '/ban-hang', '/nhap-hang', '/bao-cao', '/ton-kho'];
-
-// 2. Định nghĩa các Route chỉ dành cho Admin
-const adminRoutes = ['/bao-cao']; 
+// 1. Danh sách các route cần bảo vệ (Phải đăng nhập mới vào được)
+const protectedRoutes = [
+  '/dashboard', 
+  '/ban-hang', 
+  '/nhap-hang', 
+  '/chuyen-kho',
+  '/tra-hang',
+  '/ton-kho',
+  '/danh-muc',
+  '/cong-no',
+  '/bao-cao'
+];
 
 export function middleware(request: NextRequest) {
-  const userRole = request.cookies.get('userRole')?.value;
+  // Lấy token từ Cookie (được set lúc Login trong AuthProvider)
+  const token = request.cookies.get('accessToken')?.value;
   const { pathname } = request.nextUrl;
 
-  // KIỂM TRA 1: Nếu truy cập route cần bảo vệ mà chưa login
-  // Logic: Nếu pathname bắt đầu bằng bất kỳ route nào trong protectedRoutes
+  // KIỂM TRA 1: Route bảo vệ mà KHÔNG có Token -> Đá về Login
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
-
-  if (isProtectedRoute && !userRole) {
-    return NextResponse.redirect(new URL('/login', request.url));
+  if (isProtectedRoute && !token) {
+    const loginUrl = new URL('/login', request.url);
+    // (Tùy chọn) Lưu lại trang đang muốn vào để redirect lại sau khi login xong
+    // loginUrl.searchParams.set('from', pathname); 
+    return NextResponse.redirect(loginUrl);
   }
 
-  // KIỂM TRA 2: Đã login mà cố vào trang login/register -> đá về dashboard
-  if ((pathname.startsWith('/login') || pathname.startsWith('/register')) && userRole) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
-  // KIỂM TRA 3: Phân quyền Staff/Admin
-  const isAdminRoute = adminRoutes.some(route => pathname.startsWith(route));
-  
-  if (isAdminRoute && userRole === 'staff') {
-    // Nếu là staff mà vào trang admin -> Đá về trang bán hàng hoặc dashboard
+  // KIỂM TRA 2: Đã có Token mà cố vào Login/Register -> Đá về Dashboard
+  if ((pathname.startsWith('/login') || pathname.startsWith('/register')) && token) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   return NextResponse.next();
 }
 
-// Cấu hình matcher để middleware chạy trên các path này
+// Config matcher
 export const config = {
   matcher: [
-    '/dashboard/:path*', 
-    '/ban-hang/:path*', 
-    '/nhap-hang/:path*', 
-    '/bao-cao/:path*', 
-    '/login', 
-    '/register'
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };

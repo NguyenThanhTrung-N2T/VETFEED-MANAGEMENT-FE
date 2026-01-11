@@ -1,15 +1,37 @@
 "use client";
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Mail, ArrowLeft, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { authService } from '@/services/auth.service';
 
 export default function ForgotPasswordPage() {
+    const [email, setEmail] = useState('');
     const [isSent, setIsSent] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
 
-    const handleReset = (e: React.FormEvent) => {
+    const handleReset = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Giả lập gửi mail thành công
-        setIsSent(true);
+
+        // Reset trạng thái trước khi gọi API
+        setIsLoading(true);
+        setErrorMsg('');
+
+        try {
+            // Gọi API thông qua Service
+            await authService.forgotPassword(email);
+
+            // Thành công -> Chuyển sang màn hình thông báo
+            setIsSent(true);
+        } catch (error: any) {
+            console.error("Forgot password error:", error);
+            const message = error.response?.data?.detail ||
+                error.response?.data?.title ||
+                "Không tìm thấy email hoặc có lỗi xảy ra.";
+            setErrorMsg(message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -25,6 +47,14 @@ export default function ForgotPasswordPage() {
                 {/* Content */}
                 <div className="p-8">
 
+                    {/* Hiển thị lỗi nếu có */}
+                    {errorMsg && !isSent && (
+                        <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-200 flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+                            <AlertCircle size={18} className="shrink-0" />
+                            <span>{errorMsg}</span>
+                        </div>
+                    )}
+
                     {!isSent ? (
                         /* TRẠNG THÁI 1: FORM NHẬP EMAIL */
                         <form onSubmit={handleReset} className="space-y-6">
@@ -36,15 +66,31 @@ export default function ForgotPasswordPage() {
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
                                 <div className="relative">
                                     <Mail className="absolute left-3 top-3 text-slate-400" size={18} />
-                                    <input required type="email" placeholder="admin@vetfeed.com" className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" />
+                                    <input
+                                        required
+                                        type="email"
+                                        placeholder="admin@vetfeed.com"
+                                        className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        disabled={isLoading}
+                                    />
                                 </div>
                             </div>
 
                             <button
                                 type="submit"
-                                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-emerald-200"
+                                disabled={isLoading}
+                                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-emerald-200 flex justify-center items-center disabled:opacity-70 disabled:cursor-not-allowed"
                             >
-                                Gửi yêu cầu
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="animate-spin mr-2" size={20} />
+                                        Đang gửi...
+                                    </>
+                                ) : (
+                                    "Gửi yêu cầu"
+                                )}
                             </button>
                         </form>
                     ) : (
@@ -55,13 +101,14 @@ export default function ForgotPasswordPage() {
                             </div>
                             <h3 className="text-xl font-bold text-slate-800">Đã gửi email!</h3>
                             <p className="text-sm text-slate-600">
-                                Vui lòng kiểm tra hộp thư đến (và cả mục Spam) để nhận hướng dẫn đặt lại mật khẩu.
+                                Chúng tôi đã gửi email hướng dẫn đặt lại mật khẩu đến <strong>{email}</strong>.
+                                <br />Vui lòng kiểm tra cả hộp thư Spam.
                             </p>
                             <button
-                                onClick={() => setIsSent(false)}
+                                onClick={() => { setIsSent(false); setEmail(''); setErrorMsg(''); }}
                                 className="text-sm text-emerald-600 font-bold hover:underline"
                             >
-                                Gửi lại nếu chưa nhận được
+                                Gửi lại bằng email khác
                             </button>
                         </div>
                     )}
