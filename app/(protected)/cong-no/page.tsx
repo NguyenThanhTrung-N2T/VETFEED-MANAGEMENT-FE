@@ -80,13 +80,13 @@ export default function CongNoPage() {
     return (
         <>
             {/* Search + Filter */}
-            <div className="flex w-full justify-end">
+            <div className="flex w-full justify-end mb-6">
                 <div className="flex shadow-sm rounded-md bg-white border-slate-200">
                     {/* Filter Dropdown */}
                     <div className="relative">
                         <button
                             onClick={() => setIsFilterOpen(!isFilterOpen)}
-                            className="flex items-center justify-between w-40 bg-[#253D90] text-white px-4 py-2 rounded-l-md transition-all h-full"
+                            className="w-40 px-4 py-2 text-sm font-medium flex items-center justify-between gap-2 bg-[#25396f] text-white rounded-l-lg hover:bg-[#1e2e5a] transition-colors shadow-md"
                         >
                             {/* Wrap text in a span to control truncation if it gets too long */}
                             <span className="truncate">
@@ -97,7 +97,7 @@ export default function CongNoPage() {
                             <ChevronDown size={16} className="shrink-0 ml-2" />
                         </button>
                         {isFilterOpen && (
-                            <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                            <div className="absolute top-full left-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-10">
                                 {filterOptions.map((opt) => (
                                     <button
                                         key={opt.value}
@@ -134,9 +134,8 @@ export default function CongNoPage() {
                     <div className="text-2xl font-semibold">Danh sách công nợ</div>
                     <button
                         onClick={() => setOpenAddModal(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg
-                        bg-[#3f861e] text-white text-sm font-medium
-                        hover:bg-[#529E29] transition-colors leading-none justify-center w-30"
+                        className="justify-center w-30 inline-flex items-center gap-2 px-4 py-2 rounded-lg
+                            bg-[#43a047] hover:bg-green-700 text-white font-medium transition-colors shadow-green-100 shadow-lg leading-none "
                     >
                         <Plus size={16} className="font-white" /><span>Thêm</span>
                     </button>

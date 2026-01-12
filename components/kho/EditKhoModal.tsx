@@ -1,22 +1,32 @@
 "use client";
 
+import { useState } from "react";
 import Modal from "@/components/ui/Modal";
 import KhoForm from "./KhoForm";
 import { KhoHangDTO } from "@/types";
 import { Layout } from "lucide-react";
 
-export default function EditKhoModal({
-    kho,
-    onClose,
-    onUpdate,
-}: {
+interface Props {
     kho: KhoHangDTO;
     onClose: () => void;
     onUpdate: (data: KhoHangDTO) => void;
-}) {
-    function handleUpdate(data: KhoHangDTO) {
-        onUpdate(data);
-        onClose();
+}
+
+export default function EditKhoModal({ kho, onClose, onUpdate }: Props) {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    async function handleUpdate(data: KhoHangDTO) {
+        try {
+            setIsSubmitting(true);
+            // Await the parent action (e.g., API call)
+            await onUpdate({ ...kho, ...data });
+            onClose();
+        }
+        catch (error) {
+            console.error("Failed to update kho", error);
+            // Optional: Set an error state here to show a message
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     return (
@@ -31,6 +41,7 @@ export default function EditKhoModal({
                 submitText="Cập nhật"
                 onSubmit={handleUpdate}
                 onCancel={onClose}
+                isLoading={isSubmitting}
             />
         </Modal>
     );

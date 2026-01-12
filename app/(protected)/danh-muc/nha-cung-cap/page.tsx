@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Edit, Trash2, Search, ChevronDown, Plus } from "lucide-react";
+import { Edit, Trash2, Search, ChevronDown, Plus, Filter } from "lucide-react";
 import { NhaCungCapDTO } from "@/types";
 
 // TODO: Replace with real API call - fetch from /api/nha-cung-cap
@@ -41,6 +41,9 @@ const MOCK_NhaCungCap: NhaCungCapDTO[] = [
 export default function NhaCungCapPage() {
     const [query, setQuery] = useState("");
     const [openAddModal, setOpenAddModal] = useState(false);
+    const [modalType, setModalType] = useState<'filter' | 'delete' | 'add' | 'edit' | null>(null);
+    const [selectedItem, setSelectedItem] = useState<NhaCungCapDTO | null>(null);
+
     // TODO: Replace with real data fetching
     // Example: const { data: nhaCungCaps, isLoading } = useSWR('/api/nha-cung-cap', fetcher);
     const nhaCungCaps = useMemo(() => MOCK_NhaCungCap, []);
@@ -57,10 +60,10 @@ export default function NhaCungCapPage() {
     return (
         <>
             {/* Search Bar */}
-            <div className="flex justify-end w-full">
+            <div className="flex justify-end w-full mb-6">
                 <div className="flex shadow-sm rounded-md overflow-hidden bg-white border-slate-200">
                     {/* Dropdown */}
-                    <button className="flex items-center gap-2 bg-[#253D90] text-white px-4 py-2 text-sm font-medium hover:bg-[#1e3276] transition-colors">
+                    <button className="px-4 py-2 text-sm font-medium flex items-center gap-2 bg-[#25396f] text-white rounded-l-lg hover:bg-[#1e2e5a] transition-colors shadow-md">
                         <span>Tất cả</span>
                         <ChevronDown size={14} />
                     </button>
@@ -82,15 +85,25 @@ export default function NhaCungCapPage() {
             </div>
 
             {/* Content Card */}
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-                <div className="mb-3 flex items-center justify-between">
-                    <div className="text-2xl text-black">Danh sách nhà cung cấp</div>
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-125">
+                {/* Card Header */}
+                <div className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                            Danh sách tồn kho
+                            <Filter
+                                onClick={() => setModalType('filter')}
+                                className="cursor-pointer hover:text-green-600 transition-colors ml-1"
+                                size={20}
+                                strokeWidth={1.5}
+                            />
+                        </h2>
+                    </div>
 
                     {(userRole === "manager") && (<button
                         onClick={() => setOpenAddModal(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg
-                            bg-[#3f861e] text-white text-sm font-medium
-                            hover:bg-[#529E29] transition-colors leading-none justify-center w-30"
+                        className="justify-center w-30 inline-flex items-center gap-2 px-4 py-2 rounded-lg
+                            bg-[#43a047] hover:bg-green-700 text-white font-medium transition-colors shadow-green-100 shadow-lg leading-none "
                     >
                         <Plus size={16} className="font-white" /><span>Thêm</span>
                     </button>)}

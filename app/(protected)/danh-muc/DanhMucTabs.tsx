@@ -15,7 +15,7 @@ export default function DanhMucTabs() {
     const pathname = usePathname();
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
             {TABS.map((tab) => {
                 const isActive = pathname === tab.path;
                 const Icon = tab.icon;
@@ -25,11 +25,11 @@ export default function DanhMucTabs() {
                         key={tab.path}
                         href={tab.path}
                         className={`
-              flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg
-              font-medium shadow-sm transition-all
-              ${isActive
+                            flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg
+                            font-medium shadow-sm transition-all
+                            ${isActive
                                 ? "bg-[#FFC20E] text-slate-900"
-                                : "bg-[#253D90] text-white hover:bg-[#1e3276] cursor-pointer"
+                                : "bg-[#25396f] text-white rounded-lg hover:bg-[#1e2e5a] cursor-pointer"
                             }
             `}
                     >

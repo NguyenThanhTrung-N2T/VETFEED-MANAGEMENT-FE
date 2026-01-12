@@ -134,10 +134,10 @@ export default function KhachHangPage() {
     return (
         <>
             {/* Search Bar */}
-            <div className="flex justify-end w-full">
+            <div className="flex justify-end w-full mb-6">
                 <div className="flex shadow-sm rounded-md overflow-hidden bg-white border-slate-200">
                     {/* Dropdown */}
-                    <button className="flex items-center gap-2 bg-[#253D90] text-white px-4 py-2 text-sm font-medium hover:bg-[#1e3276] transition-colors">
+                    <button className="px-4 py-2 text-sm font-medium flex items-center gap-2 bg-[#25396f] text-white rounded-l-lg hover:bg-[#1e2e5a] transition-colors shadow-md">
                         <span>Tất cả</span>
                         <ChevronDown size={14} />
                     </button>
@@ -165,9 +165,8 @@ export default function KhachHangPage() {
 
                     <button
                         onClick={() => setOpenAddModal(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg
-                                bg-[#3f861e] text-white text-sm font-medium
-                                hover:bg-[#529E29] transition-colors leading-none justify-center w-30"
+                        className="justify-center w-30 inline-flex items-center gap-2 px-4 py-2 rounded-lg
+                            bg-[#43a047] hover:bg-green-700 text-white font-medium transition-colors shadow-green-100 shadow-lg leading-none "
                     >
                         <Plus size={16} className="font-white" /><span>Thêm</span>
                     </button>

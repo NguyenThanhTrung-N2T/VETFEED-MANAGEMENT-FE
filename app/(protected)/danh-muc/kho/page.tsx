@@ -5,7 +5,7 @@ import { Edit, Trash2, Search, ChevronDown, Plus } from "lucide-react";
 import { KhoHangDTO } from "@/types";
 import AddKhoModal from "@/components/kho/AddKhoModal";
 import EditKhoModal from "@/components/kho/EditKhoModal";
-
+import DeleteKhoModal from "@/components/kho/DeleteKhoModal";
 // TODO: Replace with real API call - fetch from /api/kho
 const MOCK_KhoHang: KhoHangDTO[] = [
     {
@@ -42,8 +42,9 @@ export default function KhoPage() {
     // TODO: Replace with real data fetching
     // Example: const { data: khoHangs, isLoading } = useSWR('/api/kho', fetcher);
     const [khoData, setKhoData] = useState<KhoHangDTO[]>(MOCK_KhoHang);
-    const [openAddModal, setOpenAddModal] = useState(false);
-    const [editingKho, setEditingKho] = useState<KhoHangDTO | null>(null);
+
+    const [modalType, setModalType] = useState<'filter' | 'delete' | 'add' | 'edit' | null>(null);
+    const [selectedItem, setSelectedItem] = useState<KhoHangDTO | null>(null);
 
     const khoHangs = khoData;
     const filteredData = khoHangs.filter((k) =>
@@ -53,28 +54,65 @@ export default function KhoPage() {
     );
     //await fetch("/api/kho", { method: "POST" })
     //await fetch(`/api/kho/${id}`, { method: "PUT" })
-    function handleAdd(kho: KhoHangDTO) {
-        setKhoData((prev) => [kho, ...prev]);
-    }
 
-    function handleUpdate(updated: KhoHangDTO) {
+    // Open Add/Edit/Delete Modals
+    const openAdd = () => {
+        setModalType('add');
+    };
+    const openEdit = (kho: KhoHangDTO) => {
+        setSelectedItem(kho);
+        setModalType('edit');
+    };
+    const openDelete = (kho: KhoHangDTO) => {
+        setSelectedItem(kho);
+        setModalType('delete');
+    };
+    const closeModal = () => {
+        setModalType(null);
+        setSelectedItem(null); // Reset data
+    };
+    // --- CRUD Handlers ---
+    const handleCreate = async (newData: KhoHangDTO) => {
+        // MOCK
+        console.log("Saving new kho:", newData);
+        setKhoData((prev) => [newData, ...prev]); // Add to top of list
+
+        // Real App (API Call)
+        /*
+        try {
+            await fetch('/api/kho', {
+                method: 'POST',
+                body: JSON.stringify(newData)
+            });
+            // Then refresh your data
+            router.refresh(); 
+        } catch (error) {
+            console.error(error);
+        }
+        */
+    };
+    const handleUpdate = async (updatedData: KhoHangDTO) => {
+        // MOCK
+        console.log("Updating kho:", updatedData);
         setKhoData((prev) =>
-            prev.map((k) => (k.MaKho === updated.MaKho ? updated : k))
+            prev.map((k) => (k.MaKho === updatedData.MaKho ? updatedData : k))
         );
-    }
-    function handleDelete(maKho: string) {
-        // TODO: Replace with API call - DELETE /api/kho/:id
-    }
+        // Real App (API Call)    
+    };
+    const handleDelete = async (id: string) => {
+        // API Call here...
+        setKhoData(prev => prev.filter(k => k.MaKho !== id));
+    };
     // TODO: Get real role from auth/session
     const userRole: "manager" | "staff" = "manager";
 
     return (
         <>
             {/* Search Bar */}
-            <div className="flex justify-end w-full">
+            <div className="flex justify-end w-full mb-6">
                 <div className="flex shadow-sm rounded-md overflow-hidden bg-white border-slate-200">
                     {/* Dropdown */}
-                    <button className="flex items-center gap-2 bg-[#253D90] text-white px-4 py-2 text-sm font-medium hover:bg-[#1e3276] transition-colors">
+                    <button className="px-4 py-2 text-sm font-medium flex items-center gap-2 bg-[#25396f] text-white rounded-l-lg hover:bg-[#1e2e5a] transition-colors shadow-md">
                         <span>Tất cả</span>
                         <ChevronDown size={14} />
                     </button>
@@ -100,14 +138,14 @@ export default function KhoPage() {
                 <div className="mb-3 flex items-center justify-between">
                     <div className="text-2xl text-black">Danh sách kho</div>
 
-                    {(userRole === "manager") && (<button
-                        onClick={() => setOpenAddModal(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg
-                                bg-[#3f861e] text-white text-sm font-medium
-                                hover:bg-[#529E29] transition-colors leading-none justify-center w-30"
-                    >
-                        <Plus size={16} className="font-white" /><span>Thêm</span>
-                    </button>)}
+                    {(userRole === "manager") &&
+                        (<button
+                            onClick={() => openAdd()}
+                            className="justify-center w-30 inline-flex items-center gap-2 px-4 py-2 rounded-lg
+                            bg-[#43a047] hover:bg-green-700 text-white font-medium transition-colors shadow-green-100 shadow-lg leading-none "
+                        >
+                            <Plus size={16} className="font-white" /><span>Thêm</span>
+                        </button>)}
                 </div>
                 <table className="w-full text-sm">
                     <thead>
@@ -149,13 +187,15 @@ export default function KhoPage() {
                                     <div className="inline-flex items-center gap-2">
                                         {(userRole === "manager") && (
                                             <button
-                                                onClick={() => setEditingKho(k)}
+                                                onClick={() => openEdit(k)}
                                                 className="p-2 rounded-md text-slate-600 hover:bg-slate-200">
                                                 <Edit size={18} />
                                             </button>
                                         )}
                                         {userRole === "manager" && (
-                                            <button className="p-2 rounded-md text-red-600 hover:bg-red-50">
+                                            <button
+                                                onClick={() => openDelete(k)}
+                                                className="p-2 rounded-md text-red-600 hover:bg-red-50">
                                                 <Trash2 size={18} />
                                             </button>
                                         )}
@@ -166,17 +206,24 @@ export default function KhoPage() {
                     </tbody>
                 </table>
             </div>
-            {openAddModal && (
+            {modalType === 'add' && (
                 <AddKhoModal
-                    onClose={() => setOpenAddModal(false)}
-                    onAdd={handleAdd}
+                    onClose={() => closeModal()}
+                    onAdd={handleCreate}
                 />
             )}
-            {editingKho && (
+            {modalType === 'edit' && selectedItem && (
                 <EditKhoModal
-                    kho={editingKho}
-                    onClose={() => setEditingKho(null)}
+                    kho={selectedItem}
+                    onClose={() => closeModal()}
                     onUpdate={handleUpdate}
+                />
+            )}
+            {modalType === 'delete' && selectedItem && (
+                <DeleteKhoModal
+                    kho={selectedItem}
+                    onClose={() => closeModal()}
+                    onDelete={handleDelete}
                 />
             )}
         </>
