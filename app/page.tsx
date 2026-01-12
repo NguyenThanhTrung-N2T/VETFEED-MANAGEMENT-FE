@@ -43,10 +43,10 @@ export default function LandingPage() {
           {/* Hero Image / Illustration */}
           <div className="relative animate-in slide-in-from-right-10 duration-700 fade-in lg:block hidden">
             {/* Background Blob */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-200/50 rounded-full blur-3xl -z-10"></div>
+            <div className="absolute top-0 right-0 w-125 h-125 bg-emerald-200/50 rounded-full blur-3xl -z-10"></div>
 
             <div className="relative grid grid-cols-2 gap-4">
-              <div className="space-y-4 mt-12">
+              <div className="space-y-4 mt-17">
                 <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-100 hover:scale-105 transition-transform">
                   <Activity className="text-orange-500 mb-3" size={32} />
                   <h3 className="font-bold text-slate-800">Theo dõi kho</h3>
@@ -59,7 +59,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="space-y-4">
-                <div className="bg-emerald-600 p-6 rounded-2xl shadow-lg text-white transform -translate-y-8 hover:scale-105 transition-transform">
+                <div className="bg-emerald-600 p-6 rounded-2xl shadow-lg text-white transform hover:scale-105 transition-transform">
                   <ShieldCheck className="text-emerald-200 mb-3" size={32} />
                   <h3 className="font-bold">An toàn dữ liệu</h3>
                   <p className="text-sm text-emerald-100">Bảo mật chuẩn quốc tế</p>
@@ -77,7 +77,7 @@ export default function LandingPage() {
 
       {/* Footer đơn giản */}
       <footer className="bg-slate-900 text-slate-400 py-8 text-center text-sm">
-        <p>© 2024 VetFeed - Hệ thống quản lý cửa hàng thú y.</p>
+        <p>© 2025 VetFeed - Hệ thống quản lý cửa hàng thú y.</p>
       </footer>
     </main>
   );

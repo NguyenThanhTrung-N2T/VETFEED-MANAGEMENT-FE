@@ -46,12 +46,10 @@ export default function Sidebar() {
     });
 
     return (
-        <aside className="w-64 bg-[#0f172a] text-white flex flex-col flex-shrink-0 h-screen sticky top-0 border-r border-slate-800">
-            {/* Logo */}
-            <div className="p-6">
-                <h1 className="text-2xl font-bold tracking-wide uppercase cursor-default">
-                    VET<span className="text-emerald-500">FEED</span>
-                </h1>
+        <aside className="w-64 bg-[#0f172a] text-white flex flex-col shrink-0 h-screen sticky top-0">
+            {/* ... Phần Logo ... */}
+            <div className="p-6 flex justify-center">
+                <h1 className="text-2xl font-bold tracking-wide uppercase">VET<span className="text-emerald-500">FEED</span></h1>
             </div>
 
             {/* User Info lấy từ AuthContext */}
@@ -77,7 +75,7 @@ export default function Sidebar() {
             {/* Menu Navigation */}
             <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto custom-scrollbar pb-4">
                 {filteredMenu.map((item, index) => {
-                    const isActive = pathname.startsWith(item.href);
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
                     return (
                         <Link
                             key={index}
