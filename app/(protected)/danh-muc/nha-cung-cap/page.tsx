@@ -89,8 +89,8 @@ export default function NhaCungCapPage() {
                     {(userRole === "manager") && (<button
                         onClick={() => setOpenAddModal(true)}
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-lg
-                                bg-[#3f861e] text-white text-sm font-medium
-                                hover:bg-[#529E29] transition-colors leading-none justify-center w-30"
+                            bg-[#3f861e] text-white text-sm font-medium
+                            hover:bg-[#529E29] transition-colors leading-none justify-center w-30"
                     >
                         <Plus size={16} className="font-white" /><span>Thêm</span>
                     </button>)}

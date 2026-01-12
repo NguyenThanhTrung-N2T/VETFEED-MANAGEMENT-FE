@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import { Search, Plus, Edit, Trash2, ChevronDown, Eye } from "lucide-react";
 import { CongNoSummary } from "@/types/index";
 import ViewCongNoModal from "@/components/cong-no/ViewCongNoModal";
+import AddCongNoModal from "@/components/cong-no/AddCongNoModal";
 
 // Mock data thay cho API
 const mockData: CongNoSummary[] = [
@@ -52,7 +53,7 @@ export default function CongNoPage() {
     const [openModal, setOpenModal] = useState(false);
     const [selectedCongNo, setSelectedCongNo] = useState<CongNoSummary | null>(null);
     const [userRole] = useState("manager"); // Mock user role, replace with real auth logic
-
+    const [openAddModal, setOpenAddModal] = useState(false);
     const filteredData = useMemo(() => {
         return mockData.filter((item) => {
             const matchesSearch = item.tenDoiTuong.toLowerCase().includes(searchTerm.toLowerCase());
@@ -131,6 +132,14 @@ export default function CongNoPage() {
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
                 <div className="mb-3 flex items-center justify-between">
                     <div className="text-2xl font-semibold">Danh sách công nợ</div>
+                    <button
+                        onClick={() => setOpenAddModal(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg
+                        bg-[#3f861e] text-white text-sm font-medium
+                        hover:bg-[#529E29] transition-colors leading-none justify-center w-30"
+                    >
+                        <Plus size={16} className="font-white" /><span>Thêm</span>
+                    </button>
                 </div>
                 <table className="w-full text-sm">
                     <thead>
@@ -205,6 +214,18 @@ export default function CongNoPage() {
                     congNoSummary={selectedCongNo}
                 />
             )}
+            {/* AddCongNoModal */}
+            <AddCongNoModal
+                isOpen={openAddModal}
+                onClose={() => setOpenAddModal(false)}
+                onCreated={(created) => {
+                    // created: whatever your API returns. You should reload data from server here.
+                    // For now we just log and remind to refresh.
+                    console.log("New CongNo created:", created);
+                    // TODO: call your summary reload (e.g., fetch /api/cong-no/summary again)
+                    setOpenAddModal(false);
+                }}
+            />
         </>
     );
 }

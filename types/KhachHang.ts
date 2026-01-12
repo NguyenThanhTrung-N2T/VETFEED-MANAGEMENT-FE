@@ -1,4 +1,4 @@
-// src/types/KhachHang.ts
+//types/KhachHang.ts
 import { z } from "zod";
 
 /**

@@ -7,3 +7,4 @@ export * from "./GiaBan";
 export * from "./SanPhamWithPrice";
 export * from "./CongNo";
 export * from "./CongNoHistory";
+export * from "./BaoCao";

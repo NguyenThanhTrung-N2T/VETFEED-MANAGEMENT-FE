@@ -4,6 +4,8 @@ import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import { Edit, Trash2, Search, ChevronDown, Plus, Eye } from "lucide-react";
 import { KhachHangDTO, LoaiKhachHang } from "@/types";
+import AddKhachHangModal from "@/components/khach-hang/AddKhachHangModal";
+
 const loaiKhachHangMap: Record<LoaiKhachHang, string> = { CA_NHAN: "Cá nhân", TRANG_TRAI: "Trang trại", DAI_LY: "Đại lý", };
 // TODO: Replace with real API call - fetch from /api/khach-hang
 const MOCK_KhachHang: KhachHangDTO[] = [
@@ -109,11 +111,14 @@ const MOCK_KhachHang: KhachHangDTO[] = [
 
 export default function KhachHangPage() {
     const [query, setQuery] = useState("");
+    const [khachHangData, setKhachHangData] = useState<KhachHangDTO[]>(MOCK_KhachHang);
     const [openAddModal, setOpenAddModal] = useState(false);
 
     // TODO: Replace with real data fetching
     // Example: const { data: khachHangs, isLoading } = useSWR('/api/khach-hang', fetcher);
-    const khachHangs = useMemo(() => MOCK_KhachHang, []);
+    const khachHangs = khachHangData;
+
+
 
     const filteredData = khachHangs.filter((c) =>
         `${c.TenKH} ${c.SoDienThoai ?? ""} ${c.LoaiKhachHang ?? ""}`
@@ -123,7 +128,9 @@ export default function KhachHangPage() {
 
     // TODO: Get real role from auth/session
     const userRole: "manager" | "staff" = "manager";
-
+    function handleAdd(newKhachHang: KhachHangDTO) {
+        setKhachHangData((prev) => [newKhachHang, ...prev]);
+    }
     return (
         <>
             {/* Search Bar */}
@@ -214,6 +221,13 @@ export default function KhachHangPage() {
                     </tbody>
                 </table>
             </div >
+            {/* Add Modal */}
+            {openAddModal && (
+                <AddKhachHangModal
+                    onClose={() => setOpenAddModal(false)}
+                    onAdd={handleAdd}
+                />
+            )}
         </>
     );
 }
