@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { KhoHangDTO } from "@/types"; // Adjust this import path to match your project
+import { KhoHangResponse } from "@/client/types.gen";
 
 interface Props {
-    kho: KhoHangDTO;
+    kho: KhoHangResponse;
     onClose: () => void;
     onDelete: (id: string) => Promise<void> | void;
 }
@@ -16,7 +16,7 @@ export default function DeleteKhoModal({ kho, onClose, onDelete }: Props) {
         setIsDeleting(true);
         try {
             // Pass the ID to the parent's delete function
-            await onDelete(kho.MaKho);
+            await onDelete(kho.maKho!);
             onClose();
         } catch (error) {
             console.error("Lỗi khi xóa kho:", error);
@@ -34,7 +34,7 @@ export default function DeleteKhoModal({ kho, onClose, onDelete }: Props) {
                 {/* Title / Question */}
                 <h3 className="text-xl font-bold text-slate-800 mb-8 font-sans leading-relaxed">
                     Bạn có chắc là muốn xóa kho hàng <br />
-                    <span className="text-red-600">"{kho.TenKho}"</span> không?
+                    <span className="text-red-600">"{kho.tenKho}"</span> không?
                 </h3>
 
                 {/* Actions */}

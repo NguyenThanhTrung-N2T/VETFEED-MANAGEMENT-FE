@@ -1,69 +1,88 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { Edit, Trash2, Search, ChevronDown, Plus, Filter } from "lucide-react";
-import { KhoHangDTO } from "@/types";
+import React, { useMemo, useState, useEffect } from "react";
+import { Edit, Trash2, Search, ChevronDown, Plus, Filter, Loader2 } from "lucide-react";
+import {
+    KhoHangResponse,
+    CreateKhoHangRequest,
+    UpdateKhoHangRequest
+} from "@/client/types.gen";
 import AddKhoModal from "@/components/kho/AddKhoModal";
 import EditKhoModal from "@/components/kho/EditKhoModal";
 import DeleteKhoModal from "@/components/kho/DeleteKhoModal";
+import { khoHangService } from "@/services/kho-hang.service";
+
 // TODO: Replace with real API call - fetch from /api/kho
-const MOCK_KhoHang: KhoHangDTO[] = [
-    {
-        MaKho: "aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-        MaKhoCode: "KHO_HCM",
-        TenKho: "Kho Vận Linh Xuân",
-        DiaChi: "123 QL1A, TP. Thủ Đức, TP.HCM",
-        TrangThai: "HOAT_DONG",
-        GhiChu: "Note",
-        NgayTao: new Date().toISOString(),
-    },
-    {
-        MaKho: "bbbbbbb2-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-        MaKhoCode: "KHO_A",
-        TenKho: "Kho A",
-        DiaChi: "45 Nguyễn Văn Linh, Q.7, TP.HCM",
-        TrangThai: "HOAT_DONG",
-        GhiChu: null,
-        NgayTao: new Date().toISOString(),
-    },
-    {
-        MaKho: "ccccccc3-cccc-cccc-cccc-cccccccccccc",
-        MaKhoCode: "KHO_4",
-        TenKho: "Kho 4 Non Blonds",
-        DiaChi: "210 Trần Phú, TP. Long Khánh, Đồng Nai",
-        TrangThai: "NGUNG_HOAT_DONG",
-        GhiChu: "20kg",
-        NgayTao: new Date().toISOString(),
-    },
-];
+// const MOCK_KhoHang: KhoHangDTO[] = [
+//     {
+//         MaKho: "aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+//         MaKhoCode: "KHO_HCM",
+//         TenKho: "Kho Vận Linh Xuân",
+//         DiaChi: "123 QL1A, TP. Thủ Đức, TP.HCM",
+//         TrangThai: "HOAT_DONG",
+//         GhiChu: "Note",
+//         NgayTao: new Date().toISOString(),
+//     },
+//     {
+//         MaKho: "bbbbbbb2-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+//         MaKhoCode: "KHO_A",
+//         TenKho: "Kho A",
+//         DiaChi: "45 Nguyễn Văn Linh, Q.7, TP.HCM",
+//         TrangThai: "HOAT_DONG",
+//         GhiChu: null,
+//         NgayTao: new Date().toISOString(),
+//     },
+//     {
+//         MaKho: "ccccccc3-cccc-cccc-cccc-cccccccccccc",
+//         MaKhoCode: "KHO_4",
+//         TenKho: "Kho 4 Non Blonds",
+//         DiaChi: "210 Trần Phú, TP. Long Khánh, Đồng Nai",
+//         TrangThai: "NGUNG_HOAT_DONG",
+//         GhiChu: "20kg",
+//         NgayTao: new Date().toISOString(),
+//     },
+// ];
 
 export default function KhoPage() {
     const [query, setQuery] = useState("");
     // TODO: Replace with real data fetching
     // Example: const { data: khoHangs, isLoading } = useSWR('/api/kho', fetcher);
-    const [khoData, setKhoData] = useState<KhoHangDTO[]>(MOCK_KhoHang);
+    const [khoData, setKhoData] = useState<KhoHangResponse[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     const [modalType, setModalType] = useState<'filter' | 'delete' | 'add' | 'edit' | null>(null);
-    const [selectedItem, setSelectedItem] = useState<KhoHangDTO | null>(null);
+    const [selectedItem, setSelectedItem] = useState<KhoHangResponse | null>(null);
 
-    const khoHangs = khoData;
-    const filteredData = khoHangs.filter((k) =>
-        `${k.TenKho} ${k.DiaChi} ${k.GhiChu ?? ""}`
+    const fetchData = async () => {
+        try {
+            setIsLoading(true);
+            const data = await khoHangService.getAll();
+            // Ensure data types match. If your API returns PascalCase, it maps directly.
+            setKhoData(data);
+        } catch (error) {
+            console.error("Failed to fetch warehouses:", error);
+            // Optional: Add toast error here
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    useEffect(() => {
+        fetchData();
+    }, []);
+    const filteredData = khoData.filter((k) =>
+        `${k.tenKho} ${k.diaChi} ${k.ghiChu ?? ""}`
             .toLowerCase()
             .includes(query.toLowerCase())
     );
-    //await fetch("/api/kho", { method: "POST" })
-    //await fetch(`/api/kho/${id}`, { method: "PUT" })
-
     // --- Modal States ---
     const openAdd = () => {
         setModalType('add');
     };
-    const openEdit = (kho: KhoHangDTO) => {
+    const openEdit = (kho: KhoHangResponse) => {
         setSelectedItem(kho);
         setModalType('edit');
     };
-    const openDelete = (kho: KhoHangDTO) => {
+    const openDelete = (kho: KhoHangResponse) => {
         setSelectedItem(kho);
         setModalType('delete');
     };
@@ -75,36 +94,58 @@ export default function KhoPage() {
         setSelectedItem(null);
     };
     // --- CRUD Handlers ---
-    const handleCreate = async (newData: KhoHangDTO) => {
+    const handleCreate = async (newData: CreateKhoHangRequest) => {
         // MOCK
-        console.log("Saving new kho:", newData);
-        setKhoData((prev) => [newData, ...prev]); // Add to top of list
+        // console.log("Saving new kho:", newData);
+        // setKhoData((prev) => [newData, ...prev]); // Add to top of list
 
-        // Real App (API Call)
-        /*
         try {
-            await fetch('/api/kho', {
-                method: 'POST',
-                body: JSON.stringify(newData)
-            });
-            // Then refresh your data
-            router.refresh(); 
+            await khoHangService.create(newData);
+            await fetchData();
+            closeModal();
         } catch (error) {
-            console.error(error);
+            alert("Tạo kho hàng mới thất bại!");
         }
-        */
     };
-    const handleUpdate = async (updatedData: KhoHangDTO) => {
+    const handleUpdate = async (id: string, updatedData: UpdateKhoHangRequest) => {
         // MOCK
-        console.log("Updating kho:", updatedData);
-        setKhoData((prev) =>
-            prev.map((k) => (k.MaKho === updatedData.MaKho ? updatedData : k))
-        );
-        // Real App (API Call)    
+        // console.log("Updating kho:", updatedData);
+        // setKhoData((prev) =>
+        //     prev.map((k) => (k.MaKho === updatedData.MaKho ? updatedData : k))
+        // );
+        // Real App (API Call) 
+        try {
+            // We need to separate the ID from the body
+
+            await khoHangService.update(id, updatedData);
+            await fetchData();
+            closeModal();
+        } catch (error) {
+            alert("Failed to update warehouse");
+        }
     };
     const handleDelete = async (id: string) => {
         // API Call here...
-        setKhoData(prev => prev.filter(k => k.MaKho !== id));
+        //setKhoData(prev => prev.filter(k => k.MaKho !== id));
+        try {
+            await khoHangService.delete(id);
+            setKhoData(prev => prev.filter(k => k.maKho !== id));
+            closeModal();
+        } catch (error) {
+            alert("Failed to delete warehouse.");
+        }
+    };
+    const renderStatus = (status: string | null | undefined) => {
+        // Your API might return "0"/"1" or "Active"/"Inactive" or "HOAT_DONG"
+        // Adjust this logic based on what you see in the Network tab
+        const isActive = status === "HOAT_DONG";
+
+        return (
+            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${isActive ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                }`}>
+                {isActive ? "Hoạt động" : "Ngưng hoạt động"}
+            </span>
+        );
     };
     // TODO: Get real role from auth/session
     const userRole: "manager" | "staff" = "manager";
@@ -176,28 +217,19 @@ export default function KhoPage() {
                         <tbody className="text-sm">
                             {filteredData.map((k) => (
                                 <tr
-                                    key={k.MaKho}
+                                    key={k.maKho}
                                     className="hover:bg-slate-50 transition-colors last:border-0 odd:bg-white even:bg-[#E3EDF9]"
                                 >
 
                                     <td className="py-3 pl-3 font-medium text-slate-700 rounded-l-xl">
-                                        {k.MaKhoCode}
+                                        {k.maKhoCode || '-'}
                                     </td>
-                                    <td className="py-3 text-slate-600">{k.TenKho}</td>
-                                    <td className="py-3 text-slate-600">{k.DiaChi}</td>
+                                    <td className="py-3 text-slate-600">{k.tenKho}</td>
+                                    <td className="py-3 text-slate-600">{k.diaChi}</td>
                                     <td className="py-3 text-center">
-                                        <span
-                                            className={`px-2 py-1 rounded-full text-xs font-semibold ${k.TrangThai === "HOAT_DONG"
-                                                ? "bg-emerald-100 text-emerald-700"
-                                                : "bg-red-100 text-red-700"
-                                                }`}
-                                        >
-                                            {k.TrangThai === "HOAT_DONG"
-                                                ? "Hoạt động"
-                                                : "Ngưng hoạt động"}
-                                        </span>
+                                        {renderStatus(k.trangThai)}
                                     </td>
-                                    <td className="py-3 text-slate-600">{k.GhiChu ?? "-"}</td>
+                                    <td className="py-3 text-slate-600">{k.ghiChu ?? "-"}</td>
                                     <td className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">
                                         <div className="inline-flex items-center gap-2">
                                             {(userRole === "manager") && (

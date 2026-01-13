@@ -1,13 +1,16 @@
 "use client";
 
-import type { KhoHangDTO } from "@/types"; // use the correct type import
+import React from "react";
+import { CreateKhoHangRequest, TrangThaiKhoEnum } from "@/client/types.gen";
+type FormDataType = CreateKhoHangRequest;
 
 type Props = {
-    defaultValues?: Partial<KhoHangDTO>; // Use Partial because "Add" mode might not have all fields
-    onSubmit: (data: KhoHangDTO) => void;
+    // Partial allows us to pass empty object or just some fields when adding
+    defaultValues?: Partial<FormDataType>;
+    onSubmit: (data: FormDataType) => void;
     onCancel: () => void;
     submitText: string;
-    isLoading?: boolean; // loading state prop
+    isLoading?: boolean;
 };
 
 export default function KhoForm({
@@ -15,22 +18,24 @@ export default function KhoForm({
     onSubmit,
     onCancel,
     submitText,
-    isLoading = false, // Default to false
+    isLoading = false,
 }: Props) {
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         const form = new FormData(e.currentTarget);
 
-        // Construct the object carefully
-        // logic: if it's Edit mode, keep old ID, otherwise parent handles ID
-        const data = {
-            ...defaultValues,
-            TenKho: form.get("TenKho") as string,
-            DiaChi: form.get("DiaChi") as string,
-            // Cast strictly to your specific Enum type
-            TrangThai: form.get("TrangThai") as any,
-            GhiChu: (form.get("GhiChu") as string) || null,
-        } as KhoHangDTO;
+        // ✅ 3. Handle Enum Conversion
+        // HTML Select returns strings ("0", "1"), but API expects Numbers (0, 1)
+        const rawStatus = form.get("trangThai");
+        const statusEnum = Number(rawStatus) as TrangThaiKhoEnum;
+
+        // ✅ 4. Construct object using camelCase (matching API)
+        const data: FormDataType = {
+            tenKho: form.get("tenKho") as string,
+            diaChi: form.get("diaChi") as string,
+            trangThai: statusEnum,
+            ghiChu: (form.get("ghiChu") as string) || null,
+        };
 
         onSubmit(data);
     }
@@ -38,7 +43,6 @@ export default function KhoForm({
     return (
         <form
             onSubmit={handleSubmit}
-            // Responsive Grid (1 col on mobile, 2 cols on tablet/desktop)
             className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4"
         >
             {/* Tên kho */}
@@ -47,9 +51,11 @@ export default function KhoForm({
                     Tên kho <span className="text-red-500">*</span>
                 </label>
                 <input
-                    name="TenKho"
+                    // ✅ Name attribute must match camelCase for FormData to work logically
+                    name="tenKho"
                     placeholder="Nhập tên kho..."
-                    defaultValue={defaultValues?.TenKho}
+                    // ✅ Access props using camelCase
+                    defaultValue={defaultValues?.tenKho}
                     required
                     disabled={isLoading}
                     className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
@@ -62,9 +68,9 @@ export default function KhoForm({
                     Địa chỉ
                 </label>
                 <input
-                    name="DiaChi"
+                    name="diaChi"
                     placeholder="Nhập địa chỉ..."
-                    defaultValue={defaultValues?.DiaChi}
+                    defaultValue={defaultValues?.diaChi}
                     disabled={isLoading}
                     className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
@@ -77,15 +83,14 @@ export default function KhoForm({
                 </label>
                 <div className="relative">
                     <select
-                        name="TrangThai"
-                        defaultValue={defaultValues?.TrangThai ?? "HOAT_DONG"}
+                        name="trangThai"
+                        defaultValue={defaultValues?.trangThai ?? 1}
                         disabled={isLoading}
                         className="h-10 w-full appearance-none rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                        <option value="HOAT_DONG">Hoạt động</option>
-                        <option value="NGUNG_HOAT_DONG">Ngưng hoạt động</option>
+                        <option value="0">Hoạt động</option>
+                        <option value="1">Ngưng hoạt động</option>
                     </select>
-                    {/* Optional: Add a custom arrow icon here if you want to hide default browser arrow */}
                 </div>
             </div>
 
@@ -95,16 +100,15 @@ export default function KhoForm({
                     Ghi chú
                 </label>
                 <input
-                    name="GhiChu"
+                    name="ghiChu"
                     placeholder="Ghi chú thêm..."
-                    defaultValue={defaultValues?.GhiChu ?? ""}
+                    defaultValue={defaultValues?.ghiChu ?? ""}
                     disabled={isLoading}
                     className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
             </div>
 
             {/* Actions */}
-            {/* Use col-span-full so buttons take full width on mobile or bottom of form */}
             <div className="col-span-1 sm:col-span-2 mt-6 flex items-center justify-between gap-4">
                 <button
                     type="submit"
@@ -113,7 +117,6 @@ export default function KhoForm({
                 >
                     {isLoading ? (
                         <div className="flex items-center gap-2">
-                            {/* Simple CSS Spinner */}
                             <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
                             <span>Đang lưu...</span>
                         </div>

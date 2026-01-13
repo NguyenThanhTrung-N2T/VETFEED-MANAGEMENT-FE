@@ -3,17 +3,16 @@
 import { useState } from "react";
 import Modal from "@/components/ui/Modal";
 import KhoForm from "./KhoForm";
-import { KhoHangDTO } from "@/types";
 import { Layout } from "lucide-react";
-
+import { CreateKhoHangRequest } from "@/client/types.gen";
 interface Props {
     onClose: () => void;
-    onAdd: (data: KhoHangDTO) => Promise<void> | void;
+    onAdd: (data: CreateKhoHangRequest) => Promise<void> | void;
 }
 
 export default function AddKhoModal({ onClose, onAdd }: Props) {
     const [isSubmitting, setIsSubmitting] = useState(false);
-    async function handleAdd(data: KhoHangDTO) {
+    async function handleAdd(data: CreateKhoHangRequest) {
         try {
             setIsSubmitting(true);
             // Prepare the data
