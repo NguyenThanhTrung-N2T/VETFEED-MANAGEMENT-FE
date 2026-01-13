@@ -2,10 +2,10 @@
 
 import React, { useState, useMemo } from "react";
 import { Search, Plus, Edit, Trash2, ChevronDown, Eye, Filter } from "lucide-react";
-import { CongNoSummary } from "@/types/index";
+import { CongNo, CongNoHistory, CongNoSummary } from "@/types/index";
 import ViewCongNoModal from "@/components/cong-no/ViewCongNoModal";
 import AddCongNoModal from "@/components/cong-no/AddCongNoModal";
-
+import AddButton from "@/components/ui/AddButton";
 // Mock data thay cho API
 const mockData: CongNoSummary[] = [
     {
@@ -49,12 +49,11 @@ const filterOptions = [
 export default function CongNoPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [filterType, setFilterType] = useState<"ALL" | "KHACH_HANG" | "NHA_CUNG_CAP">("ALL");
-    const [isFilterOpen, setIsFilterOpen] = useState(false);
-    const [openModal, setOpenModal] = useState(false);
-    const [selectedCongNo, setSelectedCongNo] = useState<CongNoSummary | null>(null);
+    const [isFilterOpen, setIsFilterOpen] = useState<Boolean>(false);
     const [userRole] = useState("manager"); // Mock user role, replace with real auth logic
-    const [openAddModal, setOpenAddModal] = useState(false);
-    const [modalType, setModalType] = useState<'filter' | 'add' | 'edit' | 'delete' | null>(null);
+    const [modalType, setModalType] = useState<'filter' | 'add' | 'view' | 'delete' | null>(null);
+    const [selectedItem, setSelectedItem] = useState<CongNoSummary | null>(null);
+
     const filteredData = useMemo(() => {
         return mockData.filter((item) => {
             const matchesSearch = item.tenDoiTuong.toLowerCase().includes(searchTerm.toLowerCase());
@@ -65,18 +64,60 @@ export default function CongNoPage() {
 
     const formatCurrency = (value: number) =>
         new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value);
-
     const formatDate = (date?: string | null) => (date ? new Date(date).toLocaleDateString("vi-VN") : "");
-
     const getLoaiDoiTuongLabel = (type: string) => (type === "KHACH_HANG" ? "KH" : "NCC");
 
-    const handleEdit = (id: string) => console.log("Edit", id);
-    const handleDelete = (id: string) => console.log("Delete", id);
+    // --- Modal States ---
+    const openAdd = () => {
+        setModalType('add');
+    };
+    const openView = (congNoSummary: CongNoSummary) => {
+        setSelectedItem(congNoSummary);
+        setModalType('view');
+    };
+    const openDelete = (congNoSummary: CongNoSummary) => {
+        setSelectedItem(congNoSummary);
+        setModalType('delete');
+    };
+    const openFilter = () => {
+        setModalType('filter');
+    };
+    const closeModal = () => {
+        setModalType(null);
+        setSelectedItem(null);
+    };
+    // --- CRUD Handlers ---
+    const handleCreate = async (newData: CongNoHistory) => {
+        // MOCK
+        console.log("Saving new CongNo:", newData);
 
-    const handleViewHistory = (item: CongNoSummary) => {
-        setSelectedCongNo(item);
-        setOpenModal(true);
-    }
+
+        // Real App (API Call)
+        /*
+        try {
+            await fetch('/api/khachHang', {
+                method: 'POST',
+                body: JSON.stringify(newData)
+            });
+            // Then refresh your data
+            router.refresh(); 
+        } catch (error) {
+            console.error(error);
+        }
+        */
+    };
+    const handleUpdate = async (updatedData: CongNoHistory) => {
+        // MOCK
+        console.log("Updating cong no:", updatedData);
+        // setKhachHangData((prev) =>
+        //     prev.map((k) => (k.MaKH === updatedData.MaKH ? updatedData : k))
+        // );
+        // Real App (API Call)    
+    };
+    const handleDelete = async (id: string) => {
+        // API Call here...
+        //setKhachHangData(prev => prev.filter(k => k.MaKH !== id));
+    };
 
     return (
         <>
@@ -86,7 +127,7 @@ export default function CongNoPage() {
                     {/* Filter Dropdown */}
                     <div className="relative">
                         <button
-                            onClick={() => setIsFilterOpen(!isFilterOpen)}
+                            onClick={() => setIsFilterOpen(true)}
                             className="w-40 px-4 py-2 text-sm font-medium flex items-center justify-between gap-2 bg-[#25396f] text-white rounded-l-lg hover:bg-[#1e2e5a] transition-colors shadow-md"
                         >
                             {/* Wrap text in a span to control truncation if it gets too long */}
@@ -137,20 +178,14 @@ export default function CongNoPage() {
                         <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                             Danh sách công nợ
                             <Filter
-                                onClick={() => setModalType('filter')}
+                                onClick={() => openFilter()}
                                 className="cursor-pointer hover:text-green-600 transition-colors ml-1"
                                 size={20}
                                 strokeWidth={1.5}
                             />
                         </h2>
                     </div>
-                    <button
-                        onClick={() => setOpenAddModal(true)}
-                        className="justify-center w-30 inline-flex items-center gap-2 px-4 py-2 rounded-lg
-                            bg-[#43a047] hover:bg-green-700 text-white font-medium transition-colors shadow-green-100 shadow-lg leading-none cursor-pointer"
-                    >
-                        <Plus size={16} className="font-white" /><span>Thêm</span>
-                    </button>
+                    <AddButton onClick={() => openAdd()} />
                 </div>
                 <div className="overflow-x-auto px-6 pb-6">
                     <table className="w-full text-sm">
@@ -187,14 +222,14 @@ export default function CongNoPage() {
                                     <td className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">
                                         <div className="flex items-center justify-center gap-2">
                                             <button
-                                                onClick={() => handleViewHistory(item)}
+                                                onClick={() => openView(item)}
                                                 className="p-2 text-blue-600 hover:bg-blue-100 rounded-md transition-colors cursor-pointer"
                                                 title="Xem lịch sử"
                                             >
                                                 <Eye size={18} />
                                             </button>
                                             {userRole == "manager" && (<button
-                                                onClick={() => handleDelete(item.maDoiTuong)}
+                                                onClick={() => openDelete(item)}
                                                 className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
                                                 title="Xóa"
                                             >
@@ -213,25 +248,23 @@ export default function CongNoPage() {
                 )}
             </div>
             {/* ViewCongNoModal */}
-            {selectedCongNo && (
+            {modalType === 'view' && selectedItem && (
                 <ViewCongNoModal
-                    isOpen={openModal}
-                    onClose={() => setOpenModal(false)}
-                    congNoSummary={selectedCongNo}
+                    isOpen={modalType === 'view'}
+                    onClose={() => closeModal()}
+                    congNoSummary={selectedItem}
                 />
             )}
             {/* AddCongNoModal */}
-            <AddCongNoModal
-                isOpen={openAddModal}
-                onClose={() => setOpenAddModal(false)}
+            {modalType === 'add' && <AddCongNoModal
+                isOpen={modalType === 'add'}
+                onClose={() => closeModal()}
                 onCreated={(created) => {
                     // created: whatever your API returns. You should reload data from server here.
-                    // For now we just log and remind to refresh.
                     console.log("New CongNo created:", created);
-                    // TODO: call your summary reload (e.g., fetch /api/cong-no/summary again)
-                    setOpenAddModal(false);
+                    // TODO: call summary reload (e.g., fetch /api/cong-no/summary again)
                 }}
-            />
+            />}
         </>
     );
 }

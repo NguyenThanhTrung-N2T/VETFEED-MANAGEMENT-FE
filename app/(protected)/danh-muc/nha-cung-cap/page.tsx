@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { Edit, Trash2, Search, ChevronDown, Plus, Filter } from "lucide-react";
 import { NhaCungCapDTO } from "@/types";
+import AddButton from "@/components/ui/AddButton";
 
 // TODO: Replace with real API call - fetch from /api/nha-cung-cap
 const MOCK_NhaCungCap: NhaCungCapDTO[] = [
@@ -40,20 +41,48 @@ const MOCK_NhaCungCap: NhaCungCapDTO[] = [
 
 export default function NhaCungCapPage() {
     const [query, setQuery] = useState("");
-    const [openAddModal, setOpenAddModal] = useState(false);
+    const [nhaCungCapData, setNhaCungCapData] = useState<NhaCungCapDTO[]>(MOCK_NhaCungCap);
     const [modalType, setModalType] = useState<'filter' | 'delete' | 'add' | 'edit' | null>(null);
     const [selectedItem, setSelectedItem] = useState<NhaCungCapDTO | null>(null);
 
     // TODO: Replace with real data fetching
     // Example: const { data: nhaCungCaps, isLoading } = useSWR('/api/nha-cung-cap', fetcher);
-    const nhaCungCaps = useMemo(() => MOCK_NhaCungCap, []);
 
-    const filteredData = nhaCungCaps.filter((n) =>
+    const filteredData = nhaCungCapData.filter((n) =>
         `${n.TenNCC} ${n.DiaChi ?? ""} ${n.SoDienThoai}`
             .toLowerCase()
             .includes(query.toLowerCase())
     );
+    // --- Modal Handlers ---
+    const openAdd = () => setModalType('add');
+    const openEdit = (item: NhaCungCapDTO) => {
+        setSelectedItem(item);
+        setModalType('edit');
+    };
+    const openDelete = (item: NhaCungCapDTO) => {
+        setSelectedItem(item);
+        setModalType('delete');
+    };
+    const openFilter = () => {
+        setModalType('filter');
+    }
+    const closeModal = () => {
+        setModalType(null);
+        setSelectedItem(null);
+    };
 
+    // --- CRUD Handlers ---
+    const handleCreate = async (newData: NhaCungCapDTO) => {
+        setNhaCungCapData((prev) => [newData, ...prev]);
+    };
+
+    const handleUpdate = async (updatedData: NhaCungCapDTO) => {
+        setNhaCungCapData((prev) => prev.map((k) => (k.MaNCC === updatedData.MaNCC ? updatedData : k)));
+    };
+
+    const handleDelete = async (id: string) => {
+        setNhaCungCapData(prev => prev.filter(k => k.MaNCC !== id));
+    };
     // TODO: Get real role from auth/session
     const userRole: "manager" | "staff" = "manager";
 
@@ -92,7 +121,7 @@ export default function NhaCungCapPage() {
                         <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                             Danh sách nhà cung cấp
                             <Filter
-                                onClick={() => setModalType('filter')}
+                                onClick={() => openFilter()}
                                 className="cursor-pointer hover:text-green-600 transition-colors ml-1"
                                 size={20}
                                 strokeWidth={1.5}
@@ -100,48 +129,47 @@ export default function NhaCungCapPage() {
                         </h2>
                     </div>
 
-                    {(userRole === "manager") && (<button
-                        onClick={() => setOpenAddModal(true)}
-                        className="justify-center w-30 inline-flex items-center gap-2 px-4 py-2 rounded-lg
-                            bg-[#43a047] hover:bg-green-700 text-white font-medium transition-colors shadow-green-100 shadow-lg leading-none cursor-pointer"
-                    >
-                        <Plus size={16} className="font-white" /><span>Thêm</span>
-                    </button>)}
+                    {(userRole === "manager") && (<AddButton onClick={() => openAdd()} />
+                    )}
                 </div>
+                {/* transition-transform duration-300 group-hover:-rotate-90 */}
                 <div className="overflow-x-auto px-6 pb-6">
-                    <table className="w-full text-sm">
+                    <table className="w-full text-sm border-separate border-spacing-y-1">
                         <thead>
-                            <tr className="text-left text-xs text-slate-700 uppercase tracking-wider border-b border-slate-100 bg-[#E3EDF9] border-separate">
-                                <th className="py-3 pl-3 rounded-l-xl">Mã NCC</th>
+                            <tr className="text-left text-xs font-semibold bg-[#e9eff6] text-slate-800 uppercase tracking-wider">
+                                <th className="py-3 pl-3 rounded-l-lg">Mã NCC</th>
                                 <th className="py-3">Nhà cung cấp</th>
                                 <th className="py-3">Địa chỉ</th>
-                                <th className="py-3">Số điện thoại</th>
+                                <th className="py-3 text-center">Số điện thoại</th>
                                 <th className="py-3">Ghi chú</th>
-                                <th className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">Hành động</th>
+                                <th className="py-3 px-4 text-right rounded-r-lg w-px whitespace-nowrap">Hành động</th>
                             </tr>
                         </thead>
                         <tbody className="text-sm">
                             {filteredData.map((n) => (
                                 <tr
                                     key={n.MaNCC}
-                                    className="hover:bg-slate-100 transition-colors last:border-0 odd:bg-white even:bg-[#E3EDF9]"
-                                >
-                                    <td className="py-3 pl-3 font-medium text-slate-700 rounded-l-xl">
+                                    className="group hover:bg-slate-50 transition-colors odd:bg-white even:bg-[#f1f5f9]">
+                                    <td className="py-3 pl-3 font-medium text-slate-700 border-y border-l border-slate-100 rounded-l-lg group-hover:border-slate-200">
                                         {n.MaNCCCode}
                                     </td>
-                                    <td className="py-3 text-slate-600">{n.TenNCC}</td>
-                                    <td className="py-3 text-slate-600">{n.DiaChi ?? "-"}</td>
-                                    <td className="py-3 text-slate-600">{n.SoDienThoai}</td>
-                                    <td className="py-3 text-slate-600">{n.GhiChu ?? "-"}</td>
-                                    <td className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">
+                                    <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 text-slate-700 font-medium">{n.TenNCC}</td>
+                                    <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 text-slate-500">{n.DiaChi ?? "-"}</td>
+                                    <td className="py-3 border-y text-center border-slate-100 group-hover:border-slate-200 text-slate-700">{n.SoDienThoai}</td>
+                                    <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 text-slate-500">{n.GhiChu ?? "-"}</td>
+                                    <td className="py-3 px-4 text-right border-y border-r border-slate-100 rounded-r-lg group-hover:border-slate-200 w-px whitespace-nowrap">
                                         <div className="inline-flex items-center gap-2">
                                             {(userRole === "manager") && (
-                                                <button className="p-2 rounded-md text-slate-600 hover:bg-slate-200 cursor-pointer">
+                                                <button
+                                                    onClick={() => openEdit(n)}
+                                                    className="p-2 rounded-md text-slate-600 hover:bg-slate-200 cursor-pointer">
                                                     <Edit size={18} />
                                                 </button>
                                             )}
                                             {userRole === "manager" && (
-                                                <button className="p-2 rounded-md text-red-600 hover:bg-red-50 cursor-pointer">
+                                                <button
+                                                    onClick={() => openDelete(n)}
+                                                    className="p-2 rounded-md text-red-600 hover:bg-red-50 cursor-pointer">
                                                     <Trash2 size={18} />
                                                 </button>
                                             )}

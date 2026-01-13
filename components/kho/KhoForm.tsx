@@ -51,10 +51,8 @@ export default function KhoForm({
                     Tên kho <span className="text-red-500">*</span>
                 </label>
                 <input
-                    // ✅ Name attribute must match camelCase for FormData to work logically
                     name="tenKho"
                     placeholder="Nhập tên kho..."
-                    // ✅ Access props using camelCase
                     defaultValue={defaultValues?.tenKho}
                     required
                     disabled={isLoading}

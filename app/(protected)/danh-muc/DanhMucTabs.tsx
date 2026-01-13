@@ -30,8 +30,7 @@ export default function DanhMucTabs() {
                             ${isActive
                                 ? "bg-[#FFC20E] text-slate-900"
                                 : "bg-[#25396f] text-white rounded-lg hover:bg-[#1e2e5a] cursor-pointer"
-                            }
-            `}
+                            }`}
                     >
                         <Icon size={18} />
                         <span>{tab.name}</span>

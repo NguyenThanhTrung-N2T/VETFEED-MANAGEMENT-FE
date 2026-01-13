@@ -16,7 +16,7 @@ const MENU_ITEMS = [
     { name: "Chuyển kho", icon: <ArrowRightLeft size={20} />, href: "/chuyen-kho" },
     { name: "Trả hàng", icon: <CornerUpLeft size={20} />, href: "/tra-hang" },
     { name: "Tồn kho", icon: <Package size={20} />, href: "/ton-kho" },
-    { name: "Danh mục", icon: <Folder size={20} />, href: "/danh-muc" },
+    { name: "Danh mục", icon: <Folder size={20} />, href: "/danh-muc/nha-cung-cap", basePath: "/danh-muc" },
     { name: "Công nợ", icon: <CalendarDays size={20} />, href: "/cong-no" },
     // Chỉ Admin mới thấy Báo cáo
     { name: 'Báo cáo', icon: <BarChart3 size={20} />, href: '/bao-cao', role: 'QUAN_LY' },
@@ -29,8 +29,27 @@ export default function Sidebar() {
     // Xử lý Loading (tránh flash nội dung sai khi chưa load xong user)
     if (loading) {
         return (
-            <aside className="w-64 bg-[#0f172a] h-screen flex items-center justify-center">
-                <Loader2 className="text-emerald-500 animate-spin" />
+            <aside className="w-64 bg-[#0f172a] h-screen flex flex-col shrink-0 sticky top-0 border-r border-slate-800">
+                <div className="p-6 flex justify-center">
+                    {/* Logo Skeleton */}
+                    <div className="h-8 w-32 bg-slate-800 rounded animate-pulse" />
+                </div>
+
+                {/* User Info Skeleton */}
+                <div className="px-6 pb-6 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-800 animate-pulse shrink-0" />
+                    <div className="space-y-2 flex-1">
+                        <div className="h-4 w-24 bg-slate-800 rounded animate-pulse" />
+                        <div className="h-3 w-16 bg-slate-800 rounded animate-pulse" />
+                    </div>
+                </div>
+
+                {/* Menu Skeleton */}
+                <div className="px-4 space-y-3 mt-4">
+                    {[...Array(6)].map((_, i) => (
+                        <div key={i} className="h-10 w-full bg-slate-800/50 rounded-lg animate-pulse" />
+                    ))}
+                </div>
             </aside>
         );
     }
@@ -75,7 +94,9 @@ export default function Sidebar() {
             {/* Menu Navigation */}
             <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto custom-scrollbar pb-4">
                 {filteredMenu.map((item, index) => {
-                    const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                    const isActive = item.basePath
+                        ? pathname.startsWith(item.basePath)
+                        : pathname === item.href || pathname.startsWith(item.href + "/");
                     return (
                         <Link
                             key={index}

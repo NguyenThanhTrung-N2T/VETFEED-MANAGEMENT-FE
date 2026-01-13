@@ -21,7 +21,10 @@ const sizeClasses: Record<ModalSize, string> = {
 export default function Modal({ children, size = 'lg' }: Props) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div className={`relative w-full ${sizeClasses[size]} rounded-2xl bg-white shadow-xl overflow-hidden`}>
+            <div className={`relative w-full ${sizeClasses[size]} rounded-2xl bg-white shadow-xl overflow-hidden
+                max-h-[90vh] 
+                overflow-y-auto 
+                scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent`}>
                 <div className="px-6 py-5">
                     {children}
                 </div>

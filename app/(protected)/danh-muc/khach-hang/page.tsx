@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Edit, Trash2, Search, ChevronDown, Plus, Eye, Filter } from "lucide-react";
 import { KhachHangDTO, LoaiKhachHang } from "@/types";
 import AddKhachHangModal from "@/components/khach-hang/AddKhachHangModal";
+import AddButton from "@/components/ui/AddButton";
 
 const loaiKhachHangMap: Record<LoaiKhachHang, string> = { CA_NHAN: "Cá nhân", TRANG_TRAI: "Trang trại", DAI_LY: "Đại lý", };
 // TODO: Replace with real API call - fetch from /api/khach-hang
@@ -221,48 +222,43 @@ export default function KhachHangPage() {
                         </h2>
                     </div>
 
-                    <button
-                        onClick={() => openAdd()}
-                        className="justify-center w-30 inline-flex items-center gap-2 px-4 py-2 rounded-lg
-                            bg-[#43a047] hover:bg-green-700 text-white font-medium transition-colors shadow-green-100 shadow-lg leading-none cursor-pointer"
-                    >
-                        <Plus size={16} className="font-white" /><span>Thêm</span>
-                    </button>
+                    <AddButton onClick={() => openAdd()} />
                 </div>
+
                 <div className="overflow-x-auto px-6 pb-6">
-                    <table className="w-full text-sm">
+                    <table className="w-full text-sm border-separate border-spacing-y-1">
                         <thead>
-                            <tr className="text-left text-xs text-slate-700 uppercase tracking-wider border-b border-slate-100 bg-[#E3EDF9] border-separate">
-                                <th className="py-3 pl-3 rounded-l-xl">Mã KH</th>
+                            <tr className="text-left text-xs font-semibold bg-[#e9eff6] text-slate-800 uppercase tracking-wider">
+                                <th className="py-3 pl-3 rounded-l-lg">Mã KH</th>
                                 <th className="py-3">Họ tên</th>
                                 <th className="py-3">Loại KH</th>
                                 <th className="py-3">Số điện thoại</th>
                                 <th className="py-3 text-right">Tổng mua (VNĐ)</th>
                                 <th className="py-3 text-right">Công nợ (VNĐ)</th>
-                                <th className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">Hành động</th>
+                                <th className="py-3 px-4 text-right rounded-r-lg w-px whitespace-nowrap">Hành động</th>
                             </tr>
                         </thead>
                         <tbody className="text-sm">
                             {filteredData.map((c) => (
                                 <tr
                                     key={c.MaKH}
-                                    className="hover:bg-slate-100 transition-colors last:border-0 odd:bg-white even:bg-[#E3EDF9]"
+                                    className="group hover:bg-slate-50 transition-colors odd:bg-white even:bg-[#f1f5f9]"
                                 >
-                                    <td className="py-3 pl-3 font-medium text-slate-700 rounded-l-xl">
+                                    <td className="py-3 pl-3 font-medium text-slate-700 border-y border-l border-slate-100 rounded-l-lg group-hover:border-slate-200">
                                         {c.MaKHCode}
                                     </td>
-                                    <td className="py-3 font-medium text-slate-700">
+                                    <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 text-slate-700 font-medium">
                                         {c.TenKH}
                                     </td>
-                                    <td className="py-3 text-slate-600">{c.LoaiKhachHang ? loaiKhachHangMap[c.LoaiKhachHang] : "-"}</td>
-                                    <td className="py-3 text-slate-600">{c.SoDienThoai ?? "-"}</td>
+                                    <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 font-medium text-slate-700">{c.LoaiKhachHang ? loaiKhachHangMap[c.LoaiKhachHang] : "-"}</td>
+                                    <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 font-medium text-slate-700">{c.SoDienThoai ?? "-"}</td>
                                     <td className="py-3 text-right font-medium text-slate-800">
                                         {c.TongMua.toLocaleString("vi-VN")}
                                     </td>
                                     <td className="py-3 text-right font-medium text-red-600">
                                         {c.CongNoHienTai.toLocaleString("vi-VN")}
                                     </td>
-                                    <td className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">
+                                    <td className="py-3 px-4 text-right border-y border-r border-slate-100 rounded-r-lg group-hover:border-slate-200 w-px whitespace-nowrap">
                                         <div className="inline-flex items-center gap-2">
                                             <button
                                                 onClick={() => openView(c)}
