@@ -19,7 +19,7 @@ export default function EditSanPhamModal({
     }
 
     return (
-        <Modal>
+        <Modal size='lg'>
             {/* Header Title */}
             <div className="flex items-center justify-center gap-3 mb-8">
                 <Tag size={28} />

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Edit, Trash2, Search, ChevronDown, Plus } from "lucide-react";
+import { Edit, Trash2, Search, ChevronDown, Plus, Filter } from "lucide-react";
 import { KhoHangDTO } from "@/types";
 import AddKhoModal from "@/components/kho/AddKhoModal";
 import EditKhoModal from "@/components/kho/EditKhoModal";
@@ -55,7 +55,7 @@ export default function KhoPage() {
     //await fetch("/api/kho", { method: "POST" })
     //await fetch(`/api/kho/${id}`, { method: "PUT" })
 
-    // Open Add/Edit/Delete Modals
+    // --- Modal States ---
     const openAdd = () => {
         setModalType('add');
     };
@@ -67,9 +67,12 @@ export default function KhoPage() {
         setSelectedItem(kho);
         setModalType('delete');
     };
+    const openFilter = () => {
+        setModalType('filter');
+    };
     const closeModal = () => {
         setModalType(null);
-        setSelectedItem(null); // Reset data
+        setSelectedItem(null);
     };
     // --- CRUD Handlers ---
     const handleCreate = async (newData: KhoHangDTO) => {
@@ -134,77 +137,90 @@ export default function KhoPage() {
             </div>
 
             {/* Content Card */}
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-                <div className="mb-3 flex items-center justify-between">
-                    <div className="text-2xl text-black">Danh sách kho</div>
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-125">
+                {/* Card Header */}
+                <div className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                            Danh sách kho
+                            <Filter
+                                onClick={() => setModalType('filter')}
+                                className="cursor-pointer hover:text-green-600 transition-colors ml-1"
+                                size={20}
+                                strokeWidth={1.5}
+                            />
+                        </h2>
+                    </div>
 
                     {(userRole === "manager") &&
                         (<button
                             onClick={() => openAdd()}
                             className="justify-center w-30 inline-flex items-center gap-2 px-4 py-2 rounded-lg
-                            bg-[#43a047] hover:bg-green-700 text-white font-medium transition-colors shadow-green-100 shadow-lg leading-none "
+                            bg-[#43a047] hover:bg-green-700 text-white font-medium transition-colors shadow-green-100 shadow-lg leading-none cursor-pointer"
                         >
                             <Plus size={16} className="font-white" /><span>Thêm</span>
                         </button>)}
                 </div>
-                <table className="w-full text-sm">
-                    <thead>
-                        <tr className="text-left text-xs text-slate-700 uppercase tracking-wider border-b border-slate-100 bg-[#E3EDF9] border-separate">
-                            <th className="py-3 pl-3 rounded-l-xl">Mã kho</th>
-                            <th className="py-3">Tên kho</th>
-                            <th className="py-3">Địa chỉ</th>
-                            <th className="py-3 text-center">Trạng thái</th>
-                            <th className="py-3">Ghi chú</th>
-                            <th className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody className="text-sm">
-                        {filteredData.map((k) => (
-                            <tr
-                                key={k.MaKho}
-                                className="hover:bg-slate-50 transition-colors last:border-0 odd:bg-white even:bg-[#E3EDF9]"
-                            >
-
-                                <td className="py-3 pl-3 font-medium text-slate-700 rounded-l-xl">
-                                    {k.MaKhoCode}
-                                </td>
-                                <td className="py-3 text-slate-600">{k.TenKho}</td>
-                                <td className="py-3 text-slate-600">{k.DiaChi}</td>
-                                <td className="py-3 text-center">
-                                    <span
-                                        className={`px-2 py-1 rounded-full text-xs font-semibold ${k.TrangThai === "HOAT_DONG"
-                                            ? "bg-emerald-100 text-emerald-700"
-                                            : "bg-red-100 text-red-700"
-                                            }`}
-                                    >
-                                        {k.TrangThai === "HOAT_DONG"
-                                            ? "Hoạt động"
-                                            : "Ngưng hoạt động"}
-                                    </span>
-                                </td>
-                                <td className="py-3 text-slate-600">{k.GhiChu ?? "-"}</td>
-                                <td className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">
-                                    <div className="inline-flex items-center gap-2">
-                                        {(userRole === "manager") && (
-                                            <button
-                                                onClick={() => openEdit(k)}
-                                                className="p-2 rounded-md text-slate-600 hover:bg-slate-200">
-                                                <Edit size={18} />
-                                            </button>
-                                        )}
-                                        {userRole === "manager" && (
-                                            <button
-                                                onClick={() => openDelete(k)}
-                                                className="p-2 rounded-md text-red-600 hover:bg-red-50">
-                                                <Trash2 size={18} />
-                                            </button>
-                                        )}
-                                    </div>
-                                </td>
+                <div className="overflow-x-auto px-6 pb-6">
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="text-left text-xs text-slate-700 uppercase tracking-wider border-b border-slate-100 bg-[#E3EDF9] border-separate">
+                                <th className="py-3 pl-3 rounded-l-xl">Mã kho</th>
+                                <th className="py-3">Tên kho</th>
+                                <th className="py-3">Địa chỉ</th>
+                                <th className="py-3 text-center">Trạng thái</th>
+                                <th className="py-3">Ghi chú</th>
+                                <th className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">Hành động</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="text-sm">
+                            {filteredData.map((k) => (
+                                <tr
+                                    key={k.MaKho}
+                                    className="hover:bg-slate-50 transition-colors last:border-0 odd:bg-white even:bg-[#E3EDF9]"
+                                >
+
+                                    <td className="py-3 pl-3 font-medium text-slate-700 rounded-l-xl">
+                                        {k.MaKhoCode}
+                                    </td>
+                                    <td className="py-3 text-slate-600">{k.TenKho}</td>
+                                    <td className="py-3 text-slate-600">{k.DiaChi}</td>
+                                    <td className="py-3 text-center">
+                                        <span
+                                            className={`px-2 py-1 rounded-full text-xs font-semibold ${k.TrangThai === "HOAT_DONG"
+                                                ? "bg-emerald-100 text-emerald-700"
+                                                : "bg-red-100 text-red-700"
+                                                }`}
+                                        >
+                                            {k.TrangThai === "HOAT_DONG"
+                                                ? "Hoạt động"
+                                                : "Ngưng hoạt động"}
+                                        </span>
+                                    </td>
+                                    <td className="py-3 text-slate-600">{k.GhiChu ?? "-"}</td>
+                                    <td className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">
+                                        <div className="inline-flex items-center gap-2">
+                                            {(userRole === "manager") && (
+                                                <button
+                                                    onClick={() => openEdit(k)}
+                                                    className="p-2 rounded-md text-slate-600 hover:bg-slate-200 cursor-pointer">
+                                                    <Edit size={18} />
+                                                </button>
+                                            )}
+                                            {userRole === "manager" && (
+                                                <button
+                                                    onClick={() => openDelete(k)}
+                                                    className="p-2 rounded-md text-red-600 hover:bg-red-50 cursor-pointer">
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
             {modalType === 'add' && (
                 <AddKhoModal

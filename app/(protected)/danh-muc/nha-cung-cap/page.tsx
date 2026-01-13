@@ -90,7 +90,7 @@ export default function NhaCungCapPage() {
                 <div className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div className="flex items-center gap-2">
                         <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                            Danh sách tồn kho
+                            Danh sách nhà cung cấp
                             <Filter
                                 onClick={() => setModalType('filter')}
                                 className="cursor-pointer hover:text-green-600 transition-colors ml-1"
@@ -103,53 +103,55 @@ export default function NhaCungCapPage() {
                     {(userRole === "manager") && (<button
                         onClick={() => setOpenAddModal(true)}
                         className="justify-center w-30 inline-flex items-center gap-2 px-4 py-2 rounded-lg
-                            bg-[#43a047] hover:bg-green-700 text-white font-medium transition-colors shadow-green-100 shadow-lg leading-none "
+                            bg-[#43a047] hover:bg-green-700 text-white font-medium transition-colors shadow-green-100 shadow-lg leading-none cursor-pointer"
                     >
                         <Plus size={16} className="font-white" /><span>Thêm</span>
                     </button>)}
                 </div>
-                <table className="w-full text-sm">
-                    <thead>
-                        <tr className="text-left text-xs text-slate-700 uppercase tracking-wider border-b border-slate-100 bg-[#E3EDF9] border-separate">
-                            <th className="py-3 pl-3 rounded-l-xl">Mã NCC</th>
-                            <th className="py-3">Nhà cung cấp</th>
-                            <th className="py-3">Địa chỉ</th>
-                            <th className="py-3">Số điện thoại</th>
-                            <th className="py-3">Ghi chú</th>
-                            <th className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody className="text-sm">
-                        {filteredData.map((n) => (
-                            <tr
-                                key={n.MaNCC}
-                                className="hover:bg-slate-100 transition-colors last:border-0 odd:bg-white even:bg-[#E3EDF9]"
-                            >
-                                <td className="py-3 pl-3 font-medium text-slate-700 rounded-l-xl">
-                                    {n.MaNCCCode}
-                                </td>
-                                <td className="py-3 text-slate-600">{n.TenNCC}</td>
-                                <td className="py-3 text-slate-600">{n.DiaChi ?? "-"}</td>
-                                <td className="py-3 text-slate-600">{n.SoDienThoai}</td>
-                                <td className="py-3 text-slate-600">{n.GhiChu ?? "-"}</td>
-                                <td className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">
-                                    <div className="inline-flex items-center gap-2">
-                                        {(userRole === "manager") && (
-                                            <button className="p-2 rounded-md text-slate-600 hover:bg-slate-200">
-                                                <Edit size={18} />
-                                            </button>
-                                        )}
-                                        {userRole === "manager" && (
-                                            <button className="p-2 rounded-md text-red-600 hover:bg-red-50">
-                                                <Trash2 size={18} />
-                                            </button>
-                                        )}
-                                    </div>
-                                </td>
+                <div className="overflow-x-auto px-6 pb-6">
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="text-left text-xs text-slate-700 uppercase tracking-wider border-b border-slate-100 bg-[#E3EDF9] border-separate">
+                                <th className="py-3 pl-3 rounded-l-xl">Mã NCC</th>
+                                <th className="py-3">Nhà cung cấp</th>
+                                <th className="py-3">Địa chỉ</th>
+                                <th className="py-3">Số điện thoại</th>
+                                <th className="py-3">Ghi chú</th>
+                                <th className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">Hành động</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="text-sm">
+                            {filteredData.map((n) => (
+                                <tr
+                                    key={n.MaNCC}
+                                    className="hover:bg-slate-100 transition-colors last:border-0 odd:bg-white even:bg-[#E3EDF9]"
+                                >
+                                    <td className="py-3 pl-3 font-medium text-slate-700 rounded-l-xl">
+                                        {n.MaNCCCode}
+                                    </td>
+                                    <td className="py-3 text-slate-600">{n.TenNCC}</td>
+                                    <td className="py-3 text-slate-600">{n.DiaChi ?? "-"}</td>
+                                    <td className="py-3 text-slate-600">{n.SoDienThoai}</td>
+                                    <td className="py-3 text-slate-600">{n.GhiChu ?? "-"}</td>
+                                    <td className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">
+                                        <div className="inline-flex items-center gap-2">
+                                            {(userRole === "manager") && (
+                                                <button className="p-2 rounded-md text-slate-600 hover:bg-slate-200 cursor-pointer">
+                                                    <Edit size={18} />
+                                                </button>
+                                            )}
+                                            {userRole === "manager" && (
+                                                <button className="p-2 rounded-md text-red-600 hover:bg-red-50 cursor-pointer">
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </>
     );

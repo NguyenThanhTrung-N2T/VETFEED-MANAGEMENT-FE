@@ -7,6 +7,7 @@ type Props = {
     onSubmit: (data: SanPhamWithPriceDTO) => void;
     onCancel: () => void;
     submitText: string;
+    isLoading?: boolean;
 };
 
 export default function SanPhamForm({
@@ -14,6 +15,7 @@ export default function SanPhamForm({
     onSubmit,
     onCancel,
     submitText,
+    isLoading = false, // Default to false
 }: Props) {
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -41,6 +43,7 @@ export default function SanPhamForm({
                     placeholder="Tên sản phẩm..."
                     defaultValue={defaultValues?.TenSP}
                     required
+                    disabled={isLoading}
                     className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                 />
             </div>
@@ -53,6 +56,7 @@ export default function SanPhamForm({
                 <select
                     name="LoaiSanPham"
                     defaultValue={defaultValues?.LoaiSanPham ?? "THUOC_THU_Y"}
+                    disabled={isLoading}
                     className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                 >
                     <option value="THUOC_THU_Y">Thuốc thú y</option>
@@ -70,6 +74,7 @@ export default function SanPhamForm({
                     placeholder="Đơn vị tính..."
                     defaultValue={defaultValues?.DonViTinh!}
                     required
+                    disabled={isLoading}
                     className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                 />
             </div>
@@ -83,6 +88,7 @@ export default function SanPhamForm({
                     type="number"
                     placeholder="Đơn giá..."
                     defaultValue={defaultValues?.DonGia}
+                    disabled={isLoading}
                     className="h-11 rounded-xl bg-[#E9F1FB] px-4 text-sm outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-slate-400"
                 />
             </div>
@@ -95,6 +101,7 @@ export default function SanPhamForm({
                     name="GhiChu"
                     placeholder="Ghi chú..."
                     defaultValue={defaultValues?.GhiChu ?? ""}
+                    disabled={isLoading}
                     className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                 />
             </div>
@@ -103,6 +110,7 @@ export default function SanPhamForm({
             <div className="col-span-2 mt-6 flex items-center justify-between gap-6">
                 <button
                     type="submit"
+                    disabled={isLoading}
                     className="h-11 flex-1 rounded-lg bg-[#3f861e] text-white font-semibold hover:bg-[#529E29] transition-colors"
                 >
                     {submitText}
@@ -110,6 +118,7 @@ export default function SanPhamForm({
 
                 <button
                     type="button"
+                    disabled={isLoading}
                     onClick={onCancel}
                     className="h-11 flex-1 rounded-lg border-2 border-red-500 text-red-500 font-semibold hover:bg-red-50 transition-colors"
                 >

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Search, Plus, Edit, Trash2, ChevronDown, Eye } from "lucide-react";
+import { Search, Plus, Edit, Trash2, ChevronDown, Eye, Filter } from "lucide-react";
 import { CongNoSummary } from "@/types/index";
 import ViewCongNoModal from "@/components/cong-no/ViewCongNoModal";
 import AddCongNoModal from "@/components/cong-no/AddCongNoModal";
@@ -54,6 +54,7 @@ export default function CongNoPage() {
     const [selectedCongNo, setSelectedCongNo] = useState<CongNoSummary | null>(null);
     const [userRole] = useState("manager"); // Mock user role, replace with real auth logic
     const [openAddModal, setOpenAddModal] = useState(false);
+    const [modalType, setModalType] = useState<'filter' | 'add' | 'edit' | 'delete' | null>(null);
     const filteredData = useMemo(() => {
         return mockData.filter((item) => {
             const matchesSearch = item.tenDoiTuong.toLowerCase().includes(searchTerm.toLowerCase());
@@ -128,78 +129,84 @@ export default function CongNoPage() {
                     </div>
                 </div>
             </div>
-            {/* Table */}
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-                <div className="mb-3 flex items-center justify-between">
-                    <div className="text-2xl font-semibold">Danh sách công nợ</div>
+            {/* Content Card */}
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                {/* Card Header */}
+                <div className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                            Danh sách công nợ
+                            <Filter
+                                onClick={() => setModalType('filter')}
+                                className="cursor-pointer hover:text-green-600 transition-colors ml-1"
+                                size={20}
+                                strokeWidth={1.5}
+                            />
+                        </h2>
+                    </div>
                     <button
                         onClick={() => setOpenAddModal(true)}
                         className="justify-center w-30 inline-flex items-center gap-2 px-4 py-2 rounded-lg
-                            bg-[#43a047] hover:bg-green-700 text-white font-medium transition-colors shadow-green-100 shadow-lg leading-none "
+                            bg-[#43a047] hover:bg-green-700 text-white font-medium transition-colors shadow-green-100 shadow-lg leading-none cursor-pointer"
                     >
                         <Plus size={16} className="font-white" /><span>Thêm</span>
                     </button>
                 </div>
-                <table className="w-full text-sm">
-                    <thead>
-                        <tr className="text-xs text-slate-700 uppercase tracking-wider border-b border-slate-100 bg-[#E3EDF9] border-separate">
-                            <th className="py-3 pl-3 text-left rounded-l-xl">Mã đối tượng</th>
-                            <th className="py-3 text-left">Tên</th>
-                            <th className="py-3 text-left">Đối tượng</th>
-                            <th className="py-3 text-right">Tổng phát sinh</th>
-                            <th className="py-3 text-right">Đã thanh toán</th>
-                            <th className="py-3 text-right">Dư nợ</th>
-                            <th className="py-3 text-center">Hạn thanh toán</th>
-                            <th className="py-3 px-4 text-center rounded-r-xl w-px whitespace-nowrap">Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredData.map((item) => (
-                            <tr
-                                key={item.maDoiTuong}
-                                className="hover:bg-slate-50 transition-colors last:border-0 odd:bg-white even:bg-[#E3EDF9]"
-                            >
-                                <td className="pl-3 py-3 font-medium text-slate-700 rounded-l-xl">{item.maDoiTuong}</td>
-                                <td className="py-3 text-gray-600">{item.tenDoiTuong}</td>
-                                <td className="py-3 text-gray-600">{getLoaiDoiTuongLabel(item.loaiDoiTuong)}</td>
-                                <td className="py-3 text-right text-gray-600">{formatCurrency(item.tongPhatSinh)}</td>
-                                <td className="py-3 text-right text-gray-600">{formatCurrency(item.daThanhToan)}</td>
-                                <td
-                                    className={`py-3 text-right font-medium ${item.duNo > 0 ? "text-red-600" : "text-green-600"
-                                        }`}
-                                >
-                                    {formatCurrency(item.duNo)}
-                                </td>
-                                <td className="py-3 text-center text-gray-600">{formatDate(item.hanThanhToanGanNhat)}</td>
-                                <td className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">
-                                    <div className="flex items-center justify-center gap-2">
-                                        <button
-                                            onClick={() => handleViewHistory(item)}
-                                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                                            title="Xem lịch sử"
-                                        >
-                                            <Eye size={18} />
-                                        </button>
-                                        {/* {userRole == "manager" && (<button
-                                            onClick={() => handleEdit(item.maDoiTuong)}
-                                            className="p-2 text-slate-600 hover:bg-slate-200 rounded-md transition-colors"
-                                            title="Sửa"
-                                        >
-                                            <Edit size={18} />
-                                        </button>)} */}
-                                        {userRole == "manager" && (<button
-                                            onClick={() => handleDelete(item.maDoiTuong)}
-                                            className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                                            title="Xóa"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>)}
-                                    </div>
-                                </td>
+                <div className="overflow-x-auto px-6 pb-6">
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="text-xs text-slate-700 uppercase tracking-wider border-b border-slate-100 bg-[#E3EDF9] border-separate">
+                                <th className="py-3 pl-3 text-left rounded-l-xl">Mã đối tượng</th>
+                                <th className="py-3 text-left">Tên</th>
+                                <th className="py-3 text-left">Đối tượng</th>
+                                <th className="py-3 text-right">Tổng phát sinh</th>
+                                <th className="py-3 text-right">Đã thanh toán</th>
+                                <th className="py-3 text-right">Dư nợ</th>
+                                <th className="py-3 text-center">Hạn thanh toán</th>
+                                <th className="py-3 px-4 text-center rounded-r-xl w-px whitespace-nowrap">Hành động</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {filteredData.map((item) => (
+                                <tr
+                                    key={item.maDoiTuong}
+                                    className="hover:bg-slate-100 transition-colors last:border-0 odd:bg-white even:bg-[#E3EDF9]"
+                                >
+                                    <td className="pl-3 py-3 font-medium text-slate-700 rounded-l-xl">{item.maDoiTuong}</td>
+                                    <td className="py-3 text-gray-600">{item.tenDoiTuong}</td>
+                                    <td className="py-3 text-gray-600">{getLoaiDoiTuongLabel(item.loaiDoiTuong)}</td>
+                                    <td className="py-3 text-right text-gray-600">{formatCurrency(item.tongPhatSinh)}</td>
+                                    <td className="py-3 text-right text-gray-600">{formatCurrency(item.daThanhToan)}</td>
+                                    <td
+                                        className={`py-3 text-right font-medium ${item.duNo > 0 ? "text-red-600" : "text-green-600"
+                                            }`}
+                                    >
+                                        {formatCurrency(item.duNo)}
+                                    </td>
+                                    <td className="py-3 text-center text-gray-600">{formatDate(item.hanThanhToanGanNhat)}</td>
+                                    <td className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <button
+                                                onClick={() => handleViewHistory(item)}
+                                                className="p-2 text-blue-600 hover:bg-blue-100 rounded-md transition-colors cursor-pointer"
+                                                title="Xem lịch sử"
+                                            >
+                                                <Eye size={18} />
+                                            </button>
+                                            {userRole == "manager" && (<button
+                                                onClick={() => handleDelete(item.maDoiTuong)}
+                                                className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
+                                                title="Xóa"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>)}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
 
                 {filteredData.length === 0 && (
                     <div className="text-center py-12 text-gray-500">Không tìm thấy dữ liệu</div>

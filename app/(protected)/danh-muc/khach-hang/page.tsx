@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
-import { Edit, Trash2, Search, ChevronDown, Plus, Eye } from "lucide-react";
+import { Edit, Trash2, Search, ChevronDown, Plus, Eye, Filter } from "lucide-react";
 import { KhachHangDTO, LoaiKhachHang } from "@/types";
 import AddKhachHangModal from "@/components/khach-hang/AddKhachHangModal";
 
@@ -112,13 +112,12 @@ const MOCK_KhachHang: KhachHangDTO[] = [
 export default function KhachHangPage() {
     const [query, setQuery] = useState("");
     const [khachHangData, setKhachHangData] = useState<KhachHangDTO[]>(MOCK_KhachHang);
-    const [openAddModal, setOpenAddModal] = useState(false);
 
+    const [modalType, setModalType] = useState<'filter' | 'delete' | 'add' | 'view' | null>(null);
+    const [selectedItem, setSelectedItem] = useState<KhachHangDTO | null>(null);
     // TODO: Replace with real data fetching
     // Example: const { data: khachHangs, isLoading } = useSWR('/api/khach-hang', fetcher);
     const khachHangs = khachHangData;
-
-
 
     const filteredData = khachHangs.filter((c) =>
         `${c.TenKH} ${c.SoDienThoai ?? ""} ${c.LoaiKhachHang ?? ""}`
@@ -127,10 +126,58 @@ export default function KhachHangPage() {
     );
 
     // TODO: Get real role from auth/session
+    // --- Modal States ---
+    const openAdd = () => {
+        setModalType('add');
+    };
+    const openView = (khachHang: KhachHangDTO) => {
+        setSelectedItem(khachHang);
+        setModalType('view');
+    };
+    const openDelete = (khachHang: KhachHangDTO) => {
+        setSelectedItem(khachHang);
+        setModalType('delete');
+    };
+    const openFilter = () => {
+        setModalType('filter');
+    };
+    const closeModal = () => {
+        setModalType(null);
+        setSelectedItem(null);
+    };
+    // --- CRUD Handlers ---
+    const handleCreate = async (newData: KhachHangDTO) => {
+        // MOCK
+        console.log("Saving new KhachHang:", newData);
+        setKhachHangData((prev) => [newData, ...prev]); // Add to top of list
+
+        // Real App (API Call)
+        /*
+        try {
+            await fetch('/api/khachHang', {
+                method: 'POST',
+                body: JSON.stringify(newData)
+            });
+            // Then refresh your data
+            router.refresh(); 
+        } catch (error) {
+            console.error(error);
+        }
+        */
+    };
+    const handleUpdate = async (updatedData: KhachHangDTO) => {
+        // MOCK
+        console.log("Updating kho:", updatedData);
+        setKhachHangData((prev) =>
+            prev.map((k) => (k.MaKH === updatedData.MaKH ? updatedData : k))
+        );
+        // Real App (API Call)    
+    };
+    const handleDelete = async (id: string) => {
+        // API Call here...
+        setKhachHangData(prev => prev.filter(k => k.MaKH !== id));
+    };
     const userRole: "manager" | "staff" = "manager";
-    function handleAdd(newKhachHang: KhachHangDTO) {
-        setKhachHangData((prev) => [newKhachHang, ...prev]);
-    }
     return (
         <>
             {/* Search Bar */}
@@ -159,72 +206,89 @@ export default function KhachHangPage() {
             </div>
 
             {/* Content Card */}
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-                <div className="mb-3 flex items-center justify-between">
-                    <div className="text-2xl text-black">Danh sách khách hàng</div>
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-125">
+                {/* Card Header */}
+                <div className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                            Danh sách khách hàng
+                            <Filter
+                                onClick={() => openFilter()}
+                                className="cursor-pointer hover:text-green-600 transition-colors ml-1"
+                                size={20}
+                                strokeWidth={1.5}
+                            />
+                        </h2>
+                    </div>
 
                     <button
-                        onClick={() => setOpenAddModal(true)}
+                        onClick={() => openAdd()}
                         className="justify-center w-30 inline-flex items-center gap-2 px-4 py-2 rounded-lg
-                            bg-[#43a047] hover:bg-green-700 text-white font-medium transition-colors shadow-green-100 shadow-lg leading-none "
+                            bg-[#43a047] hover:bg-green-700 text-white font-medium transition-colors shadow-green-100 shadow-lg leading-none cursor-pointer"
                     >
                         <Plus size={16} className="font-white" /><span>Thêm</span>
                     </button>
                 </div>
-                <table className="w-full text-sm">
-                    <thead>
-                        <tr className="text-left text-xs text-slate-700 uppercase tracking-wider border-b border-slate-100 bg-[#E3EDF9] border-separate">
-                            <th className="py-3 pl-3 rounded-l-xl">Mã KH</th>
-                            <th className="py-3">Họ tên</th>
-                            <th className="py-3">Loại KH</th>
-                            <th className="py-3">Số điện thoại</th>
-                            <th className="py-3 text-right">Tổng mua (VNĐ)</th>
-                            <th className="py-3 text-right">Công nợ (VNĐ)</th>
-                            <th className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody className="text-sm">
-                        {filteredData.map((c) => (
-                            <tr
-                                key={c.MaKH}
-                                className="hover:bg-slate-100 transition-colors last:border-0 odd:bg-white even:bg-[#E3EDF9]"
-                            >
-                                <td className="py-3 pl-3 font-medium text-slate-700 rounded-l-xl">
-                                    {c.MaKHCode}
-                                </td>
-                                <td className="py-3 font-medium text-slate-700">
-                                    {c.TenKH}
-                                </td>
-                                <td className="py-3 text-slate-600">{c.LoaiKhachHang ? loaiKhachHangMap[c.LoaiKhachHang] : "-"}</td>
-                                <td className="py-3 text-slate-600">{c.SoDienThoai ?? "-"}</td>
-                                <td className="py-3 text-right font-medium text-slate-800">
-                                    {c.TongMua.toLocaleString("vi-VN")}
-                                </td>
-                                <td className="py-3 text-right font-medium text-red-600">
-                                    {c.CongNoHienTai.toLocaleString("vi-VN")}
-                                </td>
-                                <td className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">
-                                    <div className="inline-flex items-center gap-2">
-                                        <button className="p-2 rounded-md text-blue-600 hover:bg-blue-50">
-                                            <Eye size={18} />
-                                        </button>
-                                        {userRole === "manager" && (
-                                            <button className="p-2 rounded-md text-red-600 hover:bg-red-50">
-                                                <Trash2 size={18} />
-                                            </button>
-                                        )}
-                                    </div>
-                                </td>
+                <div className="overflow-x-auto px-6 pb-6">
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="text-left text-xs text-slate-700 uppercase tracking-wider border-b border-slate-100 bg-[#E3EDF9] border-separate">
+                                <th className="py-3 pl-3 rounded-l-xl">Mã KH</th>
+                                <th className="py-3">Họ tên</th>
+                                <th className="py-3">Loại KH</th>
+                                <th className="py-3">Số điện thoại</th>
+                                <th className="py-3 text-right">Tổng mua (VNĐ)</th>
+                                <th className="py-3 text-right">Công nợ (VNĐ)</th>
+                                <th className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">Hành động</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="text-sm">
+                            {filteredData.map((c) => (
+                                <tr
+                                    key={c.MaKH}
+                                    className="hover:bg-slate-100 transition-colors last:border-0 odd:bg-white even:bg-[#E3EDF9]"
+                                >
+                                    <td className="py-3 pl-3 font-medium text-slate-700 rounded-l-xl">
+                                        {c.MaKHCode}
+                                    </td>
+                                    <td className="py-3 font-medium text-slate-700">
+                                        {c.TenKH}
+                                    </td>
+                                    <td className="py-3 text-slate-600">{c.LoaiKhachHang ? loaiKhachHangMap[c.LoaiKhachHang] : "-"}</td>
+                                    <td className="py-3 text-slate-600">{c.SoDienThoai ?? "-"}</td>
+                                    <td className="py-3 text-right font-medium text-slate-800">
+                                        {c.TongMua.toLocaleString("vi-VN")}
+                                    </td>
+                                    <td className="py-3 text-right font-medium text-red-600">
+                                        {c.CongNoHienTai.toLocaleString("vi-VN")}
+                                    </td>
+                                    <td className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">
+                                        <div className="inline-flex items-center gap-2">
+                                            <button
+                                                onClick={() => openView(c)}
+                                                className="p-2 rounded-md text-blue-600 hover:bg-blue-100 cursor-pointer">
+                                                <Eye size={18} />
+                                            </button>
+                                            {userRole === "manager" && (
+                                                <button
+                                                    onClick={() => openDelete(c)}
+                                                    className="p-2 rounded-md text-red-600 hover:bg-red-50 cursor-pointer">
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div >
             {/* Add Modal */}
-            {openAddModal && (
+            {modalType === 'add' && (
                 <AddKhachHangModal
-                    onClose={() => setOpenAddModal(false)}
-                    onAdd={handleAdd}
+                    onClose={() => closeModal()}
+                    onAdd={handleCreate}
                 />
             )}
         </>

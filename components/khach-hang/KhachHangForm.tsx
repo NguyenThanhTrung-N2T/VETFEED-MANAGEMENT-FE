@@ -8,6 +8,7 @@ type Props = {
     submitText?: string;
     onSubmit: (data: Partial<KhachHang>) => void;
     onCancel: () => void;
+    isLoading?: boolean
 };
 
 const loaiKhachHangOptions: { value: LoaiKhachHang; label: string }[] = [
@@ -26,6 +27,7 @@ export default function KhachHangForm({
     submitText = "Lưu",
     onSubmit,
     onCancel,
+    isLoading = false
 }: Props) {
     const [tenKH, setTenKH] = useState(initial?.TenKH ?? "");
     const [soDienThoai, setSoDienThoai] = useState(initial?.SoDienThoai ?? "");
@@ -94,6 +96,7 @@ export default function KhachHangForm({
                     type="text"
                     value={tenKH}
                     onChange={(e) => setTenKH(e.target.value)}
+                    disabled={isLoading}
                     placeholder="Nhập tên khách hàng"
                     className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.tenKH ? "border-red-500" : "border-slate-300"
                         }`}
@@ -112,6 +115,7 @@ export default function KhachHangForm({
                     <input
                         type="tel"
                         value={soDienThoai}
+                        disabled={isLoading}
                         onChange={(e) => setSoDienThoai(e.target.value)}
                         placeholder="0123456789"
                         className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.soDienThoai ? "border-red-500" : "border-slate-300"
@@ -128,6 +132,7 @@ export default function KhachHangForm({
                     </label>
                     <select
                         value={loaiKhachHang}
+                        disabled={isLoading}
                         onChange={(e) => setLoaiKhachHang(e.target.value as LoaiKhachHang | "")}
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
@@ -149,6 +154,7 @@ export default function KhachHangForm({
                 <input
                     type="text"
                     value={diaChi}
+                    disabled={isLoading}
                     onChange={(e) => setDiaChi(e.target.value)}
                     placeholder="Nhập địa chỉ"
                     className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -164,6 +170,7 @@ export default function KhachHangForm({
                     <input
                         type="text"
                         value={hanMucCongNo}
+                        disabled={isLoading}
                         onChange={(e) => setHanMucCongNo(e.target.value)}
                         placeholder="0"
                         className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.hanMucCongNo ? "border-red-500" : "border-slate-300"
@@ -181,6 +188,7 @@ export default function KhachHangForm({
                     </label>
                     <select
                         value={trangThai}
+                        disabled={isLoading}
                         onChange={(e) => setTrangThai(e.target.value as TrangThaiKH | "")}
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
@@ -200,8 +208,9 @@ export default function KhachHangForm({
                 </label>
                 <textarea
                     value={ghiChu}
+                    disabled={isLoading}
                     onChange={(e) => setGhiChu(e.target.value)}
-                    rows={3}
+                    rows={1}
                     placeholder="Nhập ghi chú (tùy chọn)"
                     className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -210,12 +219,14 @@ export default function KhachHangForm({
             {/* Action buttons */}
             <div className="flex items-center gap-4 pt-4">
                 <button
+                    disabled={isLoading}
                     type="submit"
                     className="flex-1 h-11 rounded-lg bg-[#3f861e] text-white font-semibold hover:bg-[#529E29] transition-colors"
                 >
                     {submitText}
                 </button>
                 <button
+                    disabled={isLoading}
                     type="button"
                     onClick={onCancel}
                     className="flex-1 h-11 rounded-lg border-2 border-red-500 text-red-500 font-semibold hover:bg-red-50 transition-colors"
