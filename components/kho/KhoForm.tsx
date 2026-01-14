@@ -2,6 +2,7 @@
 
 import React from "react";
 import { CreateKhoHangRequest, TrangThaiKhoEnum } from "@/client/types.gen";
+import { ChevronDown } from "lucide-react";
 type FormDataType = CreateKhoHangRequest;
 
 type Props = {
@@ -24,12 +25,10 @@ export default function KhoForm({
         e.preventDefault();
         const form = new FormData(e.currentTarget);
 
-        // ✅ 3. Handle Enum Conversion
         // HTML Select returns strings ("0", "1"), but API expects Numbers (0, 1)
         const rawStatus = form.get("trangThai");
         const statusEnum = Number(rawStatus) as TrangThaiKhoEnum;
 
-        // ✅ 4. Construct object using camelCase (matching API)
         const data: FormDataType = {
             tenKho: form.get("tenKho") as string,
             diaChi: form.get("diaChi") as string,
@@ -82,13 +81,17 @@ export default function KhoForm({
                 <div className="relative">
                     <select
                         name="trangThai"
-                        defaultValue={defaultValues?.trangThai ?? 1}
+                        defaultValue={defaultValues?.trangThai ?? 0}
                         disabled={isLoading}
                         className="h-10 w-full appearance-none rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         <option value="0">Hoạt động</option>
                         <option value="1">Ngưng hoạt động</option>
                     </select>
+                    <ChevronDown
+                        size={16}
+                        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                    />
                 </div>
             </div>
 
