@@ -1,48 +1,66 @@
 "use client";
 
-import { useState } from "react";
-import { SanPhamWithPriceDTO, UnitConversionDTO } from "@/types/SanPhamWithPrice";
+import { useState, useEffect } from "react";
+import { SanPhamCreateRequest, SanPhamResponse, DonViQuyDoiItem } from "@/client/types.gen";
 import { Plus, Trash2, ArrowRight } from "lucide-react";
 
+// This matches what the User sees on screen, not exactly the API request
+export type SanPhamFormData = {
+    tenSP: string;
+    loaiSanPham: string;
+    donViTinh: string; // Base unit
+    ghiChu?: string | null;
+    price?: number | null; // Generic price (maps to giaBanDau OR giaMoi)
+    donViQuyDoi: DonViQuyDoiItem[];
+};
+
 type Props = {
-    defaultValues?: SanPhamWithPriceDTO;
-    onSubmit: (data: SanPhamWithPriceDTO) => void;
+    // We accept a partial Response (for editing) or Partial CreateRequest
+    defaultValues?: Partial<SanPhamResponse> | null;
+    onSubmit: (data: SanPhamFormData) => void;
     onCancel: () => void;
     submitText: string;
     isLoading?: boolean;
 };
 
-export default function SanPhamForm({
-    defaultValues,
-    onSubmit,
-    onCancel,
-    submitText,
-    isLoading = false,
-}: Props) {
-    // State to manage the list of conversion units
-    const [units, setUnits] = useState<UnitConversionDTO[]>(defaultValues?.DonViQuyDoi || []);
+export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitText, isLoading = false }: Props) {
+    // --- STATE MANAGEMENT ---
+
+    // Map default units. We assume the backend returns an array matching the Item shape.
+    // We explicitly cast to LocalDonViQuyDoiItem[] if types.gen doesn't fully match the inferred shape.
+    const [units, setUnits] = useState<DonViQuyDoiItem[]>(
+        (defaultValues?.donViQuyDoi as DonViQuyDoiItem[]) || []
+    );
+
+    // Form states
+    const [baseUnit, setBaseUnit] = useState(defaultValues?.donViCoSo || "");
+    const [price, setPrice] = useState<number | undefined>(
+        defaultValues?.donGia ?? undefined
+    );
 
     // Temporary state for the "Add Unit" inputs
     const [newUnitName, setNewUnitName] = useState("");
     const [newUnitRatio, setNewUnitRatio] = useState<number | "">("");
-    const [baseUnit, setBaseUnit] = useState(defaultValues?.DonViCoSo || "");
 
-    // Add a unit to the list
+    // --- HANDLERS ---
+
     const handleAddUnit = () => {
         if (!newUnitName || !newUnitRatio || Number(newUnitRatio) <= 1) return;
 
-        // Prevent duplicate names
-        if (units.some(u => u.DonViNhap.toLowerCase() === newUnitName.toLowerCase())) {
-            alert("Đơn vị này đã tồn tại!");
+        // Prevent duplicate names (check against list AND base unit)
+        const isDuplicateInList = units.some(u => u.donViNhap && u.donViNhap.toLowerCase() === newUnitName.toLowerCase());
+        const isDuplicateBase = baseUnit.toLowerCase() === newUnitName.toLowerCase();
+
+        if (isDuplicateInList || isDuplicateBase) {
+            alert("Tên đơn vị này đã tồn tại (trùng với danh sách hoặc đơn vị cơ sở)!");
             return;
         }
 
-        setUnits([...units, { DonViNhap: newUnitName, TyLe: Number(newUnitRatio) }]);
+        setUnits([...units, { donViNhap: newUnitName, tyLe: Number(newUnitRatio) }]);
         setNewUnitName("");
         setNewUnitRatio("");
     };
 
-    // Remove a unit from the list
     const handleRemoveUnit = (index: number) => {
         setUnits(units.filter((_, i) => i !== index));
     };
@@ -51,18 +69,17 @@ export default function SanPhamForm({
         e.preventDefault();
         const form = new FormData(e.currentTarget);
 
-        onSubmit({
-            ...defaultValues!,
-            // Using crypto.randomUUID for ID if it's missing (handled in parent usually, but safe here)
-            MaSP: defaultValues?.MaSP,
-            MaSPCode: defaultValues?.MaSPCode || "", // Code handled by backend usually
-            TenSP: form.get("TenSP") as string,
-            LoaiSanPham: form.get("LoaiSanPham") as SanPhamWithPriceDTO["LoaiSanPham"],
-            DonViCoSo: form.get("DonViCoSo") as string,
-            DonGia: Number(form.get("DonGia")),
-            GhiChu: (form.get("GhiChu") as string) || null,
-            DonViQuyDoi: units, // Include the dynamic list
-        });
+        // Construct the neutral data object
+        const formData: SanPhamFormData = {
+            tenSP: form.get("tenSP") as string,
+            loaiSanPham: form.get("loaiSanPham") as string,
+            donViTinh: baseUnit,
+            ghiChu: (form.get("ghiChu") as string) || null,
+            price: price || null, // Pass the state value
+            donViQuyDoi: units as unknown as DonViQuyDoiItem[],
+        };
+
+        onSubmit(formData);
     }
 
     return (
@@ -71,11 +88,13 @@ export default function SanPhamForm({
 
             {/* Tên sản phẩm */}
             <div className="flex flex-col gap-1 col-span-2">
-                <label className="text-sm font-medium text-slate-700">Tên sản phẩm <span className="text-red-500">*</span></label>
+                <label className="text-sm font-medium text-slate-700">
+                    Tên sản phẩm <span className="text-red-500">*</span>
+                </label>
                 <input
-                    name="TenSP"
+                    name="tenSP"
                     placeholder="VD: Amoxicillin 15%"
-                    defaultValue={defaultValues?.TenSP}
+                    defaultValue={defaultValues?.tenSP || ""}
                     required
                     disabled={isLoading}
                     className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
@@ -86,23 +105,24 @@ export default function SanPhamForm({
             <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-slate-700">Loại sản phẩm</label>
                 <select
-                    name="LoaiSanPham"
-                    defaultValue={defaultValues?.LoaiSanPham ?? "THUOC_THU_Y"}
+                    name="loaiSanPham"
+                    defaultValue={defaultValues?.loaiSanPham ?? "THUOC_THU_Y"}
                     disabled={isLoading}
                     className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                 >
                     <option value="THUOC_THU_Y">Thuốc thú y</option>
                     <option value="THUC_AN_CHAN_NUOI">Thức ăn chăn nuôi</option>
+                    <option value="KHAC">Khác</option>
                 </select>
             </div>
 
-            {/* Đơn vị cơ sở (Base Unit) */}
+            {/* Đơn vị tính (formerly DonViCoSo) */}
             <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-slate-700">
                     Đơn vị cơ sở (Nhỏ nhất) <span className="text-red-500">*</span>
                 </label>
                 <input
-                    name="DonViCoSo"
+                    name="donViTinh"
                     placeholder="VD: Viên, Lọ, Kg..."
                     value={baseUnit}
                     onChange={(e) => setBaseUnit(e.target.value)}
@@ -112,17 +132,18 @@ export default function SanPhamForm({
                 />
             </div>
 
-            {/* Đơn giá */}
+            {/* Giá bán */}
             <div className="flex flex-col gap-1.5 col-span-2">
                 <label className="text-sm font-semibold text-slate-700">
                     Giá bán (Theo đơn vị cơ sở)
                 </label>
                 <div className="relative">
                     <input
-                        name="DonGia"
+                        name="priceInput" // Logic handled via state, not direct form data submit for safety
                         type="number"
                         placeholder="0"
-                        defaultValue={defaultValues?.DonGia}
+                        value={price ?? ""}
+                        onChange={(e) => setPrice(e.target.value ? Number(e.target.value) : undefined)}
                         disabled={isLoading}
                         className="h-11 w-full rounded-xl bg-[#E9F1FB] px-4 text-sm outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-slate-400"
                     />
@@ -144,14 +165,17 @@ export default function SanPhamForm({
                         <span>Danh sách đơn vị</span>
                         <span>{units.length} đơn vị</span>
                     </div>
+
                     {/* List of added units */}
                     <div className="max-h-50 overflow-y-auto p-2 space-y-2 bg-slate-50/50">
                         {units.map((unit, index) => (
                             <div key={index} className="flex items-center gap-3 bg-slate-50 p-2 rounded border border-slate-200">
-                                <span className="font-semibold text-blue-700 w-24">{unit.DonViNhap}</span>
+                                <span className="font-semibold text-blue-700 w-24 truncate" title={unit.donViNhap ?? ''}>
+                                    {unit.donViNhap}
+                                </span>
                                 <ArrowRight size={16} className="text-slate-400" />
-                                <span className="text-slate-600">
-                                    1 {unit.DonViNhap} = <span className="font-bold text-slate-800">{unit.TyLe}</span> {baseUnit || "(Đơn vị cơ sở)"}
+                                <span className="text-slate-600 flex-1">
+                                    1 {unit.donViNhap} = <span className="font-bold text-slate-800">{unit.tyLe}</span> {baseUnit || "(Đơn vị cơ sở)"}
                                 </span>
                                 <button
                                     type="button"
@@ -163,7 +187,9 @@ export default function SanPhamForm({
                             </div>
                         ))}
                         {units.length === 0 && (
-                            <p className="text-xs text-slate-400 italic">Chưa có đơn vị quy đổi nào (VD: Hộp, Thùng)</p>
+                            <p className="text-xs text-slate-400 italic">
+                                Chưa có đơn vị quy đổi nào (VD: 1 Hộp = 10 Lọ)
+                            </p>
                         )}
                     </div>
                 </div>
@@ -189,8 +215,8 @@ export default function SanPhamForm({
                             placeholder="SL..."
                         />
                     </div>
-                    <div className="pb-1 text-sm text-slate-500 font-medium">
-                        {baseUnit}
+                    <div className="pb-1 text-sm text-slate-500 font-medium whitespace-nowrap">
+                        {baseUnit ? `(${baseUnit})` : "(Base)"}
                     </div>
                     <button
                         type="button"
@@ -207,10 +233,10 @@ export default function SanPhamForm({
             <div className="flex flex-col col-span-2 gap-1 mt-2">
                 <label className="text-sm font-medium text-slate-700">Ghi chú</label>
                 <textarea
-                    name="GhiChu"
+                    name="ghiChu"
                     rows={2}
                     placeholder="Ghi chú thêm..."
-                    defaultValue={defaultValues?.GhiChu ?? ""}
+                    defaultValue={defaultValues?.ghiChu ?? ""}
                     disabled={isLoading}
                     className="w-full rounded-md bg-[#E9F1FB] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />

@@ -6,6 +6,7 @@ import { Edit, Trash2, Search, ChevronDown, Plus, Eye, Filter } from "lucide-rea
 import { KhachHangDTO, LoaiKhachHang } from "@/types";
 import AddKhachHangModal from "@/components/khach-hang/AddKhachHangModal";
 import AddButton from "@/components/ui/AddButton";
+import ViewKhachHangModal from "@/components/khach-hang/ViewKhachHangModal";
 
 const loaiKhachHangMap: Record<LoaiKhachHang, string> = { CA_NHAN: "Cá nhân", TRANG_TRAI: "Trang trại", DAI_LY: "Đại lý", };
 // TODO: Replace with real API call - fetch from /api/khach-hang
@@ -232,7 +233,7 @@ export default function KhachHangPage() {
                                 <th className="py-3 pl-3 rounded-l-lg">Mã KH</th>
                                 <th className="py-3">Họ tên</th>
                                 <th className="py-3">Loại KH</th>
-                                <th className="py-3">Số điện thoại</th>
+                                <th className="py-3 text-center">Số điện thoại</th>
                                 <th className="py-3 text-right">Tổng mua (VNĐ)</th>
                                 <th className="py-3 text-right">Công nợ (VNĐ)</th>
                                 <th className="py-3 px-4 text-right rounded-r-lg w-px whitespace-nowrap">Hành động</th>
@@ -251,7 +252,7 @@ export default function KhachHangPage() {
                                         {c.TenKH}
                                     </td>
                                     <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 font-medium text-slate-700">{c.LoaiKhachHang ? loaiKhachHangMap[c.LoaiKhachHang] : "-"}</td>
-                                    <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 font-medium text-slate-700">{c.SoDienThoai ?? "-"}</td>
+                                    <td className="py-3 border-y text-center border-slate-100 group-hover:border-slate-200 font-medium text-slate-700">{c.SoDienThoai ?? "-"}</td>
                                     <td className="py-3 text-right font-medium text-slate-800">
                                         {c.TongMua.toLocaleString("vi-VN")}
                                     </td>
@@ -285,6 +286,12 @@ export default function KhachHangPage() {
                 <AddKhachHangModal
                     onClose={() => closeModal()}
                     onAdd={handleCreate}
+                />
+            )}
+            {modalType === 'view' && selectedItem && (
+                <ViewKhachHangModal
+                    khachHang={selectedItem}
+                    onClose={() => closeModal()}
                 />
             )}
         </>

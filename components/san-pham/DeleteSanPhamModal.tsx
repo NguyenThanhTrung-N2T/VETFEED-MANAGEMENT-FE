@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { SanPhamWithPriceDTO } from "@/types"; // Adjust this import path to match your project
+import { SanPhamResponse } from "@/client/types.gen";
 
 interface Props {
-    sanPham: SanPhamWithPriceDTO;
+    sanPham: SanPhamResponse;
     onClose: () => void;
     onDelete: (id: string) => Promise<void> | void;
 }
@@ -16,7 +16,7 @@ export default function DeleteSanPhamModal({ sanPham, onClose, onDelete }: Props
         setIsDeleting(true);
         try {
             // Pass the ID to the parent's delete function
-            await onDelete(sanPham.MaSP);
+            await onDelete(sanPham.maSP!);
             onClose();
         } catch (error) {
             console.error("Lỗi khi xóa sản phẩm:", error);
@@ -34,7 +34,7 @@ export default function DeleteSanPhamModal({ sanPham, onClose, onDelete }: Props
                 {/* Title / Question */}
                 <h3 className="text-xl font-bold text-slate-800 mb-8 font-sans leading-relaxed">
                     Bạn có chắc là muốn xóa sản phẩm <br />
-                    <span className="text-red-600">"{sanPham.TenSP}"</span> không?
+                    <span className="text-red-600">"{sanPham.tenSP}"</span> không?
                 </h3>
 
                 {/* Actions */}

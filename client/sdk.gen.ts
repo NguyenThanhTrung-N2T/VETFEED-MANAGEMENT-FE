@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { DeleteApiGiaBansByMaGiaData, DeleteApiGiaBansByMaGiaResponses, DeleteApiKhachHangsByMaKhData, DeleteApiKhachHangsByMaKhResponses, DeleteApiKhoHangsByMaKhoData, DeleteApiKhoHangsByMaKhoErrors, DeleteApiKhoHangsByMaKhoResponses, DeleteApiLoHangsByIdData, DeleteApiLoHangsByIdErrors, DeleteApiLoHangsByIdResponses, DeleteApiNhaCungCapSanPhamsByIdData, DeleteApiNhaCungCapSanPhamsByIdErrors, DeleteApiNhaCungCapSanPhamsByIdResponses, DeleteApiNhaCungCapsByIdData, DeleteApiNhaCungCapsByIdErrors, DeleteApiNhaCungCapsByIdResponses, DeleteApiPhieuBansByMaPbData, DeleteApiPhieuBansByMaPbErrors, DeleteApiPhieuBansByMaPbResponses, DeleteApiPhieuChuyenKhosByMaCkData, DeleteApiPhieuChuyenKhosByMaCkErrors, DeleteApiPhieuChuyenKhosByMaCkResponses, DeleteApiPhieuNhapsByIdData, DeleteApiPhieuNhapsByIdErrors, DeleteApiPhieuNhapsByIdResponses, DeleteApiPhieuTrasByMaPtData, DeleteApiPhieuTrasByMaPtErrors, DeleteApiPhieuTrasByMaPtResponses, DeleteApiQuyDoiDonVisByMaQdData, DeleteApiQuyDoiDonVisByMaQdResponses, DeleteApiSanPhamsByMaSpData, DeleteApiSanPhamsByMaSpResponses, GetApiGiaBansByMaGiaData, GetApiGiaBansByMaGiaResponses, GetApiGiaBansCurrentData, GetApiGiaBansCurrentResponses, GetApiGiaBansData, GetApiGiaBansResponses, GetApiKhachHangsByCodeByMaKhCodeData, GetApiKhachHangsByCodeByMaKhCodeResponses, GetApiKhachHangsByMaKhData, GetApiKhachHangsByMaKhResponses, GetApiKhachHangsByPhoneData, GetApiKhachHangsByPhoneResponses, GetApiKhachHangsData, GetApiKhachHangsResponses, GetApiKhoHangsData, GetApiKhoHangsResponses, GetApiLoHangsByIdData, GetApiLoHangsByIdErrors, GetApiLoHangsByIdResponses, GetApiLoHangsBysanphamByMaSpData, GetApiLoHangsBysanphamByMaSpResponses, GetApiLoHangsData, GetApiLoHangsResponses, GetApiNhaCungCapSanPhamsByIdData, GetApiNhaCungCapSanPhamsByIdErrors, GetApiNhaCungCapSanPhamsByIdResponses, GetApiNhaCungCapSanPhamsBynhacungcapByMaNccData, GetApiNhaCungCapSanPhamsBynhacungcapByMaNccResponses, GetApiNhaCungCapSanPhamsBysanphamByMaSpData, GetApiNhaCungCapSanPhamsBysanphamByMaSpResponses, GetApiNhaCungCapSanPhamsData, GetApiNhaCungCapSanPhamsResponses, GetApiNhaCungCapsByIdData, GetApiNhaCungCapsByIdErrors, GetApiNhaCungCapsByIdResponses, GetApiNhaCungCapsData, GetApiNhaCungCapsResponses, GetApiPhieuBansByMaPbData, GetApiPhieuBansByMaPbErrors, GetApiPhieuBansByMaPbResponses, GetApiPhieuBansData, GetApiPhieuBansErrors, GetApiPhieuBansKhachhangByMaKhData, GetApiPhieuBansKhachhangByMaKhErrors, GetApiPhieuBansKhachhangByMaKhResponses, GetApiPhieuBansResponses, GetApiPhieuChuyenKhosByMaCkData, GetApiPhieuChuyenKhosByMaCkErrors, GetApiPhieuChuyenKhosByMaCkResponses, GetApiPhieuChuyenKhosData, GetApiPhieuChuyenKhosResponses, GetApiPhieuNhapsByIdData, GetApiPhieuNhapsByIdErrors, GetApiPhieuNhapsByIdResponses, GetApiPhieuNhapsData, GetApiPhieuNhapsResponses, GetApiPhieuTrasByMaPtData, GetApiPhieuTrasByMaPtErrors, GetApiPhieuTrasByMaPtResponses, GetApiPhieuTrasData, GetApiPhieuTrasErrors, GetApiPhieuTrasResponses, GetApiQuyDoiDonVisByProductByMaSpData, GetApiQuyDoiDonVisByProductByMaSpResponses, GetApiQuyDoiDonVisUnitsByMaSpData, GetApiQuyDoiDonVisUnitsByMaSpResponses, GetApiSanPhamsByCodeByMaSpCodeData, GetApiSanPhamsByCodeByMaSpCodeResponses, GetApiSanPhamsByMaSpData, GetApiSanPhamsByMaSpResponses, GetApiSanPhamsData, GetApiSanPhamsResponses, GetApiTonKhosData, GetApiTonKhosResponses, GetKhoHangByIdData, GetKhoHangByIdErrors, GetKhoHangByIdResponses, GetTaiKhoanByIdData, GetTaiKhoanByIdResponses, PostApiGiaBansData, PostApiGiaBansResponses, PostApiKhachHangsData, PostApiKhachHangsResponses, PostApiKhoHangsData, PostApiKhoHangsErrors, PostApiKhoHangsResponses, PostApiKhoHangsSearchData, PostApiKhoHangsSearchResponses, PostApiLoHangsData, PostApiLoHangsErrors, PostApiLoHangsResponses, PostApiNhaCungCapSanPhamsData, PostApiNhaCungCapSanPhamsErrors, PostApiNhaCungCapSanPhamsResponses, PostApiNhaCungCapsData, PostApiNhaCungCapsErrors, PostApiNhaCungCapsResponses, PostApiPhieuBansData, PostApiPhieuBansErrors, PostApiPhieuBansResponses, PostApiPhieuChuyenKhosData, PostApiPhieuChuyenKhosErrors, PostApiPhieuChuyenKhosResponses, PostApiPhieuNhapsData, PostApiPhieuNhapsErrors, PostApiPhieuNhapsResponses, PostApiPhieuTrasData, PostApiPhieuTrasErrors, PostApiPhieuTrasResponses, PostApiQuyDoiDonVisByProductByMaSpData, PostApiQuyDoiDonVisByProductByMaSpResponses, PostApiSanPhamsData, PostApiSanPhamsResponses, PostApiTaiKhoansForgotPasswordData, PostApiTaiKhoansForgotPasswordResponses, PostApiTaiKhoansLoginData, PostApiTaiKhoansLoginResponses, PostApiTaiKhoansLogoutData, PostApiTaiKhoansLogoutResponses, PostApiTaiKhoansResetPasswordData, PostApiTaiKhoansResetPasswordResponses, PostApiTaiKhoansSignupData, PostApiTaiKhoansSignupResponses, PostApiTonKhosCheckallkhoData, PostApiTonKhosCheckallkhoResponses, PostApiTonKhosCheckData, PostApiTonKhosCheckResponses, PutApiGiaBansByMaGiaData, PutApiGiaBansByMaGiaResponses, PutApiKhachHangsByMaKhData, PutApiKhachHangsByMaKhResponses, PutApiKhoHangsByMaKhoData, PutApiKhoHangsByMaKhoErrors, PutApiKhoHangsByMaKhoResponses, PutApiLoHangsByIdData, PutApiLoHangsByIdErrors, PutApiLoHangsByIdResponses, PutApiNhaCungCapSanPhamsByIdData, PutApiNhaCungCapSanPhamsByIdErrors, PutApiNhaCungCapSanPhamsByIdResponses, PutApiNhaCungCapsByIdData, PutApiNhaCungCapsByIdErrors, PutApiNhaCungCapsByIdResponses, PutApiPhieuChuyenKhosByMaCkData, PutApiPhieuChuyenKhosByMaCkErrors, PutApiPhieuChuyenKhosByMaCkResponses, PutApiPhieuChuyenKhosChitietByMaCtckTrangthaiData, PutApiPhieuChuyenKhosChitietByMaCtckTrangthaiErrors, PutApiPhieuChuyenKhosChitietByMaCtckTrangthaiResponses, PutApiPhieuNhapsByIdData, PutApiPhieuNhapsByIdErrors, PutApiPhieuNhapsByIdResponses, PutApiQuyDoiDonVisByMaQdData, PutApiQuyDoiDonVisByMaQdResponses, PutApiSanPhamsByMaSpData, PutApiSanPhamsByMaSpResponses, PutApiTaiKhoansByMaTkData, PutApiTaiKhoansByMaTkResponses, PutApiTonKhosByMaKhoByMaLoData, PutApiTonKhosByMaKhoByMaLoResponses } from './types.gen';
+import type { DeleteApiGiaBansByMaGiaData, DeleteApiGiaBansByMaGiaResponses, DeleteApiKhachHangsByMaKhData, DeleteApiKhachHangsByMaKhResponses, DeleteApiKhoHangsByMaKhoData, DeleteApiKhoHangsByMaKhoErrors, DeleteApiKhoHangsByMaKhoResponses, DeleteApiLoHangsByIdData, DeleteApiLoHangsByIdErrors, DeleteApiLoHangsByIdResponses, DeleteApiNhaCungCapSanPhamsByIdData, DeleteApiNhaCungCapSanPhamsByIdErrors, DeleteApiNhaCungCapSanPhamsByIdResponses, DeleteApiNhaCungCapsByIdData, DeleteApiNhaCungCapsByIdErrors, DeleteApiNhaCungCapsByIdResponses, DeleteApiPhieuBansByMaPbData, DeleteApiPhieuBansByMaPbErrors, DeleteApiPhieuBansByMaPbResponses, DeleteApiPhieuChuyenKhosByMaCkData, DeleteApiPhieuChuyenKhosByMaCkErrors, DeleteApiPhieuChuyenKhosByMaCkResponses, DeleteApiPhieuNhapsByIdData, DeleteApiPhieuNhapsByIdErrors, DeleteApiPhieuNhapsByIdResponses, DeleteApiPhieuTrasByMaPtData, DeleteApiPhieuTrasByMaPtErrors, DeleteApiPhieuTrasByMaPtResponses, DeleteApiSanPhamsByMaSpData, DeleteApiSanPhamsByMaSpResponses, GetApiGiaBansByMaGiaData, GetApiGiaBansByMaGiaResponses, GetApiGiaBansCurrentData, GetApiGiaBansCurrentResponses, GetApiGiaBansData, GetApiGiaBansResponses, GetApiKhachHangsByCodeByMaKhCodeData, GetApiKhachHangsByCodeByMaKhCodeResponses, GetApiKhachHangsByMaKhData, GetApiKhachHangsByMaKhResponses, GetApiKhachHangsByPhoneData, GetApiKhachHangsByPhoneResponses, GetApiKhachHangsData, GetApiKhachHangsResponses, GetApiKhoHangsData, GetApiKhoHangsResponses, GetApiLoHangsByIdData, GetApiLoHangsByIdErrors, GetApiLoHangsByIdResponses, GetApiLoHangsBysanphamByMaSpData, GetApiLoHangsBysanphamByMaSpResponses, GetApiLoHangsData, GetApiLoHangsResponses, GetApiNhaCungCapSanPhamsByIdData, GetApiNhaCungCapSanPhamsByIdErrors, GetApiNhaCungCapSanPhamsByIdResponses, GetApiNhaCungCapSanPhamsBynhacungcapByMaNccData, GetApiNhaCungCapSanPhamsBynhacungcapByMaNccResponses, GetApiNhaCungCapSanPhamsBysanphamByMaSpData, GetApiNhaCungCapSanPhamsBysanphamByMaSpResponses, GetApiNhaCungCapSanPhamsData, GetApiNhaCungCapSanPhamsResponses, GetApiNhaCungCapsByIdData, GetApiNhaCungCapsByIdErrors, GetApiNhaCungCapsByIdResponses, GetApiNhaCungCapsData, GetApiNhaCungCapsResponses, GetApiPhieuBansByMaPbData, GetApiPhieuBansByMaPbErrors, GetApiPhieuBansByMaPbResponses, GetApiPhieuBansData, GetApiPhieuBansErrors, GetApiPhieuBansKhachhangByMaKhData, GetApiPhieuBansKhachhangByMaKhErrors, GetApiPhieuBansKhachhangByMaKhResponses, GetApiPhieuBansResponses, GetApiPhieuChuyenKhosByMaCkData, GetApiPhieuChuyenKhosByMaCkErrors, GetApiPhieuChuyenKhosByMaCkResponses, GetApiPhieuChuyenKhosData, GetApiPhieuChuyenKhosResponses, GetApiPhieuNhapsByIdData, GetApiPhieuNhapsByIdErrors, GetApiPhieuNhapsByIdResponses, GetApiPhieuNhapsData, GetApiPhieuNhapsResponses, GetApiPhieuTrasByMaPtData, GetApiPhieuTrasByMaPtErrors, GetApiPhieuTrasByMaPtResponses, GetApiPhieuTrasData, GetApiPhieuTrasErrors, GetApiPhieuTrasResponses, GetApiSanPhamsByCodeByMaSpCodeData, GetApiSanPhamsByCodeByMaSpCodeResponses, GetApiSanPhamsByMaSpData, GetApiSanPhamsByMaSpResponses, GetApiSanPhamsData, GetApiSanPhamsResponses, GetApiTonKhosData, GetApiTonKhosResponses, GetKhoHangByIdData, GetKhoHangByIdErrors, GetKhoHangByIdResponses, GetTaiKhoanByIdData, GetTaiKhoanByIdResponses, PostApiGiaBansData, PostApiGiaBansResponses, PostApiKhachHangsData, PostApiKhachHangsResponses, PostApiKhoHangsData, PostApiKhoHangsErrors, PostApiKhoHangsResponses, PostApiKhoHangsSearchData, PostApiKhoHangsSearchResponses, PostApiLoHangsData, PostApiLoHangsErrors, PostApiLoHangsResponses, PostApiNhaCungCapSanPhamsData, PostApiNhaCungCapSanPhamsErrors, PostApiNhaCungCapSanPhamsResponses, PostApiNhaCungCapsData, PostApiNhaCungCapsErrors, PostApiNhaCungCapsResponses, PostApiPhieuBansData, PostApiPhieuBansErrors, PostApiPhieuBansResponses, PostApiPhieuChuyenKhosData, PostApiPhieuChuyenKhosErrors, PostApiPhieuChuyenKhosResponses, PostApiPhieuNhapsData, PostApiPhieuNhapsErrors, PostApiPhieuNhapsResponses, PostApiPhieuTrasData, PostApiPhieuTrasErrors, PostApiPhieuTrasResponses, PostApiSanPhamsData, PostApiSanPhamsResponses, PostApiTaiKhoansForgotPasswordData, PostApiTaiKhoansForgotPasswordResponses, PostApiTaiKhoansLoginData, PostApiTaiKhoansLoginResponses, PostApiTaiKhoansLogoutData, PostApiTaiKhoansLogoutResponses, PostApiTaiKhoansResetPasswordData, PostApiTaiKhoansResetPasswordResponses, PostApiTaiKhoansSignupData, PostApiTaiKhoansSignupResponses, PostApiTonKhosCheckallkhoData, PostApiTonKhosCheckallkhoResponses, PostApiTonKhosCheckData, PostApiTonKhosCheckResponses, PutApiGiaBansByMaGiaData, PutApiGiaBansByMaGiaResponses, PutApiKhachHangsByMaKhData, PutApiKhachHangsByMaKhResponses, PutApiKhoHangsByMaKhoData, PutApiKhoHangsByMaKhoErrors, PutApiKhoHangsByMaKhoResponses, PutApiLoHangsByIdData, PutApiLoHangsByIdErrors, PutApiLoHangsByIdResponses, PutApiNhaCungCapSanPhamsByIdData, PutApiNhaCungCapSanPhamsByIdErrors, PutApiNhaCungCapSanPhamsByIdResponses, PutApiNhaCungCapsByIdData, PutApiNhaCungCapsByIdErrors, PutApiNhaCungCapsByIdResponses, PutApiPhieuChuyenKhosByMaCkData, PutApiPhieuChuyenKhosByMaCkErrors, PutApiPhieuChuyenKhosByMaCkResponses, PutApiPhieuChuyenKhosChitietByMaCtckTrangthaiData, PutApiPhieuChuyenKhosChitietByMaCtckTrangthaiErrors, PutApiPhieuChuyenKhosChitietByMaCtckTrangthaiResponses, PutApiPhieuNhapsByIdData, PutApiPhieuNhapsByIdErrors, PutApiPhieuNhapsByIdResponses, PutApiSanPhamsByMaSpData, PutApiSanPhamsByMaSpResponses, PutApiTaiKhoansByMaTkData, PutApiTaiKhoansByMaTkResponses, PutApiTonKhosByMaKhoByMaLoData, PutApiTonKhosByMaKhoByMaLoResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -476,51 +476,15 @@ export const getApiPhieuTrasByMaPt = <ThrowOnError extends boolean = false>(opti
     ...options
 });
 
-export const getApiQuyDoiDonVisByProductByMaSp = <ThrowOnError extends boolean = false>(options: Options<GetApiQuyDoiDonVisByProductByMaSpData, ThrowOnError>) => (options.client ?? client).get<GetApiQuyDoiDonVisByProductByMaSpResponses, unknown, ThrowOnError>({
-    security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/api/QuyDoiDonVis/by-product/{maSP}',
-    ...options
-});
-
-export const postApiQuyDoiDonVisByProductByMaSp = <ThrowOnError extends boolean = false>(options: Options<PostApiQuyDoiDonVisByProductByMaSpData, ThrowOnError>) => (options.client ?? client).post<PostApiQuyDoiDonVisByProductByMaSpResponses, unknown, ThrowOnError>({
-    security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/api/QuyDoiDonVis/by-product/{maSP}',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-export const deleteApiQuyDoiDonVisByMaQd = <ThrowOnError extends boolean = false>(options: Options<DeleteApiQuyDoiDonVisByMaQdData, ThrowOnError>) => (options.client ?? client).delete<DeleteApiQuyDoiDonVisByMaQdResponses, unknown, ThrowOnError>({
-    security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/api/QuyDoiDonVis/{maQD}',
-    ...options
-});
-
-export const putApiQuyDoiDonVisByMaQd = <ThrowOnError extends boolean = false>(options: Options<PutApiQuyDoiDonVisByMaQdData, ThrowOnError>) => (options.client ?? client).put<PutApiQuyDoiDonVisByMaQdResponses, unknown, ThrowOnError>({
-    security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/api/QuyDoiDonVis/{maQD}',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-export const getApiQuyDoiDonVisUnitsByMaSp = <ThrowOnError extends boolean = false>(options: Options<GetApiQuyDoiDonVisUnitsByMaSpData, ThrowOnError>) => (options.client ?? client).get<GetApiQuyDoiDonVisUnitsByMaSpResponses, unknown, ThrowOnError>({
-    security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/api/QuyDoiDonVis/units/{maSP}',
-    ...options
-});
-
 export const getApiSanPhams = <ThrowOnError extends boolean = false>(options?: Options<GetApiSanPhamsData, ThrowOnError>) => (options?.client ?? client).get<GetApiSanPhamsResponses, unknown, ThrowOnError>({
+    responseType: 'json',
     security: [{ name: 'Authorization', type: 'apiKey' }],
     url: '/api/SanPhams',
     ...options
 });
 
 export const postApiSanPhams = <ThrowOnError extends boolean = false>(options?: Options<PostApiSanPhamsData, ThrowOnError>) => (options?.client ?? client).post<PostApiSanPhamsResponses, unknown, ThrowOnError>({
+    responseType: 'json',
     security: [{ name: 'Authorization', type: 'apiKey' }],
     url: '/api/SanPhams',
     ...options,
@@ -531,24 +495,28 @@ export const postApiSanPhams = <ThrowOnError extends boolean = false>(options?: 
 });
 
 export const getApiSanPhamsByCodeByMaSpCode = <ThrowOnError extends boolean = false>(options: Options<GetApiSanPhamsByCodeByMaSpCodeData, ThrowOnError>) => (options.client ?? client).get<GetApiSanPhamsByCodeByMaSpCodeResponses, unknown, ThrowOnError>({
+    responseType: 'json',
     security: [{ name: 'Authorization', type: 'apiKey' }],
     url: '/api/SanPhams/by-code/{maSPCode}',
     ...options
 });
 
 export const deleteApiSanPhamsByMaSp = <ThrowOnError extends boolean = false>(options: Options<DeleteApiSanPhamsByMaSpData, ThrowOnError>) => (options.client ?? client).delete<DeleteApiSanPhamsByMaSpResponses, unknown, ThrowOnError>({
+    responseType: 'json',
     security: [{ name: 'Authorization', type: 'apiKey' }],
     url: '/api/SanPhams/{maSP}',
     ...options
 });
 
 export const getApiSanPhamsByMaSp = <ThrowOnError extends boolean = false>(options: Options<GetApiSanPhamsByMaSpData, ThrowOnError>) => (options.client ?? client).get<GetApiSanPhamsByMaSpResponses, unknown, ThrowOnError>({
+    responseType: 'json',
     security: [{ name: 'Authorization', type: 'apiKey' }],
     url: '/api/SanPhams/{maSP}',
     ...options
 });
 
 export const putApiSanPhamsByMaSp = <ThrowOnError extends boolean = false>(options: Options<PutApiSanPhamsByMaSpData, ThrowOnError>) => (options.client ?? client).put<PutApiSanPhamsByMaSpResponses, unknown, ThrowOnError>({
+    responseType: 'json',
     security: [{ name: 'Authorization', type: 'apiKey' }],
     url: '/api/SanPhams/{maSP}',
     ...options,

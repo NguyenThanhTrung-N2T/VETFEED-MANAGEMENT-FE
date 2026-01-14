@@ -165,6 +165,11 @@ export type CreateTaiKhoanRequest = {
     password: string;
 };
 
+export type DonViQuyDoiItem = {
+    donViNhap?: string | null;
+    tyLe?: number;
+};
+
 export type ForgotPasswordRequest = {
     email: string;
 };
@@ -194,7 +199,7 @@ export type KhachHangCreateRequest = {
     diaChi?: string | null;
     loaiKhachHang: string;
     hanMucCongNo?: number | null;
-    trangThai: string;
+    trangThai: TrangThaiKhachHangEnum;
     ghiChu?: string | null;
 };
 
@@ -217,7 +222,7 @@ export type KhachHangUpdateRequest = {
     diaChi?: string | null;
     loaiKhachHang: string;
     hanMucCongNo?: number | null;
-    trangThai: string;
+    trangThai: TrangThaiKhachHangEnum;
     ghiChu?: string | null;
 };
 
@@ -446,22 +451,32 @@ export type ProblemDetails = {
     [key: string]: unknown | string | null | string | null | number | null | string | null | string | null | undefined;
 };
 
-export type QuyDoiDonViCreateRequest = {
-    donViNhap: string;
-    tyLe?: number;
-};
-
-export type QuyDoiDonViUpdateRequest = {
-    donViNhap: string;
-    tyLe?: number;
-};
-
 export type SanPhamCreateRequest = {
     tenSP: string;
     loaiSanPham: string;
     donViTinh?: string | null;
     ghiChu?: string | null;
     giaBanDau?: number | null;
+    donViQuyDoi?: Array<DonViQuyDoiItem> | null;
+};
+
+export type SanPhamResponse = {
+    maSP?: string;
+    maSPCode?: string | null;
+    tenSP?: string | null;
+    loaiSanPham?: string | null;
+    donViCoSo?: string | null;
+    ghiChu?: string | null;
+    ngayTao?: string;
+    donGia?: number | null;
+    donViQuyDoi?: Array<DonViQuyDoiItem> | null;
+};
+
+export type SanPhamResponsePagedResult = {
+    items?: Array<SanPhamResponse> | null;
+    total?: number;
+    page?: number | null;
+    pageSize?: number | null;
 };
 
 export type SanPhamUpdateRequest = {
@@ -470,12 +485,15 @@ export type SanPhamUpdateRequest = {
     donViTinh?: string | null;
     ghiChu?: string | null;
     giaMoi?: number | null;
+    donViQuyDoi?: Array<DonViQuyDoiItem> | null;
 };
 
 export type SearchKhoHangRequest = {
     thuocTinh?: string | null;
     keyWord?: string | null;
 };
+
+export type TrangThaiKhachHangEnum = 0 | 1;
 
 export type TrangThaiKhoEnum = 0 | 1;
 
@@ -1852,86 +1870,6 @@ export type GetApiPhieuTrasByMaPtResponses = {
 
 export type GetApiPhieuTrasByMaPtResponse = GetApiPhieuTrasByMaPtResponses[keyof GetApiPhieuTrasByMaPtResponses];
 
-export type GetApiQuyDoiDonVisByProductByMaSpData = {
-    body?: never;
-    path: {
-        maSP: string;
-    };
-    query?: never;
-    url: '/api/QuyDoiDonVis/by-product/{maSP}';
-};
-
-export type GetApiQuyDoiDonVisByProductByMaSpResponses = {
-    /**
-     * OK
-     */
-    200: unknown;
-};
-
-export type PostApiQuyDoiDonVisByProductByMaSpData = {
-    body?: QuyDoiDonViCreateRequest;
-    path: {
-        maSP: string;
-    };
-    query?: never;
-    url: '/api/QuyDoiDonVis/by-product/{maSP}';
-};
-
-export type PostApiQuyDoiDonVisByProductByMaSpResponses = {
-    /**
-     * OK
-     */
-    200: unknown;
-};
-
-export type DeleteApiQuyDoiDonVisByMaQdData = {
-    body?: never;
-    path: {
-        maQD: string;
-    };
-    query?: never;
-    url: '/api/QuyDoiDonVis/{maQD}';
-};
-
-export type DeleteApiQuyDoiDonVisByMaQdResponses = {
-    /**
-     * OK
-     */
-    200: unknown;
-};
-
-export type PutApiQuyDoiDonVisByMaQdData = {
-    body?: QuyDoiDonViUpdateRequest;
-    path: {
-        maQD: string;
-    };
-    query?: never;
-    url: '/api/QuyDoiDonVis/{maQD}';
-};
-
-export type PutApiQuyDoiDonVisByMaQdResponses = {
-    /**
-     * OK
-     */
-    200: unknown;
-};
-
-export type GetApiQuyDoiDonVisUnitsByMaSpData = {
-    body?: never;
-    path: {
-        maSP: string;
-    };
-    query?: never;
-    url: '/api/QuyDoiDonVis/units/{maSP}';
-};
-
-export type GetApiQuyDoiDonVisUnitsByMaSpResponses = {
-    /**
-     * OK
-     */
-    200: unknown;
-};
-
 export type GetApiSanPhamsData = {
     body?: never;
     path?: never;
@@ -1948,8 +1886,10 @@ export type GetApiSanPhamsResponses = {
     /**
      * OK
      */
-    200: unknown;
+    200: SanPhamResponsePagedResult;
 };
+
+export type GetApiSanPhamsResponse = GetApiSanPhamsResponses[keyof GetApiSanPhamsResponses];
 
 export type PostApiSanPhamsData = {
     body?: SanPhamCreateRequest;
@@ -1962,8 +1902,10 @@ export type PostApiSanPhamsResponses = {
     /**
      * OK
      */
-    200: unknown;
+    200: SanPhamResponse;
 };
+
+export type PostApiSanPhamsResponse = PostApiSanPhamsResponses[keyof PostApiSanPhamsResponses];
 
 export type GetApiSanPhamsByCodeByMaSpCodeData = {
     body?: never;
@@ -1978,8 +1920,10 @@ export type GetApiSanPhamsByCodeByMaSpCodeResponses = {
     /**
      * OK
      */
-    200: unknown;
+    200: SanPhamResponse;
 };
+
+export type GetApiSanPhamsByCodeByMaSpCodeResponse = GetApiSanPhamsByCodeByMaSpCodeResponses[keyof GetApiSanPhamsByCodeByMaSpCodeResponses];
 
 export type DeleteApiSanPhamsByMaSpData = {
     body?: never;
@@ -1994,8 +1938,10 @@ export type DeleteApiSanPhamsByMaSpResponses = {
     /**
      * OK
      */
-    200: unknown;
+    200: string;
 };
+
+export type DeleteApiSanPhamsByMaSpResponse = DeleteApiSanPhamsByMaSpResponses[keyof DeleteApiSanPhamsByMaSpResponses];
 
 export type GetApiSanPhamsByMaSpData = {
     body?: never;
@@ -2010,8 +1956,10 @@ export type GetApiSanPhamsByMaSpResponses = {
     /**
      * OK
      */
-    200: unknown;
+    200: SanPhamResponse;
 };
+
+export type GetApiSanPhamsByMaSpResponse = GetApiSanPhamsByMaSpResponses[keyof GetApiSanPhamsByMaSpResponses];
 
 export type PutApiSanPhamsByMaSpData = {
     body?: SanPhamUpdateRequest;
@@ -2026,8 +1974,10 @@ export type PutApiSanPhamsByMaSpResponses = {
     /**
      * OK
      */
-    200: unknown;
+    200: SanPhamResponse;
 };
+
+export type PutApiSanPhamsByMaSpResponse = PutApiSanPhamsByMaSpResponses[keyof PutApiSanPhamsByMaSpResponses];
 
 export type GetTaiKhoanByIdData = {
     body?: never;

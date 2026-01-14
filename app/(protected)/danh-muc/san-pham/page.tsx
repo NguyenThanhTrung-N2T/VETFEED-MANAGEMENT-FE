@@ -1,192 +1,114 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Edit, Trash2, Search, ChevronDown, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import AddSanPhamModal from "@/components/san-pham/AddSanPhamModal";
 import EditSanPhamModal from "@/components/san-pham/EditSanPhamModal";
 import DeleteSanPhamModal from "@/components/san-pham/DeleteSanPhamModal";
-import { SanPhamWithPriceDTO } from "@/types/SanPhamWithPrice";
+import {
+    SanPhamCreateRequest,
+    SanPhamUpdateRequest,
+    SanPhamResponse,
+    SanPhamResponsePagedResult
+} from '@/client/types.gen';
+import { sanPhamService } from "@/services/san-pham.service";
 import AddButton from "@/components/ui/AddButton";
 
-// --- MOCK DATA ---
-// (Kept your data here)
-const MOCK_SanPhamwithPrice: SanPhamWithPriceDTO[] = [
-    {
-        MaSP: "1",
-        MaSPCode: "SP001",
-        TenSP: "Amoxicillin 15%",
-        LoaiSanPham: "THUOC_THU_Y",
-        DonViCoSo: "Lọ",
-        DonViQuyDoi: [
-            { DonViNhap: "Hộp", TyLe: 12 },
-            { DonViNhap: "Thùng nhỏ", TyLe: 120 },
-            { DonViNhap: "Thùng to", TyLe: 500 },
-        ],
-        DonGia: 150000,
-        GhiChu: "Hàng nhập khẩu",
-        NgayTao: new Date().toISOString(),
-    },
-    {
-        MaSP: "2",
-        MaSPCode: "SP002",
-        TenSP: "Vitamin B-Complex",
-        LoaiSanPham: "THUOC_THU_Y",
-        DonViCoSo: "Chai",
-        DonViQuyDoi: [],
-        DonGia: 80000,
-        GhiChu: null,
-        NgayTao: new Date().toISOString(),
-    },
-    {
-        MaSP: "3",
-        MaSPCode: "SP003",
-        TenSP: "Cám gà đẻ trứng",
-        LoaiSanPham: "THUC_AN_CHAN_NUOI",
-        DonViCoSo: "Kg",
-        DonViQuyDoi: [
-            { DonViNhap: "Bao", TyLe: 25 },
-            { DonViNhap: "Pallet", TyLe: 1000 },
-        ],
-        DonGia: 12000,
-        GhiChu: "Bao 25kg",
-        NgayTao: new Date().toISOString(),
-    },
-    {
-        MaSP: "4",
-        MaSPCode: "SP004",
-        TenSP: "Thuốc sát trùng Iodine",
-        LoaiSanPham: "THUOC_THU_Y",
-        DonViCoSo: "Chai",
-        DonViQuyDoi: [
-            { DonViNhap: "Thùng", TyLe: 24 },
-        ],
-        DonGia: 95000,
-        GhiChu: null,
-        NgayTao: new Date().toISOString(),
-    },
-    {
-        MaSP: "5",
-        MaSPCode: "SP005",
-        TenSP: "Men tiêu hóa gia súc",
-        LoaiSanPham: "THUOC_THU_Y",
-        DonViCoSo: "Gói",
-        DonViQuyDoi: [
-            { DonViNhap: "Hộp", TyLe: 50 },
-        ],
-        DonGia: 18000,
-        GhiChu: "Dùng cho heo, bò",
-        NgayTao: new Date().toISOString(),
-    },
-    {
-        MaSP: "6",
-        MaSPCode: "SP006",
-        TenSP: "Cám heo tăng trọng",
-        LoaiSanPham: "THUC_AN_CHAN_NUOI",
-        DonViCoSo: "Kg",
-        DonViQuyDoi: [
-            { DonViNhap: "Bao", TyLe: 30 },
-        ],
-        DonGia: 11000,
-        GhiChu: "Bao 30kg",
-        NgayTao: new Date().toISOString(),
-    },
-    {
-        MaSP: "7",
-        MaSPCode: "SP007",
-        TenSP: "Kháng sinh Enrofloxacin",
-        LoaiSanPham: "THUOC_THU_Y",
-        DonViCoSo: "Lọ",
-        DonViQuyDoi: [],
-        DonGia: 210000,
-        GhiChu: "Chỉ dùng theo chỉ định",
-        NgayTao: new Date().toISOString(),
-    },
-    {
-        MaSP: "8",
-        MaSPCode: "SP008",
-        TenSP: "Thức ăn cá tra",
-        LoaiSanPham: "THUC_AN_CHAN_NUOI",
-        DonViCoSo: "Kg",
-        DonViQuyDoi: [
-            { DonViNhap: "Bao", TyLe: 20 },
-        ],
-        DonGia: 13500,
-        GhiChu: null,
-        NgayTao: new Date().toISOString(),
-    },
-    {
-        MaSP: "9",
-        MaSPCode: "SP009",
-        TenSP: "Canxi + D3",
-        LoaiSanPham: "THUOC_THU_Y",
-        DonViCoSo: "Chai",
-        DonViQuyDoi: [
-            { DonViNhap: "Thùng", TyLe: 12 },
-        ],
-        DonGia: 70000,
-        GhiChu: "Cho gia cầm",
-        NgayTao: new Date().toISOString(),
-    },
-    {
-        MaSP: "10",
-        MaSPCode: "SP010",
-        TenSP: "Cám vịt thịt",
-        LoaiSanPham: "THUC_AN_CHAN_NUOI",
-        DonViCoSo: "Kg",
-        DonViQuyDoi: [
-            { DonViNhap: "Bao", TyLe: 25 },
-        ],
-        DonGia: 10500,
-        GhiChu: null,
-        NgayTao: new Date().toISOString(),
-    },
-    {
-        MaSP: "11",
-        MaSPCode: "SP011",
-        TenSP: "Thuốc tẩy giun Levamisole",
-        LoaiSanPham: "THUOC_THU_Y",
-        DonViCoSo: "Gói",
-        DonViQuyDoi: [],
-        DonGia: 32000,
-        GhiChu: "Dùng định kỳ",
-        NgayTao: new Date().toISOString(),
-    },
-];
-
-const ITEMS_PER_PAGE = 10; // Show 10 items per page
+const ITEMS_PER_PAGE = 4; // Show N items per page
 
 export default function SanPhamPage() {
     const [query, setQuery] = useState("");
-    const [sanPhamData, setSanPhamData] = useState<SanPhamWithPriceDTO[]>(MOCK_SanPhamwithPrice);
-
+    const [sanPhamData, setSanPhamData] = useState<SanPhamResponsePagedResult | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = ITEMS_PER_PAGE;
 
     const [modalType, setModalType] = useState<'filter' | 'delete' | 'add' | 'edit' | null>(null);
-    const [selectedItem, setSelectedItem] = useState<SanPhamWithPriceDTO | null>(null);
+    const [selectedItem, setSelectedItem] = useState<SanPhamResponse | null>(null);
 
-    // 1. First, Filter the data
-    const filteredData = useMemo(() => {
-        return sanPhamData.filter((s) =>
-            `${s.TenSP} ${s.MaSPCode} ${s.DonViCoSo}`.toLowerCase().includes(query.toLowerCase())
-        );
-    }, [sanPhamData, query]);
+    const fetchData = async (page: number = 1, search: string = "") => {
+        try {
+            console.log("Fetching page:", page); // <-- check page number
+            setIsLoading(true);
+            const data = await sanPhamService.getAll(
+                {
+                    Page: page,
+                    PageSize: pageSize,
+                    Keyword: search,
+                }
+            );
+            console.log("API response:", data); // <-- check the returned data
+            setSanPhamData(data);
+        } catch (error) {
+            console.error("Failed to fetch products:", error);
+            // Optional: Add toast error here
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    useEffect(() => {
+        fetchData(currentPage, query);
+    }, [currentPage, query]);
 
-    // 2. Then, Paginate the filtered results
-    const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
-    const paginatedData = useMemo(() => {
-        const start = (currentPage - 1) * ITEMS_PER_PAGE;
-        return filteredData.slice(start, start + ITEMS_PER_PAGE);
-    }, [filteredData, currentPage]);
+    const paginatedData = sanPhamData?.items ?? [];
+    const totalItems = sanPhamData?.total ?? 0;
+    const totalPages = Math.ceil(totalItems / pageSize);
 
-    // Reset to page 1 when search query changes
     React.useEffect(() => {
         setCurrentPage(1);
     }, [query]);
 
+    // --- CRUD Handlers (Same as before) ---
+    const closeModal = () => { setModalType(null); setSelectedItem(null); };
+    const handleCreate = async (newData: SanPhamCreateRequest) => {
+        try {
+            setIsLoading(true);
+            await sanPhamService.create(newData);
+            setCurrentPage(1);
+            closeModal();
+        } catch (error) {
+            alert("Tạo sản phẩm mới thất bại!");
+        }
+        finally {
+            setIsLoading(false);
+        }
+    };
+    const handleUpdate = async (id: string, updatedData: SanPhamUpdateRequest) => {
+        try {
+            setIsLoading(true);
+            await sanPhamService.update(id, updatedData);
+            await fetchData(currentPage);
+            closeModal();
+        } catch (error) {
+            alert("Cập nhật sản phẩm thất bại!");
+        }
+        finally {
+            setIsLoading(false);
+        }
+    };
+    const handleDelete = async (id: string) => {
+        if (!sanPhamData?.items) return; // Early exit if items not loaded
+        try {
+            setIsLoading(true);
+            await sanPhamService.delete(id);
+            const newPage = (sanPhamData?.items.length === 1 && currentPage > 1)
+                ? currentPage - 1
+                : currentPage;
+
+            await fetchData(newPage, query);
+            closeModal();
+        } catch (error) {
+            console.log(error)
+            alert("Xóa sản phẩm thất bại");
+        }
+        finally {
+            setIsLoading(false);
+        }
+    };
     // --- Helper: Optimized Unit Display ---
     // Only shows the first 2 units, then "+N" to keep row height stable
-    const renderUnitBadges = (units: SanPhamWithPriceDTO['DonViQuyDoi']) => {
+    const renderUnitBadges = (units: SanPhamResponse['donViQuyDoi']) => {
         if (!units || units.length === 0) return <span className="text-slate-400 italic text-xs">--</span>;
 
         const displayUnits = units.slice(0, 2);
@@ -196,15 +118,15 @@ export default function SanPhamPage() {
             <div className="flex flex-wrap gap-1 items-center">
                 {displayUnits.map((u, idx) => (
                     <span key={idx} className="inline-flex items-center text-[11px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-100 whitespace-nowrap">
-                        <span className="font-semibold">{u.DonViNhap}</span>
+                        <span className="font-semibold">{u.donViNhap}</span>
                         <span className="text-blue-400 mx-0.5">×</span>
-                        <span>{u.TyLe}</span>
+                        <span>{u.tyLe}</span>
                     </span>
                 ))}
                 {remaining > 0 && (
                     <span
                         className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200 cursor-help"
-                        title={units.slice(2).map(u => `${u.DonViNhap} (x${u.TyLe})`).join(', ')}
+                        title={units.slice(2).map(u => `${u.donViNhap} (x${u.tyLe})`).join(', ')}
                     >
                         +{remaining}
                     </span>
@@ -212,22 +134,31 @@ export default function SanPhamPage() {
             </div>
         );
     };
-
-    // --- CRUD Handlers (Same as before) ---
-    const closeModal = () => { setModalType(null); setSelectedItem(null); };
-    const handleCreate = async (newData: SanPhamWithPriceDTO) => {
-        setSanPhamData((prev) => [newData, ...prev]);
-        closeModal();
+    // Helper to generate the array of page numbers (e.g., [1, '...', 4, 5, 6, '...', 10])
+    const getPaginationGroup = () => {
+        // If total pages are few (<= 7), show all of them
+        if (totalPages <= 7) {
+            return [...Array(totalPages)].map((_, i) => i + 1);
+        }
+        const start = Math.max(2, currentPage - 1);
+        const end = Math.min(totalPages - 1, currentPage + 1);
+        const pages: (number | string)[] = [1]; // Showing the first page
+        // Add left dots if needed
+        if (start > 2) {
+            pages.push('...');
+        }
+        // Add middle pages
+        for (let i = start; i <= end; i++) {
+            pages.push(i);
+        }
+        // Add right dots if needed
+        if (end < totalPages - 1) {
+            pages.push('...');
+        }
+        // Always show last page
+        pages.push(totalPages);
+        return pages;
     };
-    const handleUpdate = async (updatedData: SanPhamWithPriceDTO) => {
-        setSanPhamData((prev) => prev.map((k) => (k.MaSP === updatedData.MaSP ? updatedData : k)));
-        closeModal();
-    };
-    const handleDelete = async (id: string) => {
-        setSanPhamData(prev => prev.filter(k => k.MaSP !== id));
-        closeModal();
-    };
-
     const userRole = "manager";
 
     return (
@@ -261,7 +192,7 @@ export default function SanPhamPage() {
                         <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                             Danh sách sản phẩm
                             <span className="text-sm font-normal text-slate-500 ml-2 bg-slate-100 px-2 py-0.5 rounded-full">
-                                {filteredData.length}
+                                {totalItems}
                             </span>
                             <Filter
                                 onClick={() => setModalType('filter')}
@@ -289,27 +220,69 @@ export default function SanPhamPage() {
                             </tr>
                         </thead>
                         <tbody className="text-sm">
-                            {paginatedData.map((s) => (
-                                <tr key={s.MaSP} className="group hover:bg-slate-50 transition-colors odd:bg-white even:bg-[#f1f5f9]">
+                            {isLoading ? [...Array(4)].map((_, index) => (
+                                <tr key={index} className="animate-pulse bg-white border-b border-slate-100">
+                                    {/* Mã SP */}
+                                    <td className="py-4 pl-3 border-y border-l border-slate-50 rounded-l-lg">
+                                        <div className="h-4 bg-slate-200 rounded w-16"></div>
+                                    </td>
+
+                                    {/* Tên sản phẩm */}
+                                    <td className="py-4 border-y border-slate-50">
+                                        <div className="h-4 bg-slate-200 rounded w-32 mb-1"></div>
+                                        <div className="h-3 bg-slate-100 rounded w-20"></div>
+                                    </td>
+
+                                    {/* Phân loại */}
+                                    <td className="py-4 border-y border-slate-50">
+                                        <div className="h-4 bg-slate-200 rounded w-24"></div>
+                                    </td>
+
+                                    {/* ĐVT */}
+                                    <td className="py-4 border-y border-slate-50 text-center flex justify-center">
+                                        <div className="h-6 bg-slate-200 rounded-full w-14"></div>
+                                    </td>
+
+                                    {/* Quy cách */}
+                                    <td className="py-4 border-y border-slate-50">
+                                        <div className="h-4 bg-slate-200 rounded w-28 mb-1"></div>
+                                        <div className="h-3 bg-slate-100 rounded w-16"></div>
+                                    </td>
+
+                                    {/* Giá bán */}
+                                    <td className="py-4 border-y border-slate-50 text-right">
+                                        <div className="h-4 bg-slate-200 rounded w-20 mx-auto"></div>
+                                    </td>
+
+                                    {/* Hành động */}
+                                    <td className="py-4 px-4 text-right border-y border-r border-slate-50 rounded-r-lg">
+                                        <div className="flex justify-end gap-2">
+                                            <div className="h-8 w-8 bg-slate-200 rounded-md"></div>
+                                            <div className="h-8 w-8 bg-slate-200 rounded-md"></div>
+                                        </div>
+                                    </td>
+                                </tr>)
+                            ) : paginatedData.map((s) => (
+                                <tr key={s.maSP} className="group hover:bg-slate-50 transition-colors odd:bg-white even:bg-[#f1f5f9]">
                                     <td className="py-3 pl-3 font-medium text-slate-700 border-y border-l border-slate-100 rounded-l-lg group-hover:border-slate-200">
-                                        {s.MaSPCode}
+                                        {s.maSPCode}
                                     </td>
                                     <td className="py-3 border-y border-slate-100 group-hover:border-slate-200">
-                                        <div className="font-medium text-slate-700 truncate" title={s.TenSP}>
-                                            {s.TenSP}
+                                        <div className="font-medium text-slate-700 truncate" title={s.tenSP ?? ''}>
+                                            {s.tenSP}
                                         </div>
                                     </td>
                                     <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 text-slate-500">
-                                        {s.LoaiSanPham === "THUOC_THU_Y" ? "Thuốc thú y" : "Thức ăn CN"}
+                                        {s.loaiSanPham === "THUOC_THU_Y" ? "Thuốc thú y" : "Thức ăn CN"}
                                     </td>
                                     <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 text-center font-semibold text-slate-700">
-                                        {s.DonViCoSo}
+                                        {s.donViCoSo}
                                     </td>
                                     <td className="py-3 border-y border-slate-100 group-hover:border-slate-200">
-                                        {renderUnitBadges(s.DonViQuyDoi)}
+                                        {renderUnitBadges(s.donViQuyDoi)}
                                     </td>
                                     <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 text-right font-medium text-slate-700">
-                                        {s.DonGia ? s.DonGia.toLocaleString("vi-VN") : "0"}
+                                        {s.donGia ? s.donGia.toLocaleString("vi-VN") : "0"}
                                         <span className="text-[10px] text-slate-400 font-normal ml-0.5">₫</span>
                                     </td>
                                     <td className="py-3 px-4 text-right border-y border-r border-slate-100 rounded-r-lg group-hover:border-slate-200 whitespace-nowrap">
@@ -331,7 +304,7 @@ export default function SanPhamPage() {
                         </tbody>
                     </table>
 
-                    {filteredData.length === 0 && (
+                    {totalItems === 0 && (
                         <div className="text-center py-10 text-slate-400">
                             Không tìm thấy sản phẩm nào.
                         </div>
@@ -339,43 +312,57 @@ export default function SanPhamPage() {
                 </div>
 
                 {/* --- Pagination Controls --- */}
-                {filteredData.length > 0 && (
+                {totalItems > 0 && (
                     <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
                         <span className="text-sm text-slate-500">
-                            Hiển thị {((currentPage - 1) * ITEMS_PER_PAGE) + 1} đến {Math.min(currentPage * ITEMS_PER_PAGE, filteredData.length)} của {filteredData.length} sản phẩm
+                            Hiển thị {((currentPage - 1) * ITEMS_PER_PAGE) + 1} đến {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)} của {totalItems} sản phẩm
                         </span>
 
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                 disabled={currentPage === 1}
-                                className="p-2 rounded-md border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="p-2 rounded-md border
+                                bg-white border-slate-300 text-slate-600
+                                transition-all duration-200
+
+                                cursor-pointer
+                                hover:bg-slate-50 hover:text-[#25396f] hover:border-[#25396f] hover:shadow-sm
+
+                                disabled:opacity-40
+                                disabled:cursor-default
+                                disabled:hover:bg-white
+                                disabled:hover:text-slate-600
+                                disabled:hover:border-slate-300
+                                disabled:shadow-none"
                             >
                                 <ChevronLeft size={16} />
                             </button>
 
                             {/* Page Numbers (Simple version) */}
-                            {[...Array(totalPages)].map((_, i) => {
-                                const pageNum = i + 1;
-                                // Only show 5 pages max logic is better for real large apps, 
-                                // but for 'hundreds' (e.g. 20 pages), simple scrolling is fine, 
-                                // or just showing current/total.
-                                if (totalPages > 7 && Math.abs(currentPage - pageNum) > 2 && pageNum !== 1 && pageNum !== totalPages) {
-                                    if (Math.abs(currentPage - pageNum) === 3) return <span key={i} className="text-slate-400 text-xs">...</span>;
-                                    return null;
+                            {getPaginationGroup().map((item, index) => {
+                                // If the item is '...', render the span
+                                if (item === '...') {
+                                    return (
+                                        <span key={`dots-${index}`} className="text-slate-400 text-xs px-1 self-end mb-2">
+                                            ...
+                                        </span>
+                                    );
                                 }
 
                                 return (
                                     <button
-                                        key={pageNum}
-                                        onClick={() => setCurrentPage(pageNum)}
-                                        className={`w-8 h-8 text-xs font-medium rounded-md transition-colors
-                                            ${currentPage === pageNum
-                                                ? 'bg-[#25396f] text-white'
-                                                : 'bg-white border border-slate-300 text-slate-600 hover:bg-slate-50'
+                                        key={item}
+                                        onClick={() => setCurrentPage(item as number)}
+                                        className={`w-8 h-8 text-xs font-medium rounded-md transition-all duration-100 cursor-pointer
+                                            ${currentPage === item
+                                                ? // SELECTED: Add a slight shadow to make it pop
+                                                'bg-[#25396f] text-white border border-[#25396f] shadow-md scale-105'
+                                                : // UNSELECTED: On hover: slight gray bg, text turns blue, border turns blue
+                                                'bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 hover:text-[#25396f] hover:border-[#25396f]'
                                             }`}
                                     >
-                                        {pageNum}
+                                        {item}
                                     </button>
                                 );
                             })}
@@ -383,7 +370,19 @@ export default function SanPhamPage() {
                             <button
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                 disabled={currentPage === totalPages}
-                                className="p-2 rounded-md border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="p-2 rounded-md border
+                                    bg-white border-slate-300 text-slate-600
+                                    transition-all duration-100
+
+                                    cursor-pointer
+                                    hover:bg-slate-50 hover:text-[#25396f] hover:border-[#25396f] hover:shadow-sm
+
+                                    disabled:opacity-40
+                                    disabled:cursor-default
+                                    disabled:hover:bg-white
+                                    disabled:hover:text-slate-600
+                                    disabled:hover:border-slate-300
+                                    disabled:shadow-none"
                             >
                                 <ChevronRight size={16} />
                             </button>
