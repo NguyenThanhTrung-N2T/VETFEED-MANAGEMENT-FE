@@ -197,7 +197,7 @@ export type KhachHangCreateRequest = {
     tenKH: string;
     soDienThoai?: string | null;
     diaChi?: string | null;
-    loaiKhachHang: string;
+    loaiKhachHang: LoaiKhachHangEnum;
     hanMucCongNo?: number | null;
     trangThai: TrangThaiKhachHangEnum;
     ghiChu?: string | null;
@@ -216,11 +216,33 @@ export type KhachHangPhieuBanResponse = {
     danhSachPhieuBan?: Array<PhieuBanListResponse> | null;
 };
 
+export type KhachHangResponse = {
+    maKH?: string;
+    maKHCode?: string | null;
+    tenKH?: string | null;
+    soDienThoai?: string | null;
+    diaChi?: string | null;
+    loaiKhachHang?: string | null;
+    hanMucCongNo?: number | null;
+    tongMua?: number;
+    congNoHienTai?: number;
+    trangThai?: string | null;
+    ghiChu?: string | null;
+    ngayTao?: string;
+};
+
+export type KhachHangResponsePagedResult = {
+    items?: Array<KhachHangResponse> | null;
+    total?: number;
+    page?: number | null;
+    pageSize?: number | null;
+};
+
 export type KhachHangUpdateRequest = {
     tenKH: string;
     soDienThoai?: string | null;
     diaChi?: string | null;
-    loaiKhachHang: string;
+    loaiKhachHang: LoaiKhachHangEnum;
     hanMucCongNo?: number | null;
     trangThai: TrangThaiKhachHangEnum;
     ghiChu?: string | null;
@@ -250,9 +272,20 @@ export type LoHangResponse = {
     hanSuDung?: string;
 };
 
+export type LoaiKhachHangEnum = 0 | 1 | 2;
+
 export type LoginRequest = {
     email: string;
     password: string;
+};
+
+export type NhaCungCapCreateRequest = {
+    tenNCC?: string | null;
+    soDienThoai?: string | null;
+    diaChi?: string | null;
+    trangThai?: string | null;
+    ghiChu?: string | null;
+    sanPhams?: Array<NhaCungCapSanPhamItemDto> | null;
 };
 
 export type NhaCungCapDetailedResponse = {
@@ -267,14 +300,6 @@ export type NhaCungCapDetailedResponse = {
     sanPhams?: Array<NhaCungCapSanPhamResponse> | null;
 };
 
-export type NhaCungCapRequest = {
-    tenNCC?: string | null;
-    soDienThoai?: string | null;
-    diaChi?: string | null;
-    trangThai?: string | null;
-    ghiChu?: string | null;
-};
-
 export type NhaCungCapResponse = {
     maNCC?: string;
     maNCCCode?: string | null;
@@ -286,8 +311,8 @@ export type NhaCungCapResponse = {
     ngayTao?: string;
 };
 
-export type NhaCungCapSanPhamRequest = {
-    maNCC?: string;
+export type NhaCungCapSanPhamItemDto = {
+    maNCSP?: string | null;
     maSP?: string;
     giaNhapMacDinh?: number | null;
     trangThai?: string | null;
@@ -304,6 +329,15 @@ export type NhaCungCapSanPhamResponse = {
     trangThai?: string | null;
     ghiChu?: string | null;
     ngayTao?: string;
+};
+
+export type NhaCungCapUpdateRequest = {
+    tenNCC?: string | null;
+    soDienThoai?: string | null;
+    diaChi?: string | null;
+    trangThai?: string | null;
+    ghiChu?: string | null;
+    sanPhams?: Array<NhaCungCapSanPhamItemDto> | null;
 };
 
 export type PhieuBanDetailResponse = {
@@ -449,6 +483,23 @@ export type ProblemDetails = {
     detail?: string | null;
     instance?: string | null;
     [key: string]: unknown | string | null | string | null | number | null | string | null | string | null | undefined;
+};
+
+export type ReturnableLoHangItem = {
+    maLo?: string;
+    maLoCode?: string | null;
+    tenSanPham?: string | null;
+    donViCoSo?: string | null;
+    hanSuDung?: string;
+    soLuongDaBan?: number;
+    soLuongDaTra?: number;
+    soLuongCoTheTra?: number;
+};
+
+export type ReturnableQuantityResponse = {
+    maPB?: string;
+    maPBCode?: string | null;
+    danhSachLoHang?: Array<ReturnableLoHangItem> | null;
 };
 
 export type SanPhamCreateRequest = {
@@ -679,8 +730,10 @@ export type GetApiKhachHangsResponses = {
     /**
      * OK
      */
-    200: unknown;
+    200: KhachHangResponsePagedResult;
 };
+
+export type GetApiKhachHangsResponse = GetApiKhachHangsResponses[keyof GetApiKhachHangsResponses];
 
 export type PostApiKhachHangsData = {
     body?: KhachHangCreateRequest;
@@ -693,8 +746,10 @@ export type PostApiKhachHangsResponses = {
     /**
      * OK
      */
-    200: unknown;
+    200: KhachHangResponse;
 };
+
+export type PostApiKhachHangsResponse = PostApiKhachHangsResponses[keyof PostApiKhachHangsResponses];
 
 export type GetApiKhachHangsByCodeByMaKhCodeData = {
     body?: never;
@@ -709,8 +764,10 @@ export type GetApiKhachHangsByCodeByMaKhCodeResponses = {
     /**
      * OK
      */
-    200: unknown;
+    200: KhachHangResponse;
 };
+
+export type GetApiKhachHangsByCodeByMaKhCodeResponse = GetApiKhachHangsByCodeByMaKhCodeResponses[keyof GetApiKhachHangsByCodeByMaKhCodeResponses];
 
 export type GetApiKhachHangsByPhoneData = {
     body?: never;
@@ -725,8 +782,10 @@ export type GetApiKhachHangsByPhoneResponses = {
     /**
      * OK
      */
-    200: unknown;
+    200: KhachHangResponse;
 };
+
+export type GetApiKhachHangsByPhoneResponse = GetApiKhachHangsByPhoneResponses[keyof GetApiKhachHangsByPhoneResponses];
 
 export type DeleteApiKhachHangsByMaKhData = {
     body?: never;
@@ -757,8 +816,10 @@ export type GetApiKhachHangsByMaKhResponses = {
     /**
      * OK
      */
-    200: unknown;
+    200: KhachHangResponse;
 };
+
+export type GetApiKhachHangsByMaKhResponse = GetApiKhachHangsByMaKhResponses[keyof GetApiKhachHangsByMaKhResponses];
 
 export type PutApiKhachHangsByMaKhData = {
     body?: KhachHangUpdateRequest;
@@ -773,8 +834,10 @@ export type PutApiKhachHangsByMaKhResponses = {
     /**
      * OK
      */
-    200: unknown;
+    200: KhachHangResponse;
 };
+
+export type PutApiKhachHangsByMaKhResponse = PutApiKhachHangsByMaKhResponses[keyof PutApiKhachHangsByMaKhResponses];
 
 export type GetApiKhoHangsData = {
     body?: never;
@@ -1058,6 +1121,22 @@ export type GetApiLoHangsBysanphamByMaSpResponses = {
 
 export type GetApiLoHangsBysanphamByMaSpResponse = GetApiLoHangsBysanphamByMaSpResponses[keyof GetApiLoHangsBysanphamByMaSpResponses];
 
+export type GetApiLoHangsOutdatedData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/LoHangs/outdated';
+};
+
+export type GetApiLoHangsOutdatedResponses = {
+    /**
+     * OK
+     */
+    200: LoHangResponse;
+};
+
+export type GetApiLoHangsOutdatedResponse = GetApiLoHangsOutdatedResponses[keyof GetApiLoHangsOutdatedResponses];
+
 export type GetApiNhaCungCapsData = {
     body?: never;
     path?: never;
@@ -1075,7 +1154,7 @@ export type GetApiNhaCungCapsResponses = {
 export type GetApiNhaCungCapsResponse = GetApiNhaCungCapsResponses[keyof GetApiNhaCungCapsResponses];
 
 export type PostApiNhaCungCapsData = {
-    body?: NhaCungCapRequest;
+    body?: NhaCungCapCreateRequest;
     path?: never;
     query?: never;
     url: '/api/NhaCungCaps';
@@ -1094,7 +1173,7 @@ export type PostApiNhaCungCapsResponses = {
     /**
      * Created
      */
-    201: NhaCungCapResponse;
+    201: NhaCungCapDetailedResponse;
 };
 
 export type PostApiNhaCungCapsResponse = PostApiNhaCungCapsResponses[keyof PostApiNhaCungCapsResponses];
@@ -1154,7 +1233,7 @@ export type GetApiNhaCungCapsByIdResponses = {
 export type GetApiNhaCungCapsByIdResponse = GetApiNhaCungCapsByIdResponses[keyof GetApiNhaCungCapsByIdResponses];
 
 export type PutApiNhaCungCapsByIdData = {
-    body?: NhaCungCapRequest;
+    body?: NhaCungCapUpdateRequest;
     path: {
         id: string;
     };
@@ -1179,172 +1258,10 @@ export type PutApiNhaCungCapsByIdResponses = {
     /**
      * OK
      */
-    200: NhaCungCapResponse;
+    200: NhaCungCapDetailedResponse;
 };
 
 export type PutApiNhaCungCapsByIdResponse = PutApiNhaCungCapsByIdResponses[keyof PutApiNhaCungCapsByIdResponses];
-
-export type GetApiNhaCungCapSanPhamsData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/NhaCungCapSanPhams';
-};
-
-export type GetApiNhaCungCapSanPhamsResponses = {
-    /**
-     * OK
-     */
-    200: Array<NhaCungCapSanPhamResponse>;
-};
-
-export type GetApiNhaCungCapSanPhamsResponse = GetApiNhaCungCapSanPhamsResponses[keyof GetApiNhaCungCapSanPhamsResponses];
-
-export type PostApiNhaCungCapSanPhamsData = {
-    body?: NhaCungCapSanPhamRequest;
-    path?: never;
-    query?: never;
-    url: '/api/NhaCungCapSanPhams';
-};
-
-export type PostApiNhaCungCapSanPhamsErrors = {
-    /**
-     * Bad Request
-     */
-    400: ProblemDetails;
-};
-
-export type PostApiNhaCungCapSanPhamsError = PostApiNhaCungCapSanPhamsErrors[keyof PostApiNhaCungCapSanPhamsErrors];
-
-export type PostApiNhaCungCapSanPhamsResponses = {
-    /**
-     * Created
-     */
-    201: NhaCungCapSanPhamResponse;
-};
-
-export type PostApiNhaCungCapSanPhamsResponse = PostApiNhaCungCapSanPhamsResponses[keyof PostApiNhaCungCapSanPhamsResponses];
-
-export type DeleteApiNhaCungCapSanPhamsByIdData = {
-    body?: never;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/api/NhaCungCapSanPhams/{id}';
-};
-
-export type DeleteApiNhaCungCapSanPhamsByIdErrors = {
-    /**
-     * Not Found
-     */
-    404: ProblemDetails;
-};
-
-export type DeleteApiNhaCungCapSanPhamsByIdError = DeleteApiNhaCungCapSanPhamsByIdErrors[keyof DeleteApiNhaCungCapSanPhamsByIdErrors];
-
-export type DeleteApiNhaCungCapSanPhamsByIdResponses = {
-    /**
-     * No Content
-     */
-    204: void;
-};
-
-export type DeleteApiNhaCungCapSanPhamsByIdResponse = DeleteApiNhaCungCapSanPhamsByIdResponses[keyof DeleteApiNhaCungCapSanPhamsByIdResponses];
-
-export type GetApiNhaCungCapSanPhamsByIdData = {
-    body?: never;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/api/NhaCungCapSanPhams/{id}';
-};
-
-export type GetApiNhaCungCapSanPhamsByIdErrors = {
-    /**
-     * Not Found
-     */
-    404: ProblemDetails;
-};
-
-export type GetApiNhaCungCapSanPhamsByIdError = GetApiNhaCungCapSanPhamsByIdErrors[keyof GetApiNhaCungCapSanPhamsByIdErrors];
-
-export type GetApiNhaCungCapSanPhamsByIdResponses = {
-    /**
-     * OK
-     */
-    200: NhaCungCapSanPhamResponse;
-};
-
-export type GetApiNhaCungCapSanPhamsByIdResponse = GetApiNhaCungCapSanPhamsByIdResponses[keyof GetApiNhaCungCapSanPhamsByIdResponses];
-
-export type PutApiNhaCungCapSanPhamsByIdData = {
-    body?: NhaCungCapSanPhamRequest;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/api/NhaCungCapSanPhams/{id}';
-};
-
-export type PutApiNhaCungCapSanPhamsByIdErrors = {
-    /**
-     * Bad Request
-     */
-    400: ProblemDetails;
-    /**
-     * Not Found
-     */
-    404: ProblemDetails;
-};
-
-export type PutApiNhaCungCapSanPhamsByIdError = PutApiNhaCungCapSanPhamsByIdErrors[keyof PutApiNhaCungCapSanPhamsByIdErrors];
-
-export type PutApiNhaCungCapSanPhamsByIdResponses = {
-    /**
-     * OK
-     */
-    200: NhaCungCapSanPhamResponse;
-};
-
-export type PutApiNhaCungCapSanPhamsByIdResponse = PutApiNhaCungCapSanPhamsByIdResponses[keyof PutApiNhaCungCapSanPhamsByIdResponses];
-
-export type GetApiNhaCungCapSanPhamsBynhacungcapByMaNccData = {
-    body?: never;
-    path: {
-        maNCC: string;
-    };
-    query?: never;
-    url: '/api/NhaCungCapSanPhams/bynhacungcap/{maNCC}';
-};
-
-export type GetApiNhaCungCapSanPhamsBynhacungcapByMaNccResponses = {
-    /**
-     * OK
-     */
-    200: Array<NhaCungCapSanPhamResponse>;
-};
-
-export type GetApiNhaCungCapSanPhamsBynhacungcapByMaNccResponse = GetApiNhaCungCapSanPhamsBynhacungcapByMaNccResponses[keyof GetApiNhaCungCapSanPhamsBynhacungcapByMaNccResponses];
-
-export type GetApiNhaCungCapSanPhamsBysanphamByMaSpData = {
-    body?: never;
-    path: {
-        maSP: string;
-    };
-    query?: never;
-    url: '/api/NhaCungCapSanPhams/bysanpham/{maSP}';
-};
-
-export type GetApiNhaCungCapSanPhamsBysanphamByMaSpResponses = {
-    /**
-     * OK
-     */
-    200: Array<NhaCungCapSanPhamResponse>;
-};
-
-export type GetApiNhaCungCapSanPhamsBysanphamByMaSpResponse = GetApiNhaCungCapSanPhamsBysanphamByMaSpResponses[keyof GetApiNhaCungCapSanPhamsBysanphamByMaSpResponses];
 
 export type GetApiPhieuBansData = {
     body?: never;
@@ -1869,6 +1786,37 @@ export type GetApiPhieuTrasByMaPtResponses = {
 };
 
 export type GetApiPhieuTrasByMaPtResponse = GetApiPhieuTrasByMaPtResponses[keyof GetApiPhieuTrasByMaPtResponses];
+
+export type GetApiPhieuTrasReturnableQuantityByMaPbData = {
+    body?: never;
+    path: {
+        maPB: string;
+    };
+    query?: never;
+    url: '/api/PhieuTras/returnable-quantity/{maPB}';
+};
+
+export type GetApiPhieuTrasReturnableQuantityByMaPbErrors = {
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+    /**
+     * Internal Server Error
+     */
+    500: unknown;
+};
+
+export type GetApiPhieuTrasReturnableQuantityByMaPbError = GetApiPhieuTrasReturnableQuantityByMaPbErrors[keyof GetApiPhieuTrasReturnableQuantityByMaPbErrors];
+
+export type GetApiPhieuTrasReturnableQuantityByMaPbResponses = {
+    /**
+     * OK
+     */
+    200: ReturnableQuantityResponse;
+};
+
+export type GetApiPhieuTrasReturnableQuantityByMaPbResponse = GetApiPhieuTrasReturnableQuantityByMaPbResponses[keyof GetApiPhieuTrasReturnableQuantityByMaPbResponses];
 
 export type GetApiSanPhamsData = {
     body?: never;

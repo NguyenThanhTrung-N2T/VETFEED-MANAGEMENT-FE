@@ -75,7 +75,7 @@ export default function KhoPage() {
             await fetchData();
             closeModal();
         } catch (error) {
-            alert("Failed to update warehouse");
+            alert("Cập nhật kho hàng thất bại!");
         }
     };
     const handleDelete = async (id: string) => {
@@ -84,7 +84,7 @@ export default function KhoPage() {
             setKhoData(prev => prev.filter(k => k.maKho !== id));
             closeModal();
         } catch (error) {
-            alert("Failed to delete warehouse.");
+            alert("Xóa kho hàng thất bại!");
         }
     };
     const renderStatus = (status: string | null | undefined) => {
@@ -230,6 +230,11 @@ export default function KhoPage() {
                             )}
                         </tbody>
                     </table>
+                    {!isLoading && filteredData.length === 0 && (
+                        <div className="text-center py-10 text-slate-400">
+                            Không tìm thấy kho hàng nào.
+                        </div>
+                    )}
                 </div>
             </div>
             {modalType === 'add' && (

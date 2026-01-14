@@ -1,142 +1,168 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import Link from "next/link";
-import { Edit, Trash2, Search, ChevronDown, Plus, Eye, Filter } from "lucide-react";
-import { KhachHangDTO, LoaiKhachHang } from "@/types";
+import React, { useMemo, useState, useEffect } from "react";
+import { Edit, Trash2, Search, ChevronDown, ChevronLeft, ChevronRight, Plus, Eye, Filter } from "lucide-react";
 import AddKhachHangModal from "@/components/khach-hang/AddKhachHangModal";
-import AddButton from "@/components/ui/AddButton";
 import ViewKhachHangModal from "@/components/khach-hang/ViewKhachHangModal";
-
-const loaiKhachHangMap: Record<LoaiKhachHang, string> = { CA_NHAN: "Cá nhân", TRANG_TRAI: "Trang trại", DAI_LY: "Đại lý", };
+import AddButton from "@/components/ui/AddButton";
+import { KhachHangCreateRequest, KhachHangResponse, KhachHangResponsePagedResult, KhachHangUpdateRequest } from "@/client/types.gen";
+import { khachHangService } from "@/services/khach-hang.service";
+const loaiKhachHangMap: Record<string, string> = { 'CA_NHAN': "Cá nhân", 'TRANG_TRAI': "Trang trại", 'DAI_LY': "Đại lý", };
 // TODO: Replace with real API call - fetch from /api/khach-hang
-const MOCK_KhachHang: KhachHangDTO[] = [
-    {
-        MaKH: "kh-0001-0000-0000-000000000001",
-        MaKHCode: "KH001",
-        TenKH: "Lê Tú An",
-        SoDienThoai: "0123781283",
-        DiaChi: "HCMC",
-        LoaiKhachHang: "CA_NHAN",
-        HanMucCongNo: null,
-        TongMua: 6000000,
-        CongNoHienTai: 0,
-        TrangThai: "HOAT_DONG",
-        GhiChu: null,
-        NgayTao: new Date().toISOString(),
-    },
-    {
-        MaKH: "kh-0002-0000-0000-000000000002",
-        MaKHCode: "KH002",
-        TenKH: "Trần Hồng Xuân",
-        SoDienThoai: "0138434121",
-        DiaChi: "Dong Nai",
-        LoaiKhachHang: "TRANG_TRAI",
-        HanMucCongNo: 10000000,
-        TongMua: 28500000,
-        CongNoHienTai: 9000000,
-        TrangThai: "HOAT_DONG",
-        GhiChu: null,
-        NgayTao: new Date().toISOString(),
-    },
-    {
-        MaKH: "kh-0003-0000-0000-000000000003",
-        MaKHCode: "KH003",
-        TenKH: "Đoàn Quốc Tuấn",
-        SoDienThoai: "0979406367",
-        DiaChi: "HCMC",
-        LoaiKhachHang: "CA_NHAN",
-        HanMucCongNo: null,
-        TongMua: 6000000,
-        CongNoHienTai: 0,
-        TrangThai: "HOAT_DONG",
-        GhiChu: null,
-        NgayTao: new Date().toISOString(),
-    },
-    {
-        MaKH: "kh-0004-0000-0000-000000000004",
-        MaKHCode: "KH004",
-        TenKH: "Trần Thị Bích",
-        SoDienThoai: "0979406555",
-        DiaChi: "HCMC",
-        LoaiKhachHang: "CA_NHAN",
-        HanMucCongNo: null,
-        TongMua: 6000000,
-        CongNoHienTai: 0,
-        TrangThai: "HOAT_DONG",
-        GhiChu: null,
-        NgayTao: new Date().toISOString(),
-    },
-    {
-        MaKH: "kh-0005-0000-0000-000000000005",
-        MaKHCode: "KH005",
-        TenKH: "Trần Thị Kim Tuyết",
-        SoDienThoai: "0979406555",
-        DiaChi: "HCMC",
-        LoaiKhachHang: "CA_NHAN",
-        HanMucCongNo: null,
-        TongMua: 6000000,
-        CongNoHienTai: 0,
-        TrangThai: "HOAT_DONG",
-        GhiChu: null,
-        NgayTao: new Date().toISOString(),
-    },
-    {
-        MaKH: "kh-0006-0000-0000-000000000006",
-        MaKHCode: "KH006",
-        TenKH: "Trần Thị Kim Nhung",
-        SoDienThoai: "0979406555",
-        DiaChi: "HCMC",
-        LoaiKhachHang: "CA_NHAN",
-        HanMucCongNo: null,
-        TongMua: 6000000,
-        CongNoHienTai: 0,
-        TrangThai: "HOAT_DONG",
-        GhiChu: null,
-        NgayTao: new Date().toISOString(),
-    },
-    {
-        MaKH: "kh-0007-0000-0000-000000000007",
-        MaKHCode: "KH007",
-        TenKH: "Trần Anh",
-        SoDienThoai: "0979406555",
-        DiaChi: "HCMC",
-        LoaiKhachHang: "CA_NHAN",
-        HanMucCongNo: null,
-        TongMua: 6000000,
-        CongNoHienTai: 0,
-        TrangThai: "HOAT_DONG",
-        GhiChu: null,
-        NgayTao: new Date().toISOString(),
-    }
-];
+// const MOCK_KhachHang: KhachHangDTO[] = [
+//     {
+//         MaKH: "kh-0001-0000-0000-000000000001",
+//         MaKHCode: "KH001",
+//         TenKH: "Lê Tú An",
+//         SoDienThoai: "0123781283",
+//         DiaChi: "HCMC",
+//         LoaiKhachHang: "CA_NHAN",
+//         HanMucCongNo: null,
+//         TongMua: 6000000,
+//         CongNoHienTai: 0,
+//         TrangThai: "HOAT_DONG",
+//         GhiChu: null,
+//         NgayTao: new Date().toISOString(),
+//     },
+//     {
+//         MaKH: "kh-0002-0000-0000-000000000002",
+//         MaKHCode: "KH002",
+//         TenKH: "Trần Hồng Xuân",
+//         SoDienThoai: "0138434121",
+//         DiaChi: "Dong Nai",
+//         LoaiKhachHang: "TRANG_TRAI",
+//         HanMucCongNo: 10000000,
+//         TongMua: 28500000,
+//         CongNoHienTai: 9000000,
+//         TrangThai: "HOAT_DONG",
+//         GhiChu: null,
+//         NgayTao: new Date().toISOString(),
+//     },
+//     {
+//         MaKH: "kh-0003-0000-0000-000000000003",
+//         MaKHCode: "KH003",
+//         TenKH: "Đoàn Quốc Tuấn",
+//         SoDienThoai: "0979406367",
+//         DiaChi: "HCMC",
+//         LoaiKhachHang: "CA_NHAN",
+//         HanMucCongNo: null,
+//         TongMua: 6000000,
+//         CongNoHienTai: 0,
+//         TrangThai: "HOAT_DONG",
+//         GhiChu: null,
+//         NgayTao: new Date().toISOString(),
+//     },
+//     {
+//         MaKH: "kh-0004-0000-0000-000000000004",
+//         MaKHCode: "KH004",
+//         TenKH: "Trần Thị Bích",
+//         SoDienThoai: "0979406555",
+//         DiaChi: "HCMC",
+//         LoaiKhachHang: "CA_NHAN",
+//         HanMucCongNo: null,
+//         TongMua: 6000000,
+//         CongNoHienTai: 0,
+//         TrangThai: "HOAT_DONG",
+//         GhiChu: null,
+//         NgayTao: new Date().toISOString(),
+//     },
+//     {
+//         MaKH: "kh-0005-0000-0000-000000000005",
+//         MaKHCode: "KH005",
+//         TenKH: "Trần Thị Kim Tuyết",
+//         SoDienThoai: "0979406555",
+//         DiaChi: "HCMC",
+//         LoaiKhachHang: "CA_NHAN",
+//         HanMucCongNo: null,
+//         TongMua: 6000000,
+//         CongNoHienTai: 0,
+//         TrangThai: "HOAT_DONG",
+//         GhiChu: null,
+//         NgayTao: new Date().toISOString(),
+//     },
+//     {
+//         MaKH: "kh-0006-0000-0000-000000000006",
+//         MaKHCode: "KH006",
+//         TenKH: "Trần Thị Kim Nhung",
+//         SoDienThoai: "0979406555",
+//         DiaChi: "HCMC",
+//         LoaiKhachHang: "CA_NHAN",
+//         HanMucCongNo: null,
+//         TongMua: 6000000,
+//         CongNoHienTai: 0,
+//         TrangThai: "HOAT_DONG",
+//         GhiChu: null,
+//         NgayTao: new Date().toISOString(),
+//     },
+//     {
+//         MaKH: "kh-0007-0000-0000-000000000007",
+//         MaKHCode: "KH007",
+//         TenKH: "Trần Anh",
+//         SoDienThoai: "0979406555",
+//         DiaChi: "HCMC",
+//         LoaiKhachHang: "CA_NHAN",
+//         HanMucCongNo: null,
+//         TongMua: 6000000,
+//         CongNoHienTai: 0,
+//         TrangThai: "HOAT_DONG",
+//         GhiChu: null,
+//         NgayTao: new Date().toISOString(),
+//     }
+// ];
+const ITEMS_PER_PAGE = 5;
 
 export default function KhachHangPage() {
     const [query, setQuery] = useState("");
-    const [khachHangData, setKhachHangData] = useState<KhachHangDTO[]>(MOCK_KhachHang);
+    const [khachHangData, setKhachHangData] = useState<KhachHangResponsePagedResult | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = ITEMS_PER_PAGE;
 
     const [modalType, setModalType] = useState<'filter' | 'delete' | 'add' | 'view' | null>(null);
-    const [selectedItem, setSelectedItem] = useState<KhachHangDTO | null>(null);
-    // TODO: Replace with real data fetching
-    // Example: const { data: khachHangs, isLoading } = useSWR('/api/khach-hang', fetcher);
-    const khachHangs = khachHangData;
+    const [selectedItem, setSelectedItem] = useState<KhachHangResponse | null>(null);
 
-    const filteredData = khachHangs.filter((c) =>
-        `${c.TenKH} ${c.SoDienThoai ?? ""} ${c.LoaiKhachHang ?? ""}`
-            .toLowerCase()
-            .includes(query.toLowerCase())
-    );
+    const fetchData = async (page: number = 1, search: string = "") => {
+        try {
+            console.log("Fetching page:", page); // <-- check page number
+            setIsLoading(true);
+            const data = await khachHangService.getAll(
+                {
+                    Page: page,
+                    PageSize: pageSize,
+                    Keyword: search,
+                }
+            );
+            console.log("API response:", data); // <-- check the returned data
+            setKhachHangData(data);
+        } catch (error) {
+            console.error("Failed to fetch customers:", error);
+            // Optional: Add toast error here
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    useEffect(() => {
+        fetchData(currentPage, query);
+    }, [currentPage, query]);
 
+    const paginatedData = khachHangData?.items ?? [];
+    const totalItems = khachHangData?.total ?? 0;
+    const totalPages = Math.ceil(totalItems / pageSize);
+
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [query]);
     // TODO: Get real role from auth/session
     // --- Modal States ---
     const openAdd = () => {
         setModalType('add');
     };
-    const openView = (khachHang: KhachHangDTO) => {
+    const openView = (khachHang: KhachHangResponse) => {
         setSelectedItem(khachHang);
         setModalType('view');
     };
-    const openDelete = (khachHang: KhachHangDTO) => {
+    const openDelete = (khachHang: KhachHangResponse) => {
         setSelectedItem(khachHang);
         setModalType('delete');
     };
@@ -148,10 +174,10 @@ export default function KhachHangPage() {
         setSelectedItem(null);
     };
     // --- CRUD Handlers ---
-    const handleCreate = async (newData: KhachHangDTO) => {
-        // MOCK
-        console.log("Saving new KhachHang:", newData);
-        setKhachHangData((prev) => [newData, ...prev]); // Add to top of list
+    const handleCreate = async (newData: KhachHangCreateRequest) => {
+        // // MOCK
+        // console.log("Saving new KhachHang:", newData);
+        // setKhachHangData((prev) => [newData, ...prev]); // Add to top of list
 
         // Real App (API Call)
         /*
@@ -167,17 +193,42 @@ export default function KhachHangPage() {
         }
         */
     };
-    const handleUpdate = async (updatedData: KhachHangDTO) => {
-        // MOCK
-        console.log("Updating kho:", updatedData);
-        setKhachHangData((prev) =>
-            prev.map((k) => (k.MaKH === updatedData.MaKH ? updatedData : k))
-        );
+    const handleUpdate = async (id: string, updatedData: KhachHangUpdateRequest) => {
+        // // MOCK
+        // console.log("Updating kho:", updatedData);
+        // setKhachHangData((prev) =>
+        //     prev.map((k) => (k.MaKH === updatedData.MaKH ? updatedData : k))
+        // );
         // Real App (API Call)    
     };
     const handleDelete = async (id: string) => {
         // API Call here...
-        setKhachHangData(prev => prev.filter(k => k.MaKH !== id));
+        //setKhachHangData(prev => prev.filter(k => k.MaKH !== id));
+    };
+    // Helper to generate the array of page numbers (e.g., [1, '...', 4, 5, 6, '...', 10])
+    const getPaginationGroup = () => {
+        // If total pages are few (<= 7), show all of them
+        if (totalPages <= 7) {
+            return [...Array(totalPages)].map((_, i) => i + 1);
+        }
+        const start = Math.max(2, currentPage - 1);
+        const end = Math.min(totalPages - 1, currentPage + 1);
+        const pages: (number | string)[] = [1]; // Showing the first page
+        // Add left dots if needed
+        if (start > 2) {
+            pages.push('...');
+        }
+        // Add middle pages
+        for (let i = start; i <= end; i++) {
+            pages.push(i);
+        }
+        // Add right dots if needed
+        if (end < totalPages - 1) {
+            pages.push('...');
+        }
+        // Always show last page
+        pages.push(totalPages);
+        return pages;
     };
     const userRole: "manager" | "staff" = "manager";
     return (
@@ -230,36 +281,67 @@ export default function KhachHangPage() {
                     <table className="w-full text-sm border-separate border-spacing-y-1">
                         <thead>
                             <tr className="text-left text-xs font-semibold bg-[#e9eff6] text-slate-800 uppercase tracking-wider">
-                                <th className="py-3 pl-3 rounded-l-lg">Mã KH</th>
-                                <th className="py-3">Họ tên</th>
-                                <th className="py-3">Loại KH</th>
-                                <th className="py-3 text-center">Số điện thoại</th>
-                                <th className="py-3 text-right">Tổng mua (VNĐ)</th>
-                                <th className="py-3 text-right">Công nợ (VNĐ)</th>
-                                <th className="py-3 px-4 text-right rounded-r-lg w-px whitespace-nowrap">Hành động</th>
+                                <th className="py-3 pl-3 rounded-l-lg w-[10%]">Mã KH</th>
+                                <th className="py-3 w-[22%]">Họ tên</th>
+                                <th className="py-3 w-[12%]">Loại KH</th>
+                                <th className="py-3 text-center w-[16%]">Số điện thoại</th>
+                                <th className="py-3 text-right w-[14%]">Tổng mua (VNĐ)</th>
+                                <th className="py-3 text-right w-[14%]">Công nợ (VNĐ)</th>
+                                <th className="py-3 px-4 text-right rounded-r-lg whitespace-nowrap w-[12%]">Hành động</th>
                             </tr>
                         </thead>
                         <tbody className="text-sm">
-                            {filteredData.map((c) => (
+                            {isLoading ? [...Array(4)].map((_, index) => (
+                                <tr key={index} className="bg-white shadow-sm rounded-lg animate-pulse">
+                                    {/* Mã KH */}
+                                    <td className="py-3 pl-3 rounded-l-lg">
+                                        <div className="h-4 w-16 bg-slate-200 rounded" />
+                                    </td>
+                                    {/* Họ tên */}
+                                    <td className="py-3">
+                                        <div className="h-4 w-40 bg-slate-200 rounded" />
+                                    </td>
+                                    {/* Loại KH */}
+                                    <td className="py-3">
+                                        <div className="h-4 w-24 bg-slate-200 rounded" />
+                                    </td>
+                                    {/* Số điện thoại */}
+                                    <td className="py-3 text-center">
+                                        <div className="h-4 w-28 bg-slate-200 rounded mx-auto" />
+                                    </td>
+                                    {/* Tổng mua */}
+                                    <td className="py-3 text-right">
+                                        <div className="h-4 w-24 bg-slate-200 rounded ml-auto" />
+                                    </td>
+                                    {/* Công nợ */}
+                                    <td className="py-3 text-right">
+                                        <div className="h-4 w-24 bg-slate-200 rounded ml-auto" />
+                                    </td>
+                                    {/* Hành động */}
+                                    <td className="py-3 px-4 text-right rounded-r-lg">
+                                        <div className="h-8 w-20 bg-slate-200 rounded ml-auto" />
+                                    </td>
+                                </tr>
+                            )) : (paginatedData.map((c) => (
                                 <tr
-                                    key={c.MaKH}
+                                    key={c.maKH}
                                     className="group hover:bg-slate-50 transition-colors odd:bg-white even:bg-[#f1f5f9]"
                                 >
                                     <td className="py-3 pl-3 font-medium text-slate-700 border-y border-l border-slate-100 rounded-l-lg group-hover:border-slate-200">
-                                        {c.MaKHCode}
+                                        {c.maKHCode}
                                     </td>
                                     <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 text-slate-700 font-medium">
-                                        {c.TenKH}
+                                        {c.tenKH}
                                     </td>
-                                    <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 font-medium text-slate-700">{c.LoaiKhachHang ? loaiKhachHangMap[c.LoaiKhachHang] : "-"}</td>
-                                    <td className="py-3 border-y text-center border-slate-100 group-hover:border-slate-200 font-medium text-slate-700">{c.SoDienThoai ?? "-"}</td>
+                                    <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 font-medium text-slate-700">{c.loaiKhachHang ? loaiKhachHangMap[c.loaiKhachHang] : "-"}</td>
+                                    <td className="py-3 border-y text-center border-slate-100 group-hover:border-slate-200 font-medium text-slate-700">{c.soDienThoai ?? "-"}</td>
                                     <td className="py-3 text-right font-medium text-slate-800">
-                                        {c.TongMua.toLocaleString("vi-VN")}
+                                        {c.tongMua ? c.tongMua.toLocaleString("vi-VN") : '0'}
                                     </td>
                                     <td className="py-3 text-right font-medium text-red-600">
-                                        {c.CongNoHienTai.toLocaleString("vi-VN")}
+                                        {c.congNoHienTai ? c.congNoHienTai.toLocaleString("vi-VN") : '0'}
                                     </td>
-                                    <td className="py-3 px-4 text-right border-y border-r border-slate-100 rounded-r-lg group-hover:border-slate-200 w-px whitespace-nowrap">
+                                    <td className="py-3 px-4 text-right border-y border-r border-slate-100 rounded-r-lg group-hover:border-slate-200 whitespace-nowrap">
                                         <div className="inline-flex items-center gap-2">
                                             <button
                                                 onClick={() => openView(c)}
@@ -276,10 +358,94 @@ export default function KhachHangPage() {
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                            )))}
                         </tbody>
                     </table>
+                    {!isLoading && totalItems === 0 && (
+                        <div className="text-center py-10 text-slate-400">
+                            Không tìm thấy khách hàng nào.
+                        </div>
+                    )}
                 </div>
+
+                {/* --- Pagination Controls --- */}
+                {totalItems > 0 && (
+                    <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+                        <span className="text-sm text-slate-500">
+                            Hiển thị {((currentPage - 1) * ITEMS_PER_PAGE) + 1} đến {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)} của {totalItems} sản phẩm
+                        </span>
+
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                                className="p-2 rounded-md border
+                                bg-white border-slate-300 text-slate-600
+                                transition-all duration-200
+
+                                cursor-pointer
+                                hover:bg-slate-50 hover:text-[#25396f] hover:border-[#25396f] hover:shadow-sm
+
+                                disabled:opacity-40
+                                disabled:cursor-default
+                                disabled:hover:bg-white
+                                disabled:hover:text-slate-600
+                                disabled:hover:border-slate-300
+                                disabled:shadow-none"
+                            >
+                                <ChevronLeft size={16} />
+                            </button>
+
+                            {/* Page Numbers (Simple version) */}
+                            {getPaginationGroup().map((item, index) => {
+                                // If the item is '...', render the span
+                                if (item === '...') {
+                                    return (
+                                        <span key={`dots-${index}`} className="text-slate-400 text-xs px-1 self-end mb-2">
+                                            ...
+                                        </span>
+                                    );
+                                }
+
+                                return (
+                                    <button
+                                        key={item}
+                                        onClick={() => setCurrentPage(item as number)}
+                                        className={`w-8 h-8 text-xs font-medium rounded-md transition-all duration-100 cursor-pointer
+                                            ${currentPage === item
+                                                ? // SELECTED: Add a slight shadow to make it pop
+                                                'bg-[#25396f] text-white border border-[#25396f] shadow-md scale-105'
+                                                : // UNSELECTED: On hover: slight gray bg, text turns blue, border turns blue
+                                                'bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 hover:text-[#25396f] hover:border-[#25396f]'
+                                            }`}
+                                    >
+                                        {item}
+                                    </button>
+                                );
+                            })}
+
+                            <button
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                                className="p-2 rounded-md border
+                                    bg-white border-slate-300 text-slate-600
+                                    transition-all duration-100
+
+                                    cursor-pointer
+                                    hover:bg-slate-50 hover:text-[#25396f] hover:border-[#25396f] hover:shadow-sm
+
+                                    disabled:opacity-40
+                                    disabled:cursor-default
+                                    disabled:hover:bg-white
+                                    disabled:hover:text-slate-600
+                                    disabled:hover:border-slate-300
+                                    disabled:shadow-none"
+                            >
+                                <ChevronRight size={16} />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div >
             {/* Add Modal */}
             {modalType === 'add' && (
@@ -292,6 +458,7 @@ export default function KhachHangPage() {
                 <ViewKhachHangModal
                     khachHang={selectedItem}
                     onClose={() => closeModal()}
+                    onUpdate={handleUpdate}
                 />
             )}
         </>

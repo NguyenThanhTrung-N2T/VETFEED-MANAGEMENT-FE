@@ -1,28 +1,30 @@
 "use client";
 
+import { useState } from "react";
 import Modal from "@/components/ui/Modal";
 import KhachHangForm from "./KhachHangForm";
-import { KhachHang } from "@/types/KhachHang";
+import { KhachHangCreateRequest, KhachHangResponse } from "@/client/types.gen";
 import { Users } from "lucide-react";
-
-export default function AddKhachHangModal({
-    onClose,
-    onAdd,
-}: {
+interface Props {
     onClose: () => void;
-    onAdd: (data: KhachHang) => void;
-}) {
-    function handleAdd(data: Partial<KhachHang>) {
-        onAdd({
-            ...data,
-            MaKH: crypto.randomUUID(),
-            MaKHCode: "KH_MOCK", // TODO: Generate proper customer code
-            TenKH: data.TenKH!,
-            TongMua: 0,
-            CongNoHienTai: 0,
-            NgayTao: new Date().toISOString(),
-        } as KhachHang);
-        onClose();
+    // The parent still expects the correct API Request type
+    onAdd: (data: KhachHangCreateRequest) => Promise<void> | void;
+}
+export default function AddKhachHangModal({ onClose, onAdd }: Props) {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    async function handleAdd(data: KhachHangCreateRequest) {
+        try {
+            setIsSubmitting(true);
+            const newData = { ...data };
+            await onAdd(newData);
+            onClose();
+        }
+        catch (error) {
+            console.log("Failed to add kho", error);
+        }
+        finally {
+            setIsSubmitting(false);
+        }
     }
 
     return (

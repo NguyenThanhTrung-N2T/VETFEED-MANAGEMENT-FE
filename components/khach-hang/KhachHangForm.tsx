@@ -1,66 +1,62 @@
 "use client";
 
-import React, { useState } from "react";
-import { KhachHang, LoaiKhachHang, TrangThaiKH } from "@/types/KhachHang";
+import React, { useState, useEffect } from "react";
+import { User, Phone, MapPin, CreditCard, FileText, Activity, Users } from "lucide-react";
+// Assuming these are your generated types. Adjust path if necessary.
+import { KhachHangCreateRequest } from "@/client/types.gen";
+import { LoaiKhachHang, TrangThaiKH } from "@/types/KhachHang"; // Or from types.gen
 
-type Props = {
-    initial?: Partial<KhachHang>;
-    submitText?: string;
-    onSubmit: (data: Partial<KhachHang>) => void;
+interface Props {
+    initialData?: Partial<KhachHangCreateRequest>;
+    onSubmit: (data: KhachHangCreateRequest) => void;
     onCancel: () => void;
-    isLoading?: boolean
+    isLoading?: boolean;
+    submitText?: string;
+}
+const DEFAULT_VALUES: KhachHangCreateRequest = {
+    tenKH: "",
+    soDienThoai: "",
+    diaChi: "",
+    loaiKhachHang: 0,
+    hanMucCongNo: 0,
+    trangThai: 0,
+    ghiChu: "",
 };
+export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoading = false, submitText = "Lưu thông tin" }: Props) {
+    // Merge default values with any initial data (for edit mode)
+    const [formData, setFormData] = useState<KhachHangCreateRequest>({
+        ...DEFAULT_VALUES,
+        ...initialData,
+    });
 
-const loaiKhachHangOptions: { value: LoaiKhachHang; label: string }[] = [
-    { value: "CA_NHAN", label: "Cá nhân" },
-    { value: "TRANG_TRAI", label: "Trang trại" },
-    { value: "DAI_LY", label: "Đại lý" },
-];
-
-const trangThaiOptions: { value: TrangThaiKH; label: string }[] = [
-    { value: "HOAT_DONG", label: "Hoạt động" },
-    { value: "KHOA", label: "Khóa" },
-];
-
-export default function KhachHangForm({
-    initial,
-    submitText = "Lưu",
-    onSubmit,
-    onCancel,
-    isLoading = false
-}: Props) {
-    const [tenKH, setTenKH] = useState(initial?.TenKH ?? "");
-    const [soDienThoai, setSoDienThoai] = useState(initial?.SoDienThoai ?? "");
-    const [diaChi, setDiaChi] = useState(initial?.DiaChi ?? "");
-    const [loaiKhachHang, setLoaiKhachHang] = useState<LoaiKhachHang | "">(
-        initial?.LoaiKhachHang ?? ""
-    );
-    const [hanMucCongNo, setHanMucCongNo] = useState(
-        initial?.HanMucCongNo?.toString() ?? ""
-    );
-    const [trangThai, setTrangThai] = useState<TrangThaiKH | "">(
-        initial?.TrangThai ?? "HOAT_DONG"
-    );
-    const [ghiChu, setGhiChu] = useState(initial?.GhiChu ?? "");
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const validateForm = () => {
+    // Handle Input Changes
+    const handleChange = (field: keyof KhachHangCreateRequest, value: any) => {
+        setFormData((prev) => ({ ...prev, [field]: value }));
+        // Clear error when user types
+        if (errors[field]) {
+            setErrors((prev) => {
+                const newErrors = { ...prev };
+                delete newErrors[field];
+                return newErrors;
+            });
+        }
+    };
+
+    const validate = () => {
         const newErrors: Record<string, string> = {};
 
-        if (!tenKH.trim()) {
-            newErrors.tenKH = "Tên khách hàng là bắt buộc";
+        if (!formData.tenKH?.trim()) {
+            newErrors.TenKH = "Tên khách hàng không được để trống";
         }
 
-        if (soDienThoai && !/^[0-9]{10,11}$/.test(soDienThoai)) {
-            newErrors.soDienThoai = "Số điện thoại không hợp lệ (10-11 số)";
+        if (formData.soDienThoai && !/^[0-9]{10,11}$/.test(formData.soDienThoai)) {
+            newErrors.SoDienThoai = "Số điện thoại không hợp lệ (10-11 số)";
         }
 
-        if (hanMucCongNo && isNaN(Number(hanMucCongNo))) {
-            newErrors.hanMucCongNo = "Hạn mức công nợ phải là số";
-        }
-
-        if (hanMucCongNo && Number(hanMucCongNo) < 0) {
-            newErrors.hanMucCongNo = "Hạn mức công nợ không được âm";
+        if (formData.hanMucCongNo !== undefined && formData.hanMucCongNo !== null && formData.hanMucCongNo < 0) {
+            newErrors.HanMucCongNo = "Hạn mức công nợ không được âm";
         }
 
         setErrors(newErrors);
@@ -69,60 +65,58 @@ export default function KhachHangForm({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-
-        if (!validateForm()) return;
-
-        const data: Partial<KhachHang> = {
-            TenKH: tenKH.trim(),
-            SoDienThoai: soDienThoai.trim() || null,
-            DiaChi: diaChi.trim() || null,
-            LoaiKhachHang: loaiKhachHang || null,
-            HanMucCongNo: hanMucCongNo ? Number(hanMucCongNo) : null,
-            TrangThai: trangThai || null,
-            GhiChu: ghiChu.trim() || null,
-        };
-
-        onSubmit(data);
+        if (validate()) {
+            onSubmit(formData);
+        }
     };
+
+    // Helper for input styles
+    const inputClass = (hasError: boolean) =>
+        `w-full pl-10 pr-4 py-2.5 bg-white border rounded-lg focus:outline-none focus:ring-2 transition-all ${hasError
+            ? "border-red-500 focus:ring-red-200"
+            : "border-slate-300 focus:ring-blue-500 focus:border-blue-500"
+        }`;
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Tên khách hàng */}
+            {/* 1. Tên Khách Hàng */}
             <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Tên khách hàng <span className="text-red-500">*</span>
                 </label>
-                <input
-                    type="text"
-                    value={tenKH}
-                    onChange={(e) => setTenKH(e.target.value)}
-                    disabled={isLoading}
-                    placeholder="Nhập tên khách hàng"
-                    className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.tenKH ? "border-red-500" : "border-slate-300"
-                        }`}
-                />
-                {errors.tenKH && (
-                    <p className="text-xs text-red-600 mt-1">{errors.tenKH}</p>
-                )}
+                <div className="relative">
+                    <User className="absolute left-3 top-2.5 text-slate-400" size={18} />
+                    <input
+                        type="text"
+                        disabled={isLoading}
+                        value={formData.tenKH || "-"}
+                        onChange={(e) => handleChange("tenKH", e.target.value)}
+                        placeholder="Ví dụ: Nguyễn Văn A"
+                        className={inputClass(!!errors.TenKH)}
+                    />
+                </div>
+                {errors.TenKH && <p className="text-xs text-red-500 mt-1">{errors.TenKH}</p>}
             </div>
 
-            {/* Số điện thoại và Loại khách hàng */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* 2. SĐT & Loại KH */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                         Số điện thoại
                     </label>
-                    <input
-                        type="tel"
-                        value={soDienThoai}
-                        disabled={isLoading}
-                        onChange={(e) => setSoDienThoai(e.target.value)}
-                        placeholder="0123456789"
-                        className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.soDienThoai ? "border-red-500" : "border-slate-300"
-                            }`}
-                    />
-                    {errors.soDienThoai && (
-                        <p className="text-xs text-red-600 mt-1">{errors.soDienThoai}</p>
+                    <div className="relative">
+                        <Phone className="absolute left-3 top-2.5 text-slate-400" size={18} />
+                        <input
+                            type="text"
+                            disabled={isLoading}
+                            value={formData.soDienThoai || "-"}
+                            onChange={(e) => handleChange("soDienThoai", e.target.value)}
+                            placeholder="0912..."
+                            className={inputClass(!!errors.SoDienThoai)}
+                        />
+                    </div>
+                    {errors.SoDienThoai && (
+                        <p className="text-xs text-red-500 mt-1">{errors.SoDienThoai}</p>
                     )}
                 </div>
 
@@ -130,55 +124,60 @@ export default function KhachHangForm({
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                         Loại khách hàng
                     </label>
-                    <select
-                        value={loaiKhachHang}
-                        disabled={isLoading}
-                        onChange={(e) => setLoaiKhachHang(e.target.value as LoaiKhachHang | "")}
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                        <option value="">-- Chọn loại --</option>
-                        {loaiKhachHangOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                            </option>
-                        ))}
-                    </select>
+                    <div className="relative">
+                        <Users className="absolute left-3 top-2.5 text-slate-400" size={18} />
+                        <select
+                            disabled={isLoading}
+                            value={formData.loaiKhachHang || "CA_NHAN"}
+                            onChange={(e) => handleChange("loaiKhachHang", e.target.value)}
+                            className={inputClass(false)}
+                        >
+                            <option value="CA_NHAN">Cá nhân</option>
+                            <option value="TRANG_TRAI">Trang trại</option>
+                            <option value="DAI_LY">Đại lý</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            {/* Địa chỉ */}
+            {/* 3. Địa chỉ */}
             <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Địa chỉ
                 </label>
-                <input
-                    type="text"
-                    value={diaChi}
-                    disabled={isLoading}
-                    onChange={(e) => setDiaChi(e.target.value)}
-                    placeholder="Nhập địa chỉ"
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-            </div>
-
-            {/* Hạn mức công nợ và Trạng thái */}
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                        Hạn mức công nợ (VNĐ)
-                    </label>
+                <div className="relative">
+                    <MapPin className="absolute left-3 top-2.5 text-slate-400" size={18} />
                     <input
                         type="text"
-                        value={hanMucCongNo}
                         disabled={isLoading}
-                        onChange={(e) => setHanMucCongNo(e.target.value)}
-                        placeholder="0"
-                        className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.hanMucCongNo ? "border-red-500" : "border-slate-300"
-                            }`}
-                        inputMode="numeric"
+                        value={formData.diaChi || ""}
+                        onChange={(e) => handleChange("diaChi", e.target.value)}
+                        placeholder="Số nhà, thôn, xã..."
+                        className={inputClass(false)}
                     />
-                    {errors.hanMucCongNo && (
-                        <p className="text-xs text-red-600 mt-1">{errors.hanMucCongNo}</p>
+                </div>
+            </div>
+
+            {/* 4. Hạn mức & Trạng thái */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        Hạn mức nợ (VNĐ)
+                    </label>
+                    <div className="relative">
+                        <CreditCard className="absolute left-3 top-2.5 text-slate-400" size={18} />
+                        <input
+                            type="number"
+                            disabled={isLoading}
+                            value={formData.hanMucCongNo ?? '0'}
+                            onChange={(e) =>
+                                handleChange("hanMucCongNo", parseFloat(e.target.value) || 0)
+                            }
+                            className={inputClass(!!errors.HanMucCongNo)}
+                        />
+                    </div>
+                    {errors.HanMucCongNo && (
+                        <p className="text-xs text-red-500 mt-1">{errors.HanMucCongNo}</p>
                     )}
                 </div>
 
@@ -186,52 +185,56 @@ export default function KhachHangForm({
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                         Trạng thái
                     </label>
-                    <select
-                        value={trangThai}
-                        disabled={isLoading}
-                        onChange={(e) => setTrangThai(e.target.value as TrangThaiKH | "")}
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                        {trangThaiOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                            </option>
-                        ))}
-                    </select>
+                    <div className="relative">
+                        <Activity className="absolute left-3 top-2.5 text-slate-400" size={18} />
+                        <select
+                            disabled={isLoading}
+                            value={formData.trangThai || "HOAT_DONG"}
+                            onChange={(e) => handleChange("trangThai", e.target.value)}
+                            className={inputClass(false)}
+                        >
+                            <option value="HOAT_DONG">Hoạt động</option>
+                            <option value="KHOA">Đang khóa</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            {/* Ghi chú */}
+            {/* 5. Ghi chú */}
             <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Ghi chú
                 </label>
-                <textarea
-                    value={ghiChu}
-                    disabled={isLoading}
-                    onChange={(e) => setGhiChu(e.target.value)}
-                    rows={1}
-                    placeholder="Nhập ghi chú (tùy chọn)"
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                <div className="relative">
+                    <FileText className="absolute left-3 top-3 text-slate-400" size={18} />
+                    <textarea
+                        disabled={isLoading}
+                        rows={2}
+                        value={formData.ghiChu || ""}
+                        onChange={(e) => handleChange("ghiChu", e.target.value)}
+                        placeholder="Ghi chú thêm..."
+                        className={`w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    />
+                </div>
             </div>
 
-            {/* Action buttons */}
-            <div className="flex items-center gap-4 pt-4">
+            {/* Actions */}
+            <div className="flex items-center gap-4 pt-4 border-t border-slate-100">
                 <button
+                    type="button"
                     disabled={isLoading}
-                    type="submit"
-                    className="flex-1 h-11 rounded-lg bg-[#3f861e] text-white font-semibold hover:bg-[#529E29] transition-colors"
+                    onClick={onCancel}
+                    className="flex-1 h-11 rounded-lg border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
                 >
-                    {submitText}
+                    Hủy bỏ
                 </button>
                 <button
+                    type="submit"
                     disabled={isLoading}
-                    type="button"
-                    onClick={onCancel}
-                    className="flex-1 h-11 rounded-lg border-2 border-red-500 text-red-500 font-semibold hover:bg-red-50 transition-colors"
+                    className="flex-1 h-11 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                    Hủy
+                    {isLoading && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                    {submitText}
                 </button>
             </div>
         </form>

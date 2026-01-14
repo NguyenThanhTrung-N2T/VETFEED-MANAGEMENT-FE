@@ -59,7 +59,7 @@ export default function SanPhamPage() {
         setCurrentPage(1);
     }, [query]);
 
-    // --- CRUD Handlers (Same as before) ---
+    // --- CRUD Handlers  ---
     const closeModal = () => { setModalType(null); setSelectedItem(null); };
     const handleCreate = async (newData: SanPhamCreateRequest) => {
         try {
@@ -304,7 +304,7 @@ export default function SanPhamPage() {
                         </tbody>
                     </table>
 
-                    {totalItems === 0 && (
+                    {!isLoading && totalItems === 0 && (
                         <div className="text-center py-10 text-slate-400">
                             Không tìm thấy sản phẩm nào.
                         </div>

@@ -12,10 +12,11 @@ import {
     SanPhamResponse,
     SanPhamResponsePagedResult
 } from '@/client/types.gen';
+
 // Define a helper type for search params based on GetApiSanPhamsData query
 export interface ProductSearchParams {
     Keyword?: string;
-    LoaiSanPham?: string; // e.g., 'Vaccine', 'Thuoc', 'DinhDuong'
+    LoaiSanPham?: string;
     Page?: number;
     PageSize?: number;
 }
@@ -26,7 +27,7 @@ export const sanPhamService = {
         const { data, error } = await getApiSanPhams({ query: params });
 
         if (error) throw error;
-        if (!data) throw error;
+        if (!data) throw new Error('Failed to fetch data!');
         return data;
     },
 
