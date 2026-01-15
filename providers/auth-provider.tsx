@@ -68,11 +68,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const logout = () => {
-        Cookies.remove('accessToken');
-        localStorage.removeItem('userInfo');
-        setUser(null);
-        router.push('/login');
+    const logout = async () => {
+        try {
+            await authService.logout();
+            Cookies.remove('accessToken');
+            localStorage.removeItem('userInfo');
+            setUser(null);
+            router.push('/login');
+        } catch (error: any) {
+            console.error("Logout failed:", error);
+        }
         // Gọi thêm authService.logout() nếu cần
     };
 
