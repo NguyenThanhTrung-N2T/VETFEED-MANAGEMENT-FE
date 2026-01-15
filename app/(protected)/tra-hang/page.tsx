@@ -1,158 +1,161 @@
 "use client";
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-    Search, Plus, ChevronDown, Edit, Trash2, Filter, FileText, CornerUpLeft
+    Search, Plus, Filter, Trash2, CornerUpLeft, FileText, Loader2, Eye
 } from 'lucide-react';
 import ReturnModals from '@/components/ReturnModals';
-
-const RETURN_DATA = [
-    { id: '20001', date: '22/04/2022', type: 'Trả bán', partner: 'Chí Vỹ', warehouse: 'Kho Tân Thông' },
-    { id: '20002', date: '12/05/2022', type: 'Trả nhập', partner: 'Công ty thuốc thú y An Phát', warehouse: 'Kho Thủ Đức' },
-    { id: '20003', date: '10/06/2022', type: 'Trả bán', partner: 'Lê Hoài', warehouse: 'Kho Củ Chi' },
-    { id: '20004', date: '20/06/2022', type: 'Trả nhập', partner: 'Công ty thức ăn chăn nuôi Việt Nam', warehouse: 'Kho Hóc Môn' },
-    { id: '20005', date: '10/07/2022', type: 'Trả bán', partner: 'Lê Minh', warehouse: 'Kho Linh Trung' },
-    { id: '20006', date: '11/08/2022', type: 'Trả bán', partner: 'Nguyễn Thanh Phong', warehouse: 'Kho Nhà Bè' },
-    { id: '20007', date: '15/01/2023', type: 'Trả nhập', partner: 'Trang trại vui vẻ', warehouse: 'Kho Hóc Môn' },
-    { id: '20008', date: '10/06/2023', type: 'Trả bán', partner: 'Lê Hoàn', warehouse: 'Kho Củ Chi' },
-    { id: '20009', date: '10/07/2025', type: 'Trả bán', partner: 'Lê Long Đĩnh', warehouse: 'Kho Củ Chi' },
-];
+import { returnService, PhieuTra } from '@/services/return.service';
+import { format } from 'date-fns';
+import AddButton from "@/components/ui/AddButton";
 
 export default function ReturnPage() {
     const [searchTerm, setSearchTerm] = useState('');
-    const [modalType, setModalType] = useState<'filter' | 'add' | 'edit' | 'detail' | 'delete' | null>(null);
+    const [data, setData] = useState<PhieuTra[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedId, setSelectedId] = useState<string | null>(null);
+    const [modalType, setModalType] = useState<'filter' | 'add' | 'detail' | 'delete' | null>(null);
 
-    // Lọc dữ liệu đơn giản
-    const filteredData = RETURN_DATA.filter(item =>
-        item.id.includes(searchTerm) ||
-        item.partner.toLowerCase().includes(searchTerm.toLowerCase())
+    // Fetch Data
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            const res = await returnService.getAll();
+            setData(res);
+        } catch (error) {
+            console.error("Fetch returns failed:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    // Filter Logic
+    const filteredData = data.filter(item =>
+        (item.maPTCode?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (item.tenKhachHang?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (item.maPBCode?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     );
+
+    const handleOpenModal = (type: typeof modalType, id: string | null = null) => {
+        setSelectedId(id);
+        setModalType(type);
+    };
+
+    const formatMoney = (val: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
 
     return (
         <div className="p-6 bg-[#eef2f6] min-h-screen font-sans relative">
-
-            {/* --- HEADER --- */}
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                    {/* Icon mũi tên quay lại (Return) */}
-                    <div className="p-1.5 bg-slate-800 rounded text-white">
+                    <div className="p-1 bg-slate-800 rounded text-white">
                         <CornerUpLeft size={20} />
                     </div>
                     Trả hàng
                 </h1>
             </div>
 
-            {/* --- TOOLBAR --- */}
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
-                <div className="relative">
-                    <button className="flex items-center justify-between w-32 px-4 py-2.5 bg-[#25396f] text-white rounded-lg hover:bg-[#1e2e5a] transition-colors shadow-md">
-                        <span className="text-sm font-medium">Tất cả</span>
-                        <ChevronDown size={16} />
-                    </button>
-                </div>
-
+            <div className="flex flex-col md:flex-row gap-4 mb-6 text-slate-800">
                 <div className="relative flex-1 max-w-lg">
                     <input
                         type="text"
-                        placeholder="Tìm kiếm..."
+                        placeholder="Tìm theo mã trả, mã bán, khách hàng..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-4 pr-10 py-2.5 rounded-lg border-none focus:ring-2 focus:ring-slate-300 shadow-sm outline-none bg-white text-slate-700 placeholder:text-slate-400"
+                        className="w-full pl-4 pr-10 py-2.5 rounded-lg border-none shadow-sm outline-none bg-white"
                     />
                     <Search className="absolute right-3 top-2.5 text-slate-400" size={20} />
                 </div>
+                <AddButton onClick={() => handleOpenModal('add')} className="ml-auto" />
             </div>
 
-            {/* --- MAIN TABLE CARD --- */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-[500px]">
-
-                {/* Card Header */}
-                <div className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                            Danh sách phiếu trả
-                            {/* Icon Filter trigger modal */}
-                            <Filter
-                                onClick={() => setModalType('filter')}
-                                className="cursor-pointer hover:text-green-600 transition-colors ml-1"
-                                size={20}
-                                strokeWidth={1.5}
-                            />
-                        </h2>
-                    </div>
-
-                    <div className="flex gap-2">
-                        <button className="flex items-center gap-2 px-4 py-2 bg-[#25396f] hover:bg-[#1e2e5a] text-white rounded-lg font-medium transition-colors shadow-md">
-                            <span>Chi tiết</span>
-                            <FileText size={18} />
-                        </button>
-                        <button
-                            onClick={() => setModalType('add')}
-                            className="flex items-center gap-2 px-5 py-2 bg-[#43a047] hover:bg-green-700 text-white rounded-lg font-medium transition-colors shadow-green-100 shadow-lg"
-                        >
-                            <span>Thêm</span>
-                            <Plus size={20} />
-                        </button>
-                    </div>
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-[200px]">
+                <div className="p-6 border-b border-gray-100">
+                    <h2 className="text-xl font-bold text-slate-800">Danh sách phiếu trả</h2>
                 </div>
 
-                {/* Table */}
                 <div className="overflow-x-auto px-6 pb-6">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full text-left border-collapse rounded-lg overflow-hidden">
                         <thead>
-                            <tr className="bg-[#e9eff6] text-slate-800 text-sm font-bold uppercase tracking-wide">
-                                <th className="p-4 border-b border-gray-200">Số phiếu</th>
-                                <th className="p-4 border-b border-gray-200">Ngày trả</th>
-                                <th className="p-4 border-b border-gray-200">Loại trả</th>
-                                <th className="p-4 border-b border-gray-200">Khách hàng/Nhà cung cấp</th>
-                                <th className="p-4 border-b border-gray-200">Kho nhập/xuất</th>
-                                <th className="p-4 border-b border-gray-200 text-center">Hành động</th>
+                            <tr className="bg-[#e9eff6] text-slate-800 text-sm font-bold uppercase">
+                                <th className="p-4">Mã phiếu trả</th>
+                                <th className="p-4">Ngày trả</th>
+                                <th className="p-4">Thuộc phiếu bán</th>
+                                <th className="p-4">Khách hàng</th>
+                                <th className="p-4 text-right">Giá trị hoàn</th>
+                                <th className="p-4 text-center">Hình thức</th>
+                                <th className="p-4 text-center">Hành động</th>
                             </tr>
                         </thead>
                         <tbody className="text-sm text-slate-700">
-                            {filteredData.map((item, index) => (
-                                <tr
-                                    key={index}
-                                    className={`hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-0 
-                    ${index % 2 === 0 ? 'bg-white' : 'bg-[#f1f5f9]'}`
-                                    }
-                                    onDoubleClick={() => setModalType('detail')}
-                                >
-                                    <td className="p-4 font-medium text-slate-600 cursor-pointer" onClick={() => setModalType('detail')}>{item.id}</td>
-                                    <td className="p-4">{item.date}</td>
-                                    <td className="p-4">{item.type}</td>
-                                    <td className="p-4 font-medium text-slate-800">{item.partner}</td>
-                                    <td className="p-4 text-slate-600">{item.warehouse}</td>
-                                    <td className="p-4">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <button
-                                                onClick={() => setModalType('edit')}
-                                                className="p-1.5 border-2 border-slate-700 text-slate-700 rounded hover:bg-slate-700 hover:text-white transition-all"
-                                            >
-                                                <Edit size={16} strokeWidth={2.5} />
-                                            </button>
-                                            <button
-                                                onClick={() => setModalType('delete')}
-                                                className="p-1.5 border-2 border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-all"
-                                            >
-                                                <Trash2 size={16} strokeWidth={2.5} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                            {loading ? (
+                                // --- SKELETON LOADER ---
+                                [...Array(5)].map((_, index) => (
+                                    <tr key={index} className="animate-pulse bg-white border-b border-slate-100">
+                                        <td className="py-4 pl-3 border-y border-l border-slate-50 rounded-l-lg"><div className="h-4 bg-slate-200 rounded w-16"></div></td>
+                                        <td className="py-4 border-y border-slate-50"><div className="h-4 bg-slate-200 rounded w-48"></div></td>
+                                        <td className="py-4 border-y border-slate-50"><div className="h-4 bg-slate-200 rounded w-full"></div></td>
+                                        <td className="py-4 border-y border-slate-50 text-center"><div className="h-4 bg-slate-200 rounded w-24 mx-auto"></div></td>
+                                        <td className="py-4 border-y border-slate-50 text-center"><div className="h-6 bg-slate-200 rounded-full w-8 mx-auto"></div></td>
+                                        <td className="py-4 border-y border-slate-50"><div className="h-4 bg-slate-200 rounded w-16"></div></td>
+                                        <td className="py-4 px-4 text-right border-y border-r border-slate-50 rounded-r-lg">
+                                            <div className="flex justify-end gap-2"><div className="h-8 w-8 bg-slate-200 rounded-md"></div><div className="h-8 w-8 bg-slate-200 rounded-md"></div></div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : filteredData.length === 0 ? (
+                                <tr><td colSpan={7} className="p-8 text-center text-slate-500">Chưa có phiếu trả nào</td></tr>
+                            ) : (
+                                filteredData.map((item) => (
+                                    <tr key={item.maPT} className="hover:bg-blue-50 border-b border-gray-100">
+                                        <td className="p-4 font-bold text-slate-700 cursor-pointer" onClick={() => handleOpenModal('detail', item.maPT)}>
+                                            {item.maPTCode || 'N/A'}
+                                        </td>
+                                        <td className="p-4">
+                                            {item.ngayTra ? format(new Date(item.ngayTra), 'dd/MM/yyyy') : '-'}
+                                        </td>
+                                        <td className="p-4 font-mono text-emerald-600 font-medium">
+                                            {item.maPBCode}
+                                        </td>
+                                        <td className="p-4 font-semibold">{item.tenKhachHang}</td>
+                                        <td className="p-4 text-right font-bold text-slate-800">
+                                            {formatMoney(item.thanhTien)}
+                                        </td>
+                                        <td className="p-4 text-center">
+                                            <span className="px-2 py-1 bg-gray-100 rounded text-xs font-medium">
+                                                {item.hinhThucHoanTien}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 text-center">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <button onClick={() => handleOpenModal('detail', item.maPT)} className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-blue-500 hover:bg-blue-100">
+                                                    <Eye size={16} />
+                                                </button>
+                                                <button onClick={() => handleOpenModal('delete', item.maPT)} className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-red-500 hover:bg-red-50">
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            {/* --- MODALS --- */}
             <ReturnModals
                 isOpen={modalType !== null}
                 type={modalType}
-                onClose={() => setModalType(null)}
+                selectedId={selectedId}
+                onClose={(refresh) => {
+                    setModalType(null);
+                    setSelectedId(null);
+                    if (refresh) fetchData();
+                }}
             />
-
         </div>
     );
 }

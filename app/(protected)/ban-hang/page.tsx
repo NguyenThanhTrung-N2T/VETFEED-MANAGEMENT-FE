@@ -1,151 +1,156 @@
 "use client";
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Search, Plus, Filter, Edit, Trash2,
-    ChevronDown, DollarSign
+    ChevronDown, DollarSign, Loader2, Eye
 } from 'lucide-react';
 import SalesModals from '@/components/SalesModals';
-
-const SALES_DATA = [
-    { id: '10000', date: '01/10/2000', customer: 'Nguyễn Văn A', phone: '0123456789', total: '1.800.000', note: 'Không có' },
-    { id: '10001', date: '01/10/2000', customer: 'Nguyễn Văn A', phone: '0123456789', total: '1.800.000', note: 'Không có' },
-    { id: '10002', date: '01/10/2000', customer: 'Nguyễn Văn A', phone: '0123456789', total: '1.800.000', note: 'Không có' },
-    { id: '10003', date: '01/10/2000', customer: 'Nguyễn Văn A', phone: '0123456789', total: '1.800.000', note: 'Không có' },
-    { id: '10004', date: '01/10/2000', customer: 'Nguyễn Văn A', phone: '0123456789', total: '1.800.000', note: 'Không có' },
-    { id: '10005', date: '01/10/2000', customer: 'Nguyễn Văn A', phone: '0123456789', total: '1.800.000', note: 'Không có' },
-    { id: '10006', date: '01/10/2000', customer: 'Nguyễn Văn A', phone: '0123456789', total: '1.800.000', note: 'Không có' },
-    { id: '10007', date: '01/10/2000', customer: 'Nguyễn Văn A', phone: '0123456789', total: '1.800.000', note: 'Không có' },
-];
+import { salesService, PhieuBan } from '@/services/sales.service';
+import { format } from 'date-fns';
+import AddButton from "@/components/ui/AddButton";
 
 export default function SalesPage() {
     const [searchTerm, setSearchTerm] = useState('');
-
-    // State quản lý Modal
+    const [data, setData] = useState<PhieuBan[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedId, setSelectedId] = useState<string | null>(null);
     const [modalType, setModalType] = useState<'filter' | 'add' | 'edit' | 'detail' | 'delete' | null>(null);
 
-    // Lọc dữ liệu (Giả lập)
-    const filteredData = SALES_DATA.filter(item =>
-        item.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.id.includes(searchTerm)
+    // Fetch Data
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            const res = await salesService.getAll();
+            setData(res);
+        } catch (error) {
+            console.error("Fetch sales failed:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    // Filter Logic
+    const filteredData = data.filter(item =>
+        (item.tenKhachHang?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (item.maPBCode?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     );
+
+    const handleOpenModal = (type: typeof modalType, id: string | null = null) => {
+        setSelectedId(id);
+        setModalType(type);
+    };
+
+    // Helper format tiền
+    const formatMoney = (amount: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
     return (
         <div className="p-6 bg-[#eef2f6] min-h-screen font-sans relative">
-
-            {/* --- HEADER --- */}
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2 font-sans">
-                    <DollarSign className="text-slate-800" size={28} />
+                    <DollarSign className="p-1 bg-slate-800 rounded text-white" size={28} />
                     Bán hàng
                 </h1>
             </div>
 
-            {/* --- TOOLBAR --- */}
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
-                <div className="relative">
-                    <button className="flex items-center justify-between w-32 px-4 py-2.5 bg-[#25396f] text-white rounded-lg hover:bg-[#1e2e5a] transition-colors shadow-md">
-                        <span className="text-sm font-medium">Tất cả</span>
-                        <ChevronDown size={16} />
-                    </button>
-                </div>
-
+            <div className="flex flex-col md:flex-row gap-4 mb-6 text-slate-800">
                 <div className="relative flex-1 max-w-lg">
                     <input
                         type="text"
-                        placeholder="Tìm kiếm..."
+                        placeholder="Tìm kiếm khách hàng, mã phiếu..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-4 pr-10 py-2.5 rounded-lg border-none focus:ring-2 focus:ring-slate-300 shadow-sm outline-none bg-white text-slate-700 placeholder:text-slate-400"
+                        className="w-full pl-4 pr-10 py-2.5 rounded-lg border-none shadow-sm outline-none bg-white"
                     />
                     <Search className="absolute right-3 top-2.5 text-slate-400" size={20} />
                 </div>
+                <AddButton onClick={() => handleOpenModal('add')} className="ml-auto" />
             </div>
 
-            {/* --- MAIN CARD --- */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-[500px] border border-gray-100">
-
-                {/* Card Header: Tiêu đề + Nút Filter + Nút Thêm */}
-                <div className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-xl font-bold text-slate-800">Danh sách phiếu</h2>
-                        {/* Click vào icon phễu để mở modal Filter */}
-                        <Filter
-                            onClick={() => setModalType('filter')}
-                            size={24}
-                            strokeWidth={1.5}
-                            className="text-slate-800 cursor-pointer hover:text-green-600 transition-colors ml-1"
-                        />
-                    </div>
-
-                    <button
-                        onClick={() => setModalType('add')}
-                        className="flex items-center gap-2 px-6 py-2 bg-[#388e3c] hover:bg-green-700 text-white rounded-lg font-bold transition-colors shadow-green-100 shadow-lg"
-                    >
-                        <span>Thêm</span>
-                        <Plus size={20} />
-                    </button>
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-[200px] border border-gray-100">
+                <div className="p-6 border-b border-gray-100">
+                    <h2 className="text-xl font-bold text-slate-800">Lịch sử bán hàng</h2>
                 </div>
 
-                {/* Table */}
                 <div className="overflow-x-auto px-6 pb-6">
                     <table className="w-full text-left border-collapse rounded-lg overflow-hidden">
                         <thead>
-                            <tr className="bg-[#e2e8f0] text-slate-800 text-sm font-bold uppercase tracking-wide">
-                                <th className="p-4 border-b border-gray-200">Số phiếu</th>
-                                <th className="p-4 border-b border-gray-200">Ngày bán</th>
-                                <th className="p-4 border-b border-gray-200">Khách hàng</th>
-                                <th className="p-4 border-b border-gray-200">Số điện thoại</th>
-                                <th className="p-4 border-b border-gray-200">Tiền thanh toán (VNĐ)</th>
-                                <th className="p-4 border-b border-gray-200">Ghi chú</th>
-                                <th className="p-4 border-b border-gray-200 text-center">Hành động</th>
+                            <tr className="bg-[#e9eff6] text-slate-800 text-sm font-bold uppercase">
+                                <th className="p-4">Mã phiếu</th>
+                                <th className="p-4">Ngày bán</th>
+                                <th className="p-4">Khách hàng</th>
+                                <th className="p-4 text-right">Tổng tiền</th>
+                                <th className="p-4 text-center">Hình thức</th>
+                                <th className="p-4 text-center">Hành động</th>
                             </tr>
                         </thead>
                         <tbody className="text-sm text-slate-700">
-                            {filteredData.map((item, index) => (
-                                <tr
-                                    key={index}
-                                    className={`hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-0 
-                    ${index % 2 === 0 ? 'bg-white' : 'bg-[#f1f5f9]'}` // Zebra stripe: Trắng / Xám nhạt
-                                    }
-                                    onDoubleClick={() => setModalType('detail')}
-                                >
-                                    <td className="p-4 font-medium text-slate-600 cursor-pointer" onClick={() => setModalType('detail')}>{item.id}</td>
-                                    <td className="p-4">{item.date}</td>
-                                    <td className="p-4 font-semibold text-slate-800">{item.customer}</td>
-                                    <td className="p-4 font-mono text-slate-600">{item.phone}</td>
-                                    <td className="p-4 font-medium text-slate-800">{item.total}</td>
-                                    <td className="p-4 text-slate-500">{item.note}</td>
-                                    <td className="p-4">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <button
-                                                onClick={() => setModalType('edit')}
-                                                className="p-1.5 border-2 border-slate-700 text-slate-700 rounded hover:bg-slate-700 hover:text-white transition-all"
-                                            >
-                                                <Edit size={16} strokeWidth={2.5} />
-                                            </button>
-                                            <button
-                                                onClick={() => setModalType('delete')}
-                                                className="p-1.5 border-2 border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-all"
-                                            >
-                                                <Trash2 size={16} strokeWidth={2.5} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                            {loading ? (
+                                // --- SKELETON LOADER ---
+                                [...Array(5)].map((_, index) => (
+                                    <tr key={index} className="animate-pulse bg-white border-b border-slate-100">
+                                        <td className="py-4 pl-3 border-y border-l border-slate-50 rounded-l-lg"><div className="h-4 bg-slate-200 rounded w-16"></div></td>
+                                        <td className="py-4 border-y border-slate-50"><div className="h-4 bg-slate-200 rounded w-48"></div></td>
+                                        <td className="py-4 border-y border-slate-50"><div className="h-4 bg-slate-200 rounded w-full"></div></td>
+                                        <td className="py-4 border-y border-slate-50 text-center"><div className="h-4 bg-slate-200 rounded w-24 mx-auto"></div></td>
+                                        <td className="py-4 border-y border-slate-50 text-center"><div className="h-6 bg-slate-200 rounded-full w-8 mx-auto"></div></td>
+                                        <td className="py-4 border-y border-slate-50"><div className="h-4 bg-slate-200 rounded w-16"></div></td>
+                                        <td className="py-4 px-4 text-right border-y border-r border-slate-50 rounded-r-lg">
+                                            <div className="flex justify-end gap-2"><div className="h-8 w-8 bg-slate-200 rounded-md"></div><div className="h-8 w-8 bg-slate-200 rounded-md"></div></div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : filteredData.length === 0 ? (
+                                <tr><td colSpan={6} className="p-8 text-center text-slate-500">Chưa có đơn hàng nào</td></tr>
+                            ) : (
+                                filteredData.map((item, index) => (
+                                    <tr key={index} className="hover:bg-blue-50 border-b border-gray-100">
+                                        <td className="p-4 font-bold text-emerald-700 cursor-pointer" onClick={() => handleOpenModal('detail', item.maPB)}>
+                                            {item.maPBCode || 'N/A'}
+                                        </td>
+                                        <td className="p-4">
+                                            {item.ngayBan ? format(new Date(item.ngayBan), 'dd/MM/yyyy HH:mm') : '-'}
+                                        </td>
+                                        <td className="p-4 font-semibold">{item.tenKhachHang}</td>
+                                        <td className="p-4 text-right font-bold text-slate-800">
+                                            {formatMoney(item.thanhTien)}
+                                        </td>
+                                        <td className="p-4 text-center">
+                                            <span className="px-2 py-1 bg-gray-100 rounded text-xs font-medium">
+                                                {item.hinhThucThanhToan}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 text-center">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <button onClick={() => handleOpenModal('detail', item.maPB)} className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-blue-500 hover:bg-blue-100" title="Xem chi tiết">
+                                                    <Eye size={16} />
+                                                </button>
+                                                <button onClick={() => handleOpenModal('delete', item.maPB)} className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-red-500 hover:bg-red-50" title="Xóa">
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            {/* --- NHÚNG COMPONENT MODAL --- */}
             <SalesModals
                 isOpen={modalType !== null}
                 type={modalType}
-                onClose={() => setModalType(null)}
+                selectedId={selectedId}
+                onClose={(refresh) => {
+                    setModalType(null);
+                    setSelectedId(null);
+                    if (refresh) fetchData();
+                }}
             />
-
         </div>
     );
 }

@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { X, Plus, Trash2, Edit, Info, Save, Loader2, Search, AlertTriangle } from "lucide-react";
 import { transferService, CTChuyenKhoItem } from "@/services/transfer.service";
 import { format } from "date-fns";
+import { toast } from 'sonner';
 
 type ModalType = "filter" | "add" | "edit" | "detail" | "delete" | null;
 
@@ -357,6 +358,7 @@ export default function TransferModals({ isOpen, type, selectedId, onClose }: Tr
             }
             setHasUnsavedChanges(false);
             handleRequestClose(true);
+            toast.success("Thêm phiếu chuyển thành công!");
         } catch (error: any) {
             setFormError("Có lỗi xảy ra: " + (error.response?.data?.detail || error.message));
         } finally {
@@ -388,6 +390,7 @@ export default function TransferModals({ isOpen, type, selectedId, onClose }: Tr
         try {
             await transferService.delete(selectedId);
             handleRequestClose(true);
+            toast.success("Xóa phiếu chuyển thành công!");
         } catch (error) {
             setFormError("Không thể xóa phiếu này!");
         } finally {

@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { X, Trash2, Save, AlertTriangle, Loader2, Search, Plus, Edit, Info } from "lucide-react";
 import { importService, SanPhamNCC, CTPhieuNhap } from "@/services/import.service";
 import { format } from "date-fns";
+import { toast } from 'sonner';
 
 type ModalType = "filter" | "add" | "edit" | "detail" | "delete" | null;
 
@@ -332,6 +333,7 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
             }
             setHasUnsavedChanges(false);
             handleRequestClose(true);
+            toast.success("Thêm phiếu nhập thành công!");
         } catch (error: any) {
             setFormError("Lỗi: " + (error.response?.data?.detail || error.message));
         } finally {
@@ -345,6 +347,7 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
         try {
             await importService.delete(selectedId);
             handleRequestClose(true);
+            toast.success("Xóa phiếu nhập thành công!");
         } catch (error) {
             setFormError("Không thể xóa phiếu này.");
         } finally {

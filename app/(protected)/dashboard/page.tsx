@@ -18,7 +18,7 @@ export default function DashboardPage() {
             {/* --- HEADER --- */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                    <div className="p-2 bg-slate-800 rounded-lg text-white">
+                    <div className="p-1 bg-slate-800 rounded-lg text-white">
                         <BarChart3 size={24} />
                     </div>
                     Dashboard

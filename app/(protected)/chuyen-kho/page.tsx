@@ -6,6 +6,7 @@ import {
 import TransferModals from '@/components/TransferModals';
 import { transferService, PhieuChuyenKho } from '@/services/transfer.service';
 import { format } from 'date-fns';
+import AddButton from "@/components/ui/AddButton";
 
 export default function TransferPage() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -61,7 +62,7 @@ export default function TransferPage() {
                 </h1>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="flex flex-col md:flex-row gap-4 mb-6 text-slate-800">
                 {/* ... Toolbar Search ... */}
                 <div className="relative flex-1 max-w-lg">
                     <input
@@ -73,13 +74,7 @@ export default function TransferPage() {
                     />
                     <Search className="absolute right-3 top-2.5 text-slate-400" size={20} />
                 </div>
-                <button
-                    onClick={() => handleOpenModal('add')}
-                    className="ml-auto flex items-center gap-2 px-5 py-2 bg-[#43a047] hover:bg-green-700 text-white rounded-lg font-medium shadow-green-100 shadow-lg"
-                >
-                    <span>Thêm phiếu</span>
-                    <Plus size={20} />
-                </button>
+                <AddButton onClick={() => handleOpenModal('add')} className="ml-auto" />
             </div>
 
             {/* Table Card */}
@@ -102,9 +97,20 @@ export default function TransferPage() {
                         </thead>
                         <tbody className="text-sm text-slate-700">
                             {loading ? (
-                                <tr>
-                                    <td colSpan={6} className="p-8 text-center"><Loader2 className="animate-spin mx-auto text-emerald-600" /></td>
-                                </tr>
+                                // --- SKELETON LOADER ---
+                                [...Array(5)].map((_, index) => (
+                                    <tr key={index} className="animate-pulse bg-white border-b border-slate-100">
+                                        <td className="py-4 pl-3 border-y border-l border-slate-50 rounded-l-lg"><div className="h-4 bg-slate-200 rounded w-16"></div></td>
+                                        <td className="py-4 border-y border-slate-50"><div className="h-4 bg-slate-200 rounded w-48"></div></td>
+                                        <td className="py-4 border-y border-slate-50"><div className="h-4 bg-slate-200 rounded w-full"></div></td>
+                                        <td className="py-4 border-y border-slate-50 text-center"><div className="h-4 bg-slate-200 rounded w-24 mx-auto"></div></td>
+                                        <td className="py-4 border-y border-slate-50 text-center"><div className="h-6 bg-slate-200 rounded-full w-8 mx-auto"></div></td>
+                                        <td className="py-4 border-y border-slate-50"><div className="h-4 bg-slate-200 rounded w-16"></div></td>
+                                        <td className="py-4 px-4 text-right border-y border-r border-slate-50 rounded-r-lg">
+                                            <div className="flex justify-end gap-2"><div className="h-8 w-8 bg-slate-200 rounded-md"></div><div className="h-8 w-8 bg-slate-200 rounded-md"></div></div>
+                                        </td>
+                                    </tr>
+                                ))
                             ) : filteredData.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="p-8 text-center text-slate-500">Chưa có dữ liệu</td>
@@ -123,10 +129,10 @@ export default function TransferPage() {
                                         <td className="p-4 text-slate-500 truncate max-w-[200px]">{item.ghiChu}</td>
                                         <td className="p-4">
                                             <div className="flex items-center justify-center gap-2">
-                                                <button onClick={() => handleOpenModal('edit', item.maCK)} className="p-1.5 border border-slate-300 rounded hover:bg-slate-800 hover:text-white transition-all">
+                                                <button onClick={() => handleOpenModal('edit', item.maCK)} className="p-1.5 rounded hover:bg-slate-800 hover:text-white transition-all">
                                                     <Edit size={16} />
                                                 </button>
-                                                <button onClick={() => handleOpenModal('delete', item.maCK)} className="p-1.5 border border-red-300 text-red-500 rounded hover:bg-red-500 hover:text-white transition-all">
+                                                <button onClick={() => handleOpenModal('delete', item.maCK)} className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-red-500 hover:bg-red-50">
                                                     <Trash2 size={16} />
                                                 </button>
                                             </div>
