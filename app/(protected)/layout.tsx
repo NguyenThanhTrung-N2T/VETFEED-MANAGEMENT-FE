@@ -1,6 +1,5 @@
-// src/app/(protected)/layout.tsx
 import Sidebar from "@/components/Sidebar";
-
+import { Toaster } from "sonner";
 export default function ProtectedLayout({
     children,
 }: {
@@ -11,6 +10,11 @@ export default function ProtectedLayout({
             <Sidebar />
             <main className="flex-1 overflow-y-auto">
                 {children}
+                <Toaster
+                    position="top-right"
+                    richColors
+                    closeButton
+                />
             </main>
         </div>
     );

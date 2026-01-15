@@ -63,6 +63,7 @@ export default function KhoPage() {
     const handleCreate = async (newData: CreateKhoHangRequest) => {
         try {
             await khoHangService.create(newData);
+            console.log(newData);
             await fetchData();
             closeModal();
         } catch (error) {

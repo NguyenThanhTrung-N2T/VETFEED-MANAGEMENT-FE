@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { User, Phone, MapPin, CreditCard, FileText, Activity, Users } from "lucide-react";
 // Assuming these are your generated types. Adjust path if necessary.
-import { KhachHangCreateRequest } from "@/client/types.gen";
-import { LoaiKhachHang, TrangThaiKH } from "@/types/KhachHang"; // Or from types.gen
+import { KhachHangCreateRequest, LoaiKhachHangEnum, TrangThaiKhachHangEnum } from "@/client/types.gen";
 
 interface Props {
     initialData?: Partial<KhachHangCreateRequest>;
@@ -28,7 +27,6 @@ export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoadi
         ...DEFAULT_VALUES,
         ...initialData,
     });
-
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     // Handle Input Changes
@@ -66,6 +64,10 @@ export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoadi
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (validate()) {
+            const typeEnum = Number(formData.loaiKhachHang) as LoaiKhachHangEnum;
+            const statusEnum = Number(formData.trangThai) as TrangThaiKhachHangEnum;
+            formData.loaiKhachHang = typeEnum;
+            formData.trangThai = statusEnum;
             onSubmit(formData);
         }
     };
@@ -89,7 +91,7 @@ export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoadi
                     <input
                         type="text"
                         disabled={isLoading}
-                        value={formData.tenKH || "-"}
+                        value={formData.tenKH || ""}
                         onChange={(e) => handleChange("tenKH", e.target.value)}
                         placeholder="Ví dụ: Nguyễn Văn A"
                         className={inputClass(!!errors.TenKH)}
@@ -109,7 +111,7 @@ export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoadi
                         <input
                             type="text"
                             disabled={isLoading}
-                            value={formData.soDienThoai || "-"}
+                            value={formData.soDienThoai || ""}
                             onChange={(e) => handleChange("soDienThoai", e.target.value)}
                             placeholder="0912..."
                             className={inputClass(!!errors.SoDienThoai)}
@@ -128,13 +130,13 @@ export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoadi
                         <Users className="absolute left-3 top-2.5 text-slate-400" size={18} />
                         <select
                             disabled={isLoading}
-                            value={formData.loaiKhachHang || "CA_NHAN"}
+                            value={formData.loaiKhachHang || 0}
                             onChange={(e) => handleChange("loaiKhachHang", e.target.value)}
                             className={inputClass(false)}
                         >
-                            <option value="CA_NHAN">Cá nhân</option>
-                            <option value="TRANG_TRAI">Trang trại</option>
-                            <option value="DAI_LY">Đại lý</option>
+                            <option value="0">Cá nhân</option>
+                            <option value="1">Trang trại</option>
+                            <option value="2">Đại lý</option>
                         </select>
                     </div>
                 </div>
@@ -189,12 +191,12 @@ export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoadi
                         <Activity className="absolute left-3 top-2.5 text-slate-400" size={18} />
                         <select
                             disabled={isLoading}
-                            value={formData.trangThai || "HOAT_DONG"}
+                            value={formData.trangThai || 0}
                             onChange={(e) => handleChange("trangThai", e.target.value)}
                             className={inputClass(false)}
                         >
-                            <option value="HOAT_DONG">Hoạt động</option>
-                            <option value="KHOA">Đang khóa</option>
+                            <option value="0">Hoạt động</option>
+                            <option value="1">Đang khóa</option>
                         </select>
                     </div>
                 </div>
@@ -219,22 +221,30 @@ export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoadi
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-4 pt-4 border-t border-slate-100">
-                <button
-                    type="button"
-                    disabled={isLoading}
-                    onClick={onCancel}
-                    className="flex-1 h-11 rounded-lg border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
-                >
-                    Hủy bỏ
-                </button>
+            <div className="col-span-2 mt-6 flex items-center justify-end gap-3">
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className="flex-1 h-11 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex h-11 flex-1 items-center justify-center rounded-lg bg-[#3f861e] text-white font-semibold hover:bg-[#529E29] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
+                    {isLoading ? (
+                        <div className="flex items-center gap-2">
+                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                            <span>Đang lưu...</span>
+                        </div>
+                    ) : (
+                        submitText
+                    )}
+                </button>
+
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    disabled={isLoading}
+                    className="h-11 flex-1 rounded-lg border-2 border-red-500 text-red-500 font-semibold hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    Hủy
                     {isLoading && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-                    {submitText}
                 </button>
             </div>
         </form>

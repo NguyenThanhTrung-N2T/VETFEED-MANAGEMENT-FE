@@ -1,114 +1,16 @@
 "use client";
 
 import React, { useMemo, useState, useEffect } from "react";
-import { Edit, Trash2, Search, ChevronDown, ChevronLeft, ChevronRight, Plus, Eye, Filter } from "lucide-react";
+import { Edit, Trash2, Search, ChevronDown, ChevronLeft, ChevronRight, Plus, Eye, Filter, ChartNoAxesColumnDecreasingIcon } from "lucide-react";
 import AddKhachHangModal from "@/components/khach-hang/AddKhachHangModal";
 import ViewKhachHangModal from "@/components/khach-hang/ViewKhachHangModal";
+import DeleteKhachHangModal from "@/components/khach-hang/DeleteKhachHangModal";
 import AddButton from "@/components/ui/AddButton";
 import { KhachHangCreateRequest, KhachHangResponse, KhachHangResponsePagedResult, KhachHangUpdateRequest } from "@/client/types.gen";
 import { khachHangService } from "@/services/khach-hang.service";
+import { toast } from 'sonner';
+
 const loaiKhachHangMap: Record<string, string> = { 'CA_NHAN': "Cá nhân", 'TRANG_TRAI': "Trang trại", 'DAI_LY': "Đại lý", };
-// TODO: Replace with real API call - fetch from /api/khach-hang
-// const MOCK_KhachHang: KhachHangDTO[] = [
-//     {
-//         MaKH: "kh-0001-0000-0000-000000000001",
-//         MaKHCode: "KH001",
-//         TenKH: "Lê Tú An",
-//         SoDienThoai: "0123781283",
-//         DiaChi: "HCMC",
-//         LoaiKhachHang: "CA_NHAN",
-//         HanMucCongNo: null,
-//         TongMua: 6000000,
-//         CongNoHienTai: 0,
-//         TrangThai: "HOAT_DONG",
-//         GhiChu: null,
-//         NgayTao: new Date().toISOString(),
-//     },
-//     {
-//         MaKH: "kh-0002-0000-0000-000000000002",
-//         MaKHCode: "KH002",
-//         TenKH: "Trần Hồng Xuân",
-//         SoDienThoai: "0138434121",
-//         DiaChi: "Dong Nai",
-//         LoaiKhachHang: "TRANG_TRAI",
-//         HanMucCongNo: 10000000,
-//         TongMua: 28500000,
-//         CongNoHienTai: 9000000,
-//         TrangThai: "HOAT_DONG",
-//         GhiChu: null,
-//         NgayTao: new Date().toISOString(),
-//     },
-//     {
-//         MaKH: "kh-0003-0000-0000-000000000003",
-//         MaKHCode: "KH003",
-//         TenKH: "Đoàn Quốc Tuấn",
-//         SoDienThoai: "0979406367",
-//         DiaChi: "HCMC",
-//         LoaiKhachHang: "CA_NHAN",
-//         HanMucCongNo: null,
-//         TongMua: 6000000,
-//         CongNoHienTai: 0,
-//         TrangThai: "HOAT_DONG",
-//         GhiChu: null,
-//         NgayTao: new Date().toISOString(),
-//     },
-//     {
-//         MaKH: "kh-0004-0000-0000-000000000004",
-//         MaKHCode: "KH004",
-//         TenKH: "Trần Thị Bích",
-//         SoDienThoai: "0979406555",
-//         DiaChi: "HCMC",
-//         LoaiKhachHang: "CA_NHAN",
-//         HanMucCongNo: null,
-//         TongMua: 6000000,
-//         CongNoHienTai: 0,
-//         TrangThai: "HOAT_DONG",
-//         GhiChu: null,
-//         NgayTao: new Date().toISOString(),
-//     },
-//     {
-//         MaKH: "kh-0005-0000-0000-000000000005",
-//         MaKHCode: "KH005",
-//         TenKH: "Trần Thị Kim Tuyết",
-//         SoDienThoai: "0979406555",
-//         DiaChi: "HCMC",
-//         LoaiKhachHang: "CA_NHAN",
-//         HanMucCongNo: null,
-//         TongMua: 6000000,
-//         CongNoHienTai: 0,
-//         TrangThai: "HOAT_DONG",
-//         GhiChu: null,
-//         NgayTao: new Date().toISOString(),
-//     },
-//     {
-//         MaKH: "kh-0006-0000-0000-000000000006",
-//         MaKHCode: "KH006",
-//         TenKH: "Trần Thị Kim Nhung",
-//         SoDienThoai: "0979406555",
-//         DiaChi: "HCMC",
-//         LoaiKhachHang: "CA_NHAN",
-//         HanMucCongNo: null,
-//         TongMua: 6000000,
-//         CongNoHienTai: 0,
-//         TrangThai: "HOAT_DONG",
-//         GhiChu: null,
-//         NgayTao: new Date().toISOString(),
-//     },
-//     {
-//         MaKH: "kh-0007-0000-0000-000000000007",
-//         MaKHCode: "KH007",
-//         TenKH: "Trần Anh",
-//         SoDienThoai: "0979406555",
-//         DiaChi: "HCMC",
-//         LoaiKhachHang: "CA_NHAN",
-//         HanMucCongNo: null,
-//         TongMua: 6000000,
-//         CongNoHienTai: 0,
-//         TrangThai: "HOAT_DONG",
-//         GhiChu: null,
-//         NgayTao: new Date().toISOString(),
-//     }
-// ];
 const ITEMS_PER_PAGE = 5;
 
 export default function KhachHangPage() {
@@ -136,8 +38,7 @@ export default function KhachHangPage() {
             console.log("API response:", data); // <-- check the returned data
             setKhachHangData(data);
         } catch (error) {
-            console.error("Failed to fetch customers:", error);
-            // Optional: Add toast error here
+            toast.error("Đã xảy ra lỗi khi tải dữ liệu!");
         } finally {
             setIsLoading(false);
         }
@@ -153,7 +54,7 @@ export default function KhachHangPage() {
     React.useEffect(() => {
         setCurrentPage(1);
     }, [query]);
-    // TODO: Get real role from auth/session
+
     // --- Modal States ---
     const openAdd = () => {
         setModalType('add');
@@ -175,35 +76,56 @@ export default function KhachHangPage() {
     };
     // --- CRUD Handlers ---
     const handleCreate = async (newData: KhachHangCreateRequest) => {
-        // // MOCK
-        // console.log("Saving new KhachHang:", newData);
-        // setKhachHangData((prev) => [newData, ...prev]); // Add to top of list
-
-        // Real App (API Call)
-        /*
         try {
-            await fetch('/api/khachHang', {
-                method: 'POST',
-                body: JSON.stringify(newData)
-            });
-            // Then refresh your data
-            router.refresh(); 
-        } catch (error) {
-            console.error(error);
+            setIsLoading(true);
+            await khachHangService.create(newData);
+            setCurrentPage(1);
+            toast.success("Thêm khách hàng mới thành công!");
+            fetchData();
+            closeModal();
         }
-        */
+        catch (error) {
+            toast.error(error as string);
+            throw error;
+        }
+        finally {
+            setIsLoading(false);
+        }
     };
     const handleUpdate = async (id: string, updatedData: KhachHangUpdateRequest) => {
-        // // MOCK
-        // console.log("Updating kho:", updatedData);
-        // setKhachHangData((prev) =>
-        //     prev.map((k) => (k.MaKH === updatedData.MaKH ? updatedData : k))
-        // );
-        // Real App (API Call)    
+        try {
+            setIsLoading(true);
+            await khachHangService.update(id, updatedData);
+            toast.success("Sửa thông tin khách hàng thành công!");
+            await fetchData(currentPage);
+            closeModal();
+        }
+        catch (error) {
+            toast.error(error as string);
+            throw error;
+        }
+        finally {
+            setIsLoading(false);
+        }
     };
     const handleDelete = async (id: string) => {
-        // API Call here...
-        //setKhachHangData(prev => prev.filter(k => k.MaKH !== id));
+        if (!khachHangData?.items) return; // Early exit if items not loaded
+        try {
+            setIsLoading(true);
+            await khachHangService.delete(id);
+            const newPage = (khachHangData?.items.length === 1 && currentPage > 1)
+                ? currentPage - 1
+                : currentPage;
+            toast.success("Xóa khách hàng thành công!");
+            await fetchData(newPage, query);
+            closeModal();
+        }
+        catch (error) {
+            toast.error(error as string);
+        }
+        finally {
+            setIsLoading(false);
+        }
     };
     // Helper to generate the array of page numbers (e.g., [1, '...', 4, 5, 6, '...', 10])
     const getPaginationGroup = () => {
@@ -230,6 +152,7 @@ export default function KhachHangPage() {
         pages.push(totalPages);
         return pages;
     };
+    // TODO: Get real role from auth/session
     const userRole: "manager" | "staff" = "manager";
     return (
         <>
@@ -259,12 +182,15 @@ export default function KhachHangPage() {
             </div>
 
             {/* Content Card */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-125">
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-125 border border-slate-100 flex flex-col">
                 {/* Card Header */}
                 <div className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div className="flex items-center gap-2">
                         <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                             Danh sách khách hàng
+                            <span className="text-sm font-normal text-slate-500 ml-2 bg-slate-100 px-2 py-0.5 rounded-full">
+                                {totalItems}
+                            </span>
                             <Filter
                                 onClick={() => openFilter()}
                                 className="cursor-pointer hover:text-green-600 transition-colors ml-1"
@@ -277,8 +203,8 @@ export default function KhachHangPage() {
                     <AddButton onClick={() => openAdd()} />
                 </div>
 
-                <div className="overflow-x-auto px-6 pb-6">
-                    <table className="w-full text-sm border-separate border-spacing-y-1">
+                <div className="overflow-x-auto px-6 pb-4 flex-1">
+                    <table className="w-full text-sm border-separate border-spacing-y-1 table-fixed min-w-250">
                         <thead>
                             <tr className="text-left text-xs font-semibold bg-[#e9eff6] text-slate-800 uppercase tracking-wider">
                                 <th className="py-3 pl-3 rounded-l-lg w-[10%]">Mã KH</th>
@@ -459,6 +385,13 @@ export default function KhachHangPage() {
                     khachHang={selectedItem}
                     onClose={() => closeModal()}
                     onUpdate={handleUpdate}
+                />
+            )}
+            {modalType === 'delete' && selectedItem && (
+                <DeleteKhachHangModal
+                    khachHang={selectedItem}
+                    onClose={() => closeModal()}
+                    onDelete={handleDelete}
                 />
             )}
         </>

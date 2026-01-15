@@ -5,6 +5,7 @@ import Modal from "@/components/ui/Modal";
 import KhachHangForm from "./KhachHangForm";
 import { KhachHangCreateRequest, KhachHangResponse } from "@/client/types.gen";
 import { Users } from "lucide-react";
+
 interface Props {
     onClose: () => void;
     // The parent still expects the correct API Request type
@@ -20,7 +21,6 @@ export default function AddKhachHangModal({ onClose, onAdd }: Props) {
             onClose();
         }
         catch (error) {
-            console.log("Failed to add kho", error);
         }
         finally {
             setIsSubmitting(false);

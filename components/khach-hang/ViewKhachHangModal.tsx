@@ -2,12 +2,15 @@
 
 import React, { useEffect, useState } from "react";
 import Modal from "@/components/ui/Modal";
-import KhachHangForm from "./KhachHangForm"; // Import the form we just built
-import { KhachHangUpdateRequest, KhachHangResponse } from "@/client/types.gen"; // Adjust import based on your setup
-import { LoaiKhachHangEnum, TrangThaiKhachHangEnum } from "@/client/types.gen";
+import KhachHangForm from "./KhachHangForm";
+import { phieuBanService } from "@/services/phieu-ban.service";
+import {
+    KhachHangUpdateRequest, KhachHangResponse, LoaiKhachHangEnum, TrangThaiKhachHangEnum,
+    PhieuBanListResponse, KhachHangPhieuBanResponse
+} from "@/client/types.gen";
 import {
     User, Phone, MapPin, CreditCard, History, Calendar, FileText,
-    CheckCircle2, AlertCircle, X, Clock, DollarSign, Pencil, ArrowLeft
+    CheckCircle2, AlertCircle, Clock, DollarSign, Edit, ArrowLeft
 } from "lucide-react";
 // HELPER: Map string from DB/Response to the Enum required by the Form/Request
 const mapStringToLoaiKH = (type?: string | null): LoaiKhachHangEnum => {
@@ -23,34 +26,14 @@ const mapStringToLoaiKH = (type?: string | null): LoaiKhachHangEnum => {
 };
 const mapStringToTrangThaiKH = (type?: string | null): TrangThaiKhachHangEnum => {
     switch (type) {
-        case "HOAT_DONG":
-            return 0;
         case "KHOA":
-        default:
             return 1;
+        case "HOAT_DONG":
+        default:
+            return 0;
     }
 };
-// --- HISTORY TYPE DEFINITIONS ---
-export interface PurchaseHistoryDTO {
-    maPB: string;
-    maPBCode: string;
-    ngayBan: string;
-    tongTienHang: number;
-    thanhTien: number;
-    tienNo: number;
-    trangThaiThanhToan: "DA_THANH_TOAN" | "CHUA_THANH_TOAN" | "MOT_PHAN";
-    ghiChu?: string;
-}
-
-// --- MOCK DATA ---
-const generateMockHistory = (customerCode: string): PurchaseHistoryDTO[] => {
-    return [
-        { maPB: "pb-1", maPBCode: "PB2310001", ngayBan: "2023-10-15T08:30:00Z", tongTienHang: 1500000, thanhTien: 1500000, tienNo: 0, trangThaiThanhToan: "DA_THANH_TOAN", ghiChu: "Mua thuốc kháng sinh" },
-        { maPB: "pb-2", maPBCode: "PB2311012", ngayBan: "2023-11-02T14:15:00Z", tongTienHang: 5200000, thanhTien: 5000000, tienNo: 2000000, trangThaiThanhToan: "MOT_PHAN", ghiChu: "Nợ 2tr hẹn trả cuối tháng" },
-        { maPB: "pb-3", maPBCode: "PB2312005", ngayBan: "2023-12-05T09:00:00Z", tongTienHang: 850000, thanhTien: 850000, tienNo: 0, trangThaiThanhToan: "DA_THANH_TOAN" },
-        { maPB: "pb-4", maPBCode: "PB2401001", ngayBan: "2024-01-10T10:30:00Z", tongTienHang: 12000000, thanhTien: 11500000, tienNo: 11500000, trangThaiThanhToan: "CHUA_THANH_TOAN", ghiChu: "Lấy cám đợt 1 cho trại heo" },
-    ];
-};
+// trangThaiThanhToan: "TIEN_MAT" | "CHUYEN_KHOAN" | "CONG_NO";
 
 interface Props {
     khachHang: KhachHangResponse;
@@ -62,19 +45,30 @@ interface Props {
 export default function ViewKhachHangModal({ khachHang, onClose, onUpdate }: Props) {
     const [activeTab, setActiveTab] = useState<"INFO" | "HISTORY">("INFO");
     const [isEditing, setIsEditing] = useState(false);
-    const [history, setHistory] = useState<PurchaseHistoryDTO[]>([]);
+    const [history, setHistory] = useState<PhieuBanListResponse[]>([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
+    const fetchPhieuBanList = async () => {
+        try {
+            setIsLoadingHistory(true);
+            if (!(khachHang && khachHang.maKH)) {
+                throw new Error('Cannot find maKH!');
+            }
+            const data = await phieuBanService.getPhieuBanByMKH(khachHang.maKH);
+            setHistory(data);
+        }
+        catch (error) {
+            console.log('Failed to fetch PhieuBanList in modal!');
+        }
+        finally {
+            setIsLoadingHistory(false);
+        }
+    }
     // --- EFFECT: Load History ---
     useEffect(() => {
         if (activeTab === "HISTORY" && !isEditing) {
-            setIsLoadingHistory(true);
-            setTimeout(() => {
-                const data = generateMockHistory(khachHang.maKHCode!);
-                setHistory(data.sort((a, b) => new Date(b.ngayBan).getTime() - new Date(a.ngayBan).getTime()));
-                setIsLoadingHistory(false);
-            }, 600);
+            fetchPhieuBanList();
         }
     }, [activeTab, khachHang.maKHCode, isEditing]);
 
@@ -108,12 +102,12 @@ export default function ViewKhachHangModal({ khachHang, onClose, onUpdate }: Pro
         }
     };
 
-    const getStatusBadge = (status: string) => {
+    const getStatusBadge = (status?: string) => {
         switch (status) {
-            case "DA_THANH_TOAN": return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700"><CheckCircle2 size={12} /> Đã thanh toán</span>;
-            case "CHUA_THANH_TOAN": return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700"><AlertCircle size={12} /> Chưa thanh toán</span>;
-            case "MOT_PHAN": return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700"><Clock size={12} /> Nợ một phần</span>;
-            default: return status;
+            case "TIEN_MAT": return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700"><CheckCircle2 size={12} /> Đã thanh toán</span>;
+            case "CONG_NO": return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700"><AlertCircle size={12} /> Chưa thanh toán</span>;
+            case "CHUYEN_KHOAN": return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700"><Clock size={12} /> Nợ một phần</span>;
+            default: return '-';
         }
     };
 
@@ -122,11 +116,6 @@ export default function ViewKhachHangModal({ khachHang, onClose, onUpdate }: Pro
         <Modal size="lg">
             {/* 1. Header Area - Changes based on Edit Mode */}
             <div className="relative mb-6">
-                {/* Close Button */}
-                <button onClick={onClose} className="absolute -top-2 -right-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors z-10">
-                    <X size={20} />
-                </button>
-
                 {isEditing ? (
                     // HEADER: EDIT MODE
                     <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
@@ -167,9 +156,9 @@ export default function ViewKhachHangModal({ khachHang, onClose, onUpdate }: Pro
                         {/* Edit Button */}
                         <button
                             onClick={() => setIsEditing(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"
+                            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-500 hover:border-blue-200 transition-all shadow-sm cursor-pointer"
                         >
-                            <Pencil size={16} />
+                            <Edit size={16} />
                             Sửa thông tin
                         </button>
                     </div>
@@ -202,14 +191,14 @@ export default function ViewKhachHangModal({ khachHang, onClose, onUpdate }: Pro
                     <div className="flex border-b border-slate-200 mb-6">
                         <button
                             onClick={() => setActiveTab("INFO")}
-                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-2
+                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 cursor-pointer
                             ${activeTab === "INFO" ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-700"}`}
                         >
                             <User size={16} /> Thông tin chung
                         </button>
                         <button
                             onClick={() => setActiveTab("HISTORY")}
-                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-2
+                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 cursor-pointer
                             ${activeTab === "HISTORY" ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-700"}`}
                         >
                             <History size={16} /> Lịch sử mua hàng
@@ -267,14 +256,14 @@ export default function ViewKhachHangModal({ khachHang, onClose, onUpdate }: Pro
                                         <label className="text-xs text-slate-500 block mb-1">Hạn mức công nợ cho phép</label>
                                         <div className="flex items-center gap-2 text-slate-800 font-medium">
                                             <CreditCard size={16} className="text-slate-400" />
-                                            {khachHang.hanMucCongNo ? formatCurrency(khachHang.hanMucCongNo) : "Không giới hạn"}
+                                            {(khachHang.hanMucCongNo !== null && khachHang.hanMucCongNo !== undefined) ? formatCurrency(khachHang.hanMucCongNo) : "Không giới hạn"}
                                         </div>
                                     </div>
                                 </div>
                                 {khachHang.ghiChu && (
                                     <div className="mt-4 pt-4 border-t border-slate-200">
                                         <label className="text-xs text-slate-500 block mb-1">Ghi chú</label>
-                                        <p className="text-sm text-slate-600 italic">"{khachHang.ghiChu}"</p>
+                                        <p className="text-sm text-slate-600 italic">{khachHang.ghiChu}</p>
                                     </div>
                                 )}
                             </div>
@@ -310,20 +299,20 @@ export default function ViewKhachHangModal({ khachHang, onClose, onUpdate }: Pro
                                                         )}
                                                     </td>
                                                     <td className="py-3 px-4 text-slate-600">
-                                                        {formatDate(item.ngayBan)}
+                                                        {formatDate(item.ngayBan ?? '-')}
                                                     </td>
                                                     <td className="py-3 px-4 text-right font-medium text-slate-800">
-                                                        {formatCurrency(item.thanhTien)}
+                                                        {formatCurrency(item.thanhTien ?? 0)}
                                                     </td>
                                                     <td className="py-3 px-4 text-right">
-                                                        {item.tienNo > 0 ? (
-                                                            <span className="text-red-600 font-bold">{formatCurrency(item.tienNo)}</span>
+                                                        {item.tienNo ? (
+                                                            <span className="text-red-600 font-bold">{formatCurrency(item.tienNo ?? 0)}</span>
                                                         ) : (
                                                             <span className="text-slate-400">-</span>
                                                         )}
                                                     </td>
                                                     <td className="py-3 px-4 text-center">
-                                                        {getStatusBadge(item.trangThaiThanhToan)}
+                                                        {getStatusBadge(item.trangThaiThanhToan ?? '-')}
                                                     </td>
                                                 </tr>
                                             )) : (
@@ -344,7 +333,7 @@ export default function ViewKhachHangModal({ khachHang, onClose, onUpdate }: Pro
                     <div className="mt-8 flex justify-end">
                         <button
                             onClick={onClose}
-                            className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition-colors"
+                            className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition-colors cursor-pointer"
                         >
                             Đóng
                         </button>

@@ -13,6 +13,7 @@ import {
 } from '@/client/types.gen';
 import { sanPhamService } from "@/services/san-pham.service";
 import AddButton from "@/components/ui/AddButton";
+import { toast } from 'sonner';
 
 const ITEMS_PER_PAGE = 4; // Show N items per page
 
@@ -41,8 +42,7 @@ export default function SanPhamPage() {
             console.log("API response:", data); // <-- check the returned data
             setSanPhamData(data);
         } catch (error) {
-            console.error("Failed to fetch products:", error);
-            // Optional: Add toast error here
+            toast.error("Đã xảy ra lỗi khi tải dữ liệu!");
         } finally {
             setIsLoading(false);
         }
@@ -58,17 +58,37 @@ export default function SanPhamPage() {
     React.useEffect(() => {
         setCurrentPage(1);
     }, [query]);
-
+    // --- Modal States ---
+    const openAdd = () => {
+        setModalType('add');
+    };
+    const openEdit = (sanPham: SanPhamResponse) => {
+        setSelectedItem(sanPham);
+        setModalType('edit');
+    };
+    const openDelete = (sanPham: SanPhamResponse) => {
+        setSelectedItem(sanPham);
+        setModalType('delete');
+    };
+    const openFilter = () => {
+        setModalType('filter');
+    };
+    const closeModal = () => {
+        setModalType(null);
+        setSelectedItem(null);
+    };
     // --- CRUD Handlers  ---
-    const closeModal = () => { setModalType(null); setSelectedItem(null); };
     const handleCreate = async (newData: SanPhamCreateRequest) => {
         try {
             setIsLoading(true);
             await sanPhamService.create(newData);
             setCurrentPage(1);
+            toast.success("Thêm sản phẩm mới thành công!");
+            fetchData();
             closeModal();
         } catch (error) {
-            alert("Tạo sản phẩm mới thất bại!");
+            toast.error(error as string);
+            throw error;
         }
         finally {
             setIsLoading(false);
@@ -78,10 +98,12 @@ export default function SanPhamPage() {
         try {
             setIsLoading(true);
             await sanPhamService.update(id, updatedData);
+            toast.success("Cập nhật sản phẩm thành công!");
             await fetchData(currentPage);
             closeModal();
         } catch (error) {
-            alert("Cập nhật sản phẩm thất bại!");
+            toast.error(error as string);
+            throw error;
         }
         finally {
             setIsLoading(false);
@@ -95,12 +117,11 @@ export default function SanPhamPage() {
             const newPage = (sanPhamData?.items.length === 1 && currentPage > 1)
                 ? currentPage - 1
                 : currentPage;
-
+            toast.success("Xóa sản phẩm thành công!");
             await fetchData(newPage, query);
             closeModal();
         } catch (error) {
-            console.log(error)
-            alert("Xóa sản phẩm thất bại");
+            toast.error(error as string);
         }
         finally {
             setIsLoading(false);
@@ -195,18 +216,17 @@ export default function SanPhamPage() {
                                 {totalItems}
                             </span>
                             <Filter
-                                onClick={() => setModalType('filter')}
+                                onClick={() => openFilter()}
                                 className="cursor-pointer hover:text-green-600 transition-colors ml-1"
                                 size={20}
                                 strokeWidth={1.5}
                             />
                         </h2>
                     </div>
-                    {userRole === "manager" && <AddButton onClick={() => setModalType('add')} />}
+                    {userRole === "manager" && <AddButton onClick={() => openAdd()} />}
                 </div>
 
                 <div className="overflow-x-auto px-6 pb-4 flex-1">
-
                     <table className="w-full text-sm border-separate border-spacing-y-1 table-fixed min-w-250">
                         <thead>
                             <tr className="text-left text-xs font-semibold bg-[#e9eff6] text-slate-800 uppercase tracking-wider">
@@ -288,12 +308,12 @@ export default function SanPhamPage() {
                                     <td className="py-3 px-4 text-right border-y border-r border-slate-100 rounded-r-lg group-hover:border-slate-200 whitespace-nowrap">
                                         <div className="inline-flex items-center gap-1 justify-end">
                                             {userRole === "manager" && (
-                                                <button onClick={() => { setSelectedItem(s); setModalType('edit'); }} className="p-2 rounded-md text-slate-600 hover:bg-slate-200 cursor-pointer transition-colors">
+                                                <button onClick={() => openEdit(s)} className="p-2 rounded-md text-slate-600 hover:bg-slate-200 cursor-pointer transition-colors">
                                                     <Edit size={18} />
                                                 </button>
                                             )}
                                             {userRole === "manager" && (
-                                                <button onClick={() => { setSelectedItem(s); setModalType('delete'); }} className="p-2 rounded-md text-red-600 hover:bg-red-50 cursor-pointer transition-colors">
+                                                <button onClick={() => openDelete(s)} className="p-2 rounded-md text-red-600 hover:bg-red-50 cursor-pointer transition-colors">
                                                     <Trash2 size={18} />
                                                 </button>
                                             )}
@@ -391,7 +411,7 @@ export default function SanPhamPage() {
                 )}
             </div>
 
-            {/* Modals remain the same... */}
+            {/* Modals */}
             {modalType === 'add' && <AddSanPhamModal onClose={closeModal} onAdd={handleCreate} />}
             {modalType === 'edit' && selectedItem && <EditSanPhamModal sanPham={selectedItem} onClose={closeModal} onUpdate={handleUpdate} />}
             {modalType === 'delete' && selectedItem && <DeleteSanPhamModal sanPham={selectedItem} onClose={closeModal} onDelete={handleDelete} />}
