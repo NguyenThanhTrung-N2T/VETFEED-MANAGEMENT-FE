@@ -59,7 +59,7 @@ export default function KhoPage() {
     const handleCreate = async (newData: CreateKhoHangRequest) => {
         try {
             await khoHangService.create(newData);
-            toast.success("Tạo kho hàng mới thành công!");
+            toast.success("Thêm kho hàng mới thành công!");
             await fetchData();
             closeModal();
         } catch (error) {

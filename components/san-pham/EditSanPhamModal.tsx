@@ -16,9 +16,9 @@ interface Props {
 export default function EditSanPhamModal({ sanPham, onClose, onUpdate }: Props) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    async function handleUpdate(formData: SanPhamFormData) {
+    async function handleSubmit(formData: SanPhamFormData) {
         if (!sanPham.maSP) {
-            console.error("Cannot update: Missing Warehouse ID");
+            console.error("Cannot update: Missing Product ID");
             return;
         }
         try {
@@ -59,7 +59,7 @@ export default function EditSanPhamModal({ sanPham, onClose, onUpdate }: Props) 
                 // !!! CRITICAL: Pass the existing data to populate the form !!!
                 defaultValues={sanPham}
                 submitText={isSubmitting ? "Đang lưu..." : "Cập nhật"}
-                onSubmit={handleUpdate}
+                onSubmit={handleSubmit}
                 onCancel={onClose}
                 isLoading={isSubmitting}
             />

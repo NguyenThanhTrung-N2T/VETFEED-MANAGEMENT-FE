@@ -71,6 +71,5 @@ export const khachHangService = {
             path: { maKH: id }
         })
         if (error) throw error;
-        return data;
     }
 }

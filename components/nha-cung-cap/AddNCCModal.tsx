@@ -26,7 +26,7 @@ export default function AddNCCModal({ onClose, onAdd }: Props) {
     };
 
     return (
-        <Modal size="lg">
+        <Modal size="xl">
             {/* Header Title */}
             <div className="flex items-center justify-center gap-3 mb-8">
                 <Globe size={28} />

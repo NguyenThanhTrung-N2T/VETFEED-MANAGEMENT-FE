@@ -57,10 +57,9 @@ export const sanPhamService = {
 
     // 5. DELETE
     delete: async (id: string) => {
-        const { error } = await deleteApiSanPhamsByMaSp({
+        const { data, error } = await deleteApiSanPhamsByMaSp({
             path: { maSP: id }
         });
         if (error) throw error;
-        return true;
     }
 };

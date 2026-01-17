@@ -15,64 +15,6 @@ const filterOptions = [
     { value: "NHA_CUNG_CAP", label: "Nhà cung cấp" },
 ];
 
-export const MOCK_CongNoTongHop: CongNoTongHopResponse[] = [
-    {
-        maDoiTuong: "b1e9f6c1-7f4d-4a9c-9c3e-1a9a7f2a1111",
-        maDoiTuongCode: "NCC-001",
-        tenDoiTuong: "Công ty TNHH Thức ăn Chăn Nuôi ABC",
-        loaiDoiTuong: "NHA_CUNG_CAP",
-        tongPhatSinh: 150_000_000,
-        daThanhToan: 90_000_000,
-        duNo: 60_000_000,
-        coQuaHan: true,
-        hanThanhToanGanNhat: "2025-12-31"
-    },
-    {
-        maDoiTuong: "c2a7a3d9-4e21-4f0a-8f6e-2b2c8e9b2222",
-        maDoiTuongCode: "NCC-002",
-        tenDoiTuong: "Hộ Kinh Doanh Minh Phát",
-        loaiDoiTuong: "NHA_CUNG_CAP",
-        tongPhatSinh: 85_500_000,
-        daThanhToan: 85_500_000,
-        duNo: 0,
-        coQuaHan: false,
-        hanThanhToanGanNhat: null
-    },
-    {
-        maDoiTuong: "d3b9e4f7-1a2b-4e5c-9d1a-3f3c9a333333",
-        maDoiTuongCode: "KH-001",
-        tenDoiTuong: "Trang trại heo Hòa Bình",
-        loaiDoiTuong: "KHACH_HANG",
-        tongPhatSinh: 42_000_000,
-        daThanhToan: 20_000_000,
-        duNo: 22_000_000,
-        coQuaHan: false,
-        hanThanhToanGanNhat: "2026-01-25"
-    },
-    {
-        maDoiTuong: "e4c8d6a1-9f3a-4c2b-b6c9-4a4f7b444444",
-        maDoiTuongCode: "NCC-003",
-        tenDoiTuong: "Công ty CP Dược Thú Y Việt",
-        loaiDoiTuong: "NHA_CUNG_CAP",
-        tongPhatSinh: 210_000_000,
-        daThanhToan: 120_000_000,
-        duNo: 90_000_000,
-        coQuaHan: true,
-        hanThanhToanGanNhat: "2025-11-30"
-    },
-    {
-        maDoiTuong: "f5a1b2c3-6d7e-4f8a-9b1c-5e5a9c555555",
-        maDoiTuongCode: "KH-002",
-        tenDoiTuong: "Trang trại gà Tân Phú",
-        loaiDoiTuong: "KHACH_HANG",
-        tongPhatSinh: 18_500_000,
-        daThanhToan: 10_000_000,
-        duNo: 8_500_000,
-        coQuaHan: false,
-        hanThanhToanGanNhat: "2026-02-05"
-    }
-];
-
 export default function CongNoPage() {
     const [query, setQuery] = useState("");
     const [filterType, setFilterType] = useState<"ALL" | "KHACH_HANG" | "NHA_CUNG_CAP">("ALL");

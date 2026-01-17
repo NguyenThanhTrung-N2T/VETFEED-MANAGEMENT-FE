@@ -20,7 +20,6 @@ export default function DeleteSanPhamModal({ sanPham, onClose, onDelete }: Props
             onClose();
         } catch (error) {
             console.error("Lỗi khi xóa sản phẩm:", error);
-            // You could add a toast error notification here
         } finally {
             setIsDeleting(false);
         }

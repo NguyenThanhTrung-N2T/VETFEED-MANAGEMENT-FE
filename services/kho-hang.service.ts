@@ -34,7 +34,7 @@ export const khoHangService = {
     },
 
     delete: async (id: string) => {
-        const { error } = await deleteApiKhoHangsByMaKho({
+        const { data, error } = await deleteApiKhoHangsByMaKho({
             path: { maKho: id }
         });
         if (error) throw error;

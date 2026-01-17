@@ -1,18 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Search, Loader2, X, Package, AlertCircle } from "lucide-react";
+import { Search, Loader2, X, Tag, AlertCircle } from "lucide-react";
 import { sanPhamService } from "@/services/san-pham.service";
-// 1. Match this type to your API Item structure
 import { ProductSearchParams, ProductSearchResult } from "@/types/product-search";
-
-// 2. Define the shape of the API Response wrapper
-type ApiResponse = {
-    items: ProductSearchResult[];
-    total: number;
-    page: number;
-    pageSize: number;
-};
 
 interface Props {
     onSelect: (product: ProductSearchResult) => void;
@@ -81,31 +72,32 @@ export default function ProductSearch({ onSelect, selectedItem, onClear, error }
     // --- RENDER SELECTED STATE ---
     if (selectedItem) {
         return (
-            <div className="flex items-center justify-between p-2 bg-blue-50 border border-blue-200 rounded-md">
-                <div className="flex items-center gap-2 overflow-hidden">
-                    <div className="p-1.5 bg-blue-100 rounded text-blue-600">
-                        <Package size={16} />
+            <div className="flex items-center justify-between h-10 bg-blue-50 border border-blue-200 rounded-md px-2">
+                <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+                    <div className="p-1 bg-blue-100 rounded text-blue-600 shrink-0">
+                        <Tag size={16} />
                     </div>
-                    <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-semibold text-blue-900 truncate">{selectedItem.tenSP}</span>
-                        <div className="flex items-center gap-2 text-xs text-blue-600">
-                            <span className="font-mono bg-white px-1 rounded border border-blue-100">
-                                {selectedItem.maSPCode}
-                            </span>
-                            <span>• {selectedItem.donViCoSo}</span>
-                        </div>
+                    <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-sm font-semibold text-blue-900 truncate">
+                            {selectedItem.tenSP}
+                        </span>
+                        <span className="text-xs text-blue-600 font-mono bg-white px-1 rounded border border-blue-100 whitespace-nowrap">
+                            {selectedItem.maSPCode}
+                        </span>
+                        <span className="text-xs text-blue-600 whitespace-nowrap">• {selectedItem.donViCoSo}</span>
                     </div>
                 </div>
                 <button
                     type="button"
                     onClick={() => { onClear(); setQuery(""); }}
-                    className="p-1.5 text-blue-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                    className="p-1.5 text-blue-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors cursor-pointer"
                 >
                     <X size={16} />
                 </button>
             </div>
         );
     }
+
 
     // --- RENDER INPUT STATE ---
     return (
@@ -114,7 +106,7 @@ export default function ProductSearch({ onSelect, selectedItem, onClear, error }
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                 <input
                     type="text"
-                    placeholder="Nhập tên hoặc mã sản phẩm..."
+                    placeholder="Nhập tên hoặc mã sản phẩm"
                     value={query}
                     onChange={(e) => { setQuery(e.target.value); setIsOpen(true); }}
                     onFocus={() => query && setIsOpen(true)}

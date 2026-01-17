@@ -1,5 +1,5 @@
 import { getApiNhaCungCaps, getApiNhaCungCapsById, putApiNhaCungCapsById, postApiNhaCungCaps, deleteApiNhaCungCapsById } from "@/client/sdk.gen";
-import { NhaCungCapCreateRequest, NhaCungCapDetailedResponse, NhaCungCapResponse, NhaCungCapUpdateRequest } from "@/client/types.gen";
+import { NhaCungCapCreateRequest, NhaCungCapDetailedResponse, NhaCungCapResponse, NhaCungCapUpdateRequest, NhaCungCapSanPhamItemDto, NhaCungCapSanPhamResponse } from "@/client/types.gen";
 
 export const nhaCungCapService = {
     getAll: async (): Promise<NhaCungCapResponse[]> => {
@@ -23,7 +23,7 @@ export const nhaCungCapService = {
         return data;
     },
     delete: async (id: string): Promise<void> => {
-        const { error } = await deleteApiNhaCungCapsById({ path: { id: id } });
+        const { data, error } = await deleteApiNhaCungCapsById({ path: { id: id } });
         if (error) throw error;
     }
 }

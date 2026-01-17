@@ -15,7 +15,7 @@ import { sanPhamService } from "@/services/san-pham.service";
 import AddButton from "@/components/ui/AddButton";
 import { toast } from 'sonner';
 
-const ITEMS_PER_PAGE = 4; // Show N items per page
+const ITEMS_PER_PAGE = 8; // Show N items per page
 
 export default function SanPhamPage() {
     const [query, setQuery] = useState("");
@@ -30,7 +30,6 @@ export default function SanPhamPage() {
 
     const fetchData = async (page: number = 1, search: string = "") => {
         try {
-            console.log("Fetching page:", page); // <-- check page number
             setIsLoading(true);
             const data = await sanPhamService.getAll(
                 {
@@ -39,7 +38,6 @@ export default function SanPhamPage() {
                     Keyword: search,
                 }
             );
-            console.log("API response:", data); // <-- check the returned data
             setSanPhamData(data);
         } catch (error) {
             toast.error("Đã xảy ra lỗi khi tải dữ liệu!");

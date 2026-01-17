@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import { Edit, Trash2, Search, ChevronDown, Filter, Tag } from "lucide-react";
-import AddButton from "@/components/ui/AddButton";
-import { NhaCungCapCreateRequest, NhaCungCapDetailedResponse, NhaCungCapResponse, NhaCungCapUpdateRequest } from "@/client/types.gen";
+import { NhaCungCapCreateRequest, NhaCungCapDetailedResponse, NhaCungCapResponse, NhaCungCapSanPhamItemDto, NhaCungCapSanPhamResponse, NhaCungCapUpdateRequest } from "@/client/types.gen";
 import { nhaCungCapService } from "@/services/nha-cung-cap.service";
 import AddNCCModal from "@/components/nha-cung-cap/AddNCCModal";
+import EditNCCModal from "@/components/nha-cung-cap/EditNCCModal";
+import DeleteNCCModal from "@/components/nha-cung-cap/DeleteNCCModal";
+import AddButton from "@/components/ui/AddButton";
 import { toast } from 'sonner';
-//import EditNhaCungCapModal from "@/components/nha-cung-cap/EditNhaCungCapModal";
-// MOCK DATA (Includes SanPhams now)
 
 export default function NhaCungCapPage() {
     const [query, setQuery] = useState("");
@@ -24,7 +24,7 @@ export default function NhaCungCapPage() {
             const data = await nhaCungCapService.getAll();
             setNhaCungCapData(data);
         } catch (error) {
-            toast.error(error as string);
+            toast.error("Xảy ra lỗi khi tải dữ liệu!");
         } finally {
             setIsLoading(false);
         }
@@ -57,8 +57,9 @@ export default function NhaCungCapPage() {
     // --- CRUD Handlers ---
     const handleCreate = async (newData: NhaCungCapCreateRequest) => {
         try {
+            console.log(newData);
             await nhaCungCapService.create(newData);
-            toast.success("Tạo nhà cung cấp mới thành công!");
+            toast.success("Thêm nhà cung cấp mới thành công!");
             await fetchData();
             closeModal();
         } catch (error: any) {
@@ -74,7 +75,7 @@ export default function NhaCungCapPage() {
             await fetchData();
             closeModal();
         } catch (error: any) {
-            toast.error(error?.message ?? "Xóa nhà cung cấp thất bại!");
+            toast.error(error?.message ?? "Cập nhật nhà cung cấp thất bại!");
             throw error;
         }
     };
@@ -82,7 +83,7 @@ export default function NhaCungCapPage() {
     const handleDelete = async (id: string) => {
         try {
             await nhaCungCapService.delete(id);
-            toast.success("Xóa kho hàng thành công!");
+            toast.success("Xóa nhà cung cấp thành công!");
             await fetchData();
             closeModal();
         } catch (error: any) {
@@ -236,17 +237,14 @@ export default function NhaCungCapPage() {
             {modalType === 'add' && (
                 <AddNCCModal onClose={closeModal} onAdd={handleCreate} />
             )}
-            {/* {modalType === 'edit' && selectedItem && (
+            {modalType === 'edit' && selectedItem && (
                 <EditNCCModal data={selectedItem} onClose={closeModal} onUpdate={handleUpdate} />
             )}
-            {modalType === 'delete' && selectedItem && (
-                // Reusing your existing DeleteKhoModal (or create a generic one)
-                <DeleteKhoModal
-                    kho={selectedItem as any} // Cast temporarily if types mismatch, better to make modal Generic
+            {modalType === 'delete' && selectedItem &&
+                <DeleteNCCModal
+                    nhaCungCap={selectedItem}
                     onClose={closeModal}
-                    onDelete={handleDelete}
-                />
-            )} */}
+                    onDelete={handleDelete} />}
         </>
     );
 }

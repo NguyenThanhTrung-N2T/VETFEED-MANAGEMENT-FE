@@ -11,7 +11,7 @@ import { khachHangService } from "@/services/khach-hang.service";
 import { toast } from 'sonner';
 
 const loaiKhachHangMap: Record<string, string> = { 'CA_NHAN': "Cá nhân", 'TRANG_TRAI': "Trang trại", 'DAI_LY': "Đại lý", };
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 8;
 
 export default function KhachHangPage() {
     const [query, setQuery] = useState("");
@@ -26,7 +26,6 @@ export default function KhachHangPage() {
 
     const fetchData = async (page: number = 1, search: string = "") => {
         try {
-            console.log("Fetching page:", page); // <-- check page number
             setIsLoading(true);
             const data = await khachHangService.getAll(
                 {
@@ -35,7 +34,6 @@ export default function KhachHangPage() {
                     Keyword: search,
                 }
             );
-            console.log("API response:", data); // <-- check the returned data
             setKhachHangData(data);
         } catch (error) {
             toast.error("Đã xảy ra lỗi khi tải dữ liệu!");
