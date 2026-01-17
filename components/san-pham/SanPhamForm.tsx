@@ -97,7 +97,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                     defaultValue={defaultValues?.tenSP || ""}
                     required
                     disabled={isLoading}
-                    className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                    className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
             </div>
 
@@ -108,7 +108,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                     name="loaiSanPham"
                     defaultValue={defaultValues?.loaiSanPham ?? "THUOC_THU_Y"}
                     disabled={isLoading}
-                    className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                    className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                     <option value="THUOC_THU_Y">Thuốc thú y</option>
                     <option value="THUC_AN_CHAN_NUOI">Thức ăn chăn nuôi</option>
@@ -128,7 +128,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                     onChange={(e) => setBaseUnit(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                    className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
             </div>
 
@@ -145,7 +145,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                         value={price ?? ""}
                         onChange={(e) => setPrice(e.target.value ? Number(e.target.value) : undefined)}
                         disabled={isLoading}
-                        className="h-11 w-full rounded-xl bg-[#E9F1FB] px-4 text-sm outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-slate-400"
+                        className="h-11 w-full rounded-xl bg-[#E9F1FB] px-4 text-sm outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-slate-400 disabled:opacity-60 disabled:cursor-not-allowed"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-medium">
                         VNĐ / {baseUnit || "..."}
@@ -180,7 +180,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                                 <button
                                     type="button"
                                     onClick={() => handleRemoveUnit(index)}
-                                    className="ml-auto text-red-500 hover:bg-red-100 p-1 rounded transition-colors"
+                                    className="ml-auto text-red-500 hover:bg-red-100 p-1 rounded transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                                 >
                                     <Trash2 size={16} />
                                 </button>
@@ -201,7 +201,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                         <input
                             value={newUnitName}
                             onChange={(e) => setNewUnitName(e.target.value)}
-                            className="w-full h-9 rounded border border-slate-300 px-2 text-sm"
+                            className="w-full h-9 rounded border border-slate-300 px-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                             placeholder="Tên đơn vị..."
                         />
                     </div>
@@ -211,7 +211,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                             type="number"
                             value={newUnitRatio}
                             onChange={(e) => setNewUnitRatio(Number(e.target.value))}
-                            className="w-full h-9 rounded border border-slate-300 px-2 text-sm"
+                            className="w-full h-9 rounded border border-slate-300 px-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                             placeholder="SL..."
                         />
                     </div>
@@ -238,7 +238,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                     placeholder="Ghi chú thêm..."
                     defaultValue={defaultValues?.ghiChu ?? ""}
                     disabled={isLoading}
-                    className="w-full rounded-md bg-[#E9F1FB] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    className="w-full rounded-md bg-[#E9F1FB] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:opacity-60 disabled:cursor-not-allowed"
                 />
             </div>
 
@@ -247,7 +247,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className="flex h-11 flex-1 items-center justify-center rounded-lg bg-[#3f861e] text-white font-semibold hover:bg-[#529E29] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex h-11 flex-1 items-center justify-center rounded-lg bg-[#3f861e] text-white font-semibold hover:bg-[#529E29] transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                     {isLoading ? (
                         <div className="flex items-center gap-2">
@@ -263,7 +263,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                     type="button"
                     onClick={onCancel}
                     disabled={isLoading}
-                    className="h-11 flex-1 rounded-lg border-2 border-red-500 text-red-500 font-semibold hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="h-11 flex-1 rounded-lg border-2 border-red-500 text-red-500 font-semibold hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                     Hủy
                 </button>

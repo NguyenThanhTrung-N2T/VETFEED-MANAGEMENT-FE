@@ -74,7 +74,7 @@ export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoadi
 
     // Helper for input styles
     const inputClass = (hasError: boolean) =>
-        `w-full pl-10 pr-4 py-2.5 bg-white border rounded-lg focus:outline-none focus:ring-2 transition-all ${hasError
+        `w-full pl-10 pr-4 py-2.5 bg-white border rounded-lg focus:outline-none focus:ring-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed ${hasError
             ? "border-red-500 focus:ring-red-200"
             : "border-slate-300 focus:ring-blue-500 focus:border-blue-500"
         }`;
@@ -225,7 +225,7 @@ export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoadi
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className="flex h-11 flex-1 items-center justify-center rounded-lg bg-[#3f861e] text-white font-semibold hover:bg-[#529E29] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex h-11 flex-1 items-center justify-center rounded-lg bg-[#3f861e] text-white font-semibold hover:bg-[#529E29] transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                 >
                     {isLoading ? (
                         <div className="flex items-center gap-2">
@@ -241,7 +241,7 @@ export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoadi
                     type="button"
                     onClick={onCancel}
                     disabled={isLoading}
-                    className="h-11 flex-1 rounded-lg border-2 border-red-500 text-red-500 font-semibold hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="h-11 flex-1 rounded-lg border-2 border-red-500 text-red-500 font-semibold hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                 >
                     Hủy
                     {isLoading && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}

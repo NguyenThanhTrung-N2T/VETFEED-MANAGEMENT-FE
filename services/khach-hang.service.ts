@@ -28,7 +28,7 @@ export const khachHangService = {
         const { data, error } = await getApiKhachHangs({ query: params });
         if (error) throw error;
         if (!data) throw new Error('Failed to fetch data!');
-        return data;
+        return data || [];
     },
     getById: async (id: string): Promise<KhachHangResponse> => {
         const { data, error } = await getApiKhachHangsByMaKh({ path: { maKH: id } });

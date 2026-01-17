@@ -38,6 +38,7 @@ export default function AddKhachHangModal({ onClose, onAdd }: Props) {
                 submitText="Thêm khách hàng"
                 onSubmit={handleAdd}
                 onCancel={onClose}
+                isLoading={isSubmitting}
             />
         </Modal>
     );

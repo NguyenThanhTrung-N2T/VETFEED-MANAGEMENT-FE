@@ -64,6 +64,12 @@ export type CheckAllKhoRequest = {
     soLuongCan: number;
 };
 
+export type CheckReturnableRequest = {
+    maPB: string;
+    maLo: string;
+    soLuong?: number;
+};
+
 export type CheckTonKhoRequest = {
     maKhoXuat: string;
     maLo: string;
@@ -131,6 +137,37 @@ export type ChiTietPhieuTraDetailResponse = {
 export type ChiTietPhieuTraRequest = {
     maLo: string;
     soLuong?: number;
+    ghiChu?: string | null;
+};
+
+export type CongNoHistoryResponse = {
+    ngay?: string;
+    loaiPhieu?: string | null;
+    maPhieu?: string | null;
+    ghiChu?: string | null;
+    phatSinhNo?: number;
+    daThanhToan?: number;
+    soDuSau?: number;
+};
+
+export type CongNoTongHopResponse = {
+    maDoiTuong?: string;
+    maDoiTuongCode?: string | null;
+    tenDoiTuong?: string | null;
+    loaiDoiTuong?: string | null;
+    tongPhatSinh?: number;
+    daThanhToan?: number;
+    duNo?: number;
+    coQuaHan?: boolean;
+    hanThanhToanGanNhat?: string | null;
+};
+
+export type CreateCongNoRequest = {
+    maDoiTuong: string;
+    soTien: number;
+    ngayPhatSinh: string;
+    maPhieuCode?: string | null;
+    hanThanhToan?: string | null;
     ghiChu?: string | null;
 };
 
@@ -309,10 +346,10 @@ export type NhaCungCapResponse = {
     trangThai?: string | null;
     ghiChu?: string | null;
     ngayTao?: string;
+    sanPhamCount?: number;
 };
 
 export type NhaCungCapSanPhamItemDto = {
-    maNCSP?: string | null;
     maSP?: string;
     giaNhapMacDinh?: number | null;
     trangThai?: string | null;
@@ -321,14 +358,13 @@ export type NhaCungCapSanPhamItemDto = {
 
 export type NhaCungCapSanPhamResponse = {
     maNCSP?: string;
-    maNCC?: string;
-    tenNCC?: string | null;
     maSP?: string;
-    tenSP?: string | null;
-    giaNhapMacDinh?: number | null;
-    trangThai?: string | null;
+    tenSanPham?: string | null;
+    maSanPhamCode?: string | null;
+    donViCoSo?: string | null;
+    giaNhapMacDinh?: number;
     ghiChu?: string | null;
-    ngayTao?: string;
+    trangThai?: string | null;
 };
 
 export type NhaCungCapUpdateRequest = {
@@ -485,23 +521,6 @@ export type ProblemDetails = {
     [key: string]: unknown | string | null | string | null | number | null | string | null | string | null | undefined;
 };
 
-export type ReturnableLoHangItem = {
-    maLo?: string;
-    maLoCode?: string | null;
-    tenSanPham?: string | null;
-    donViCoSo?: string | null;
-    hanSuDung?: string;
-    soLuongDaBan?: number;
-    soLuongDaTra?: number;
-    soLuongCoTheTra?: number;
-};
-
-export type ReturnableQuantityResponse = {
-    maPB?: string;
-    maPBCode?: string | null;
-    danhSachLoHang?: Array<ReturnableLoHangItem> | null;
-};
-
 export type SanPhamCreateRequest = {
     tenSP: string;
     loaiSanPham: string;
@@ -612,6 +631,63 @@ export type PhieuNhapDetailedResponseWritable = {
     ghiChu?: string | null;
     ngayCapNhat?: string;
     danhSachChiTiet?: Array<CtPhieuNhapResponseWritable> | null;
+};
+
+export type GetApiCongNosSummaryData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/CongNos/summary';
+};
+
+export type GetApiCongNosSummaryResponses = {
+    /**
+     * OK
+     */
+    200: Array<CongNoTongHopResponse>;
+};
+
+export type GetApiCongNosSummaryResponse = GetApiCongNosSummaryResponses[keyof GetApiCongNosSummaryResponses];
+
+export type GetApiCongNosByMaDoiTuongDetailData = {
+    body?: never;
+    path: {
+        maDoiTuong: string;
+    };
+    query?: never;
+    url: '/api/CongNos/{maDoiTuong}/detail';
+};
+
+export type GetApiCongNosByMaDoiTuongDetailResponses = {
+    /**
+     * OK
+     */
+    200: Array<CongNoHistoryResponse>;
+};
+
+export type GetApiCongNosByMaDoiTuongDetailResponse = GetApiCongNosByMaDoiTuongDetailResponses[keyof GetApiCongNosByMaDoiTuongDetailResponses];
+
+export type PostApiCongNosData = {
+    body?: CreateCongNoRequest;
+    path?: never;
+    query?: never;
+    url: '/api/CongNos';
+};
+
+export type PostApiCongNosErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+};
+
+export type PostApiCongNosError = PostApiCongNosErrors[keyof PostApiCongNosErrors];
+
+export type PostApiCongNosResponses = {
+    /**
+     * Created
+     */
+    201: unknown;
 };
 
 export type GetApiGiaBansData = {
@@ -1787,36 +1863,34 @@ export type GetApiPhieuTrasByMaPtResponses = {
 
 export type GetApiPhieuTrasByMaPtResponse = GetApiPhieuTrasByMaPtResponses[keyof GetApiPhieuTrasByMaPtResponses];
 
-export type GetApiPhieuTrasReturnableQuantityByMaPbData = {
-    body?: never;
-    path: {
-        maPB: string;
-    };
+export type PostApiPhieuTrasCheckReturnableData = {
+    body?: CheckReturnableRequest;
+    path?: never;
     query?: never;
-    url: '/api/PhieuTras/returnable-quantity/{maPB}';
+    url: '/api/PhieuTras/check-returnable';
 };
 
-export type GetApiPhieuTrasReturnableQuantityByMaPbErrors = {
+export type PostApiPhieuTrasCheckReturnableErrors = {
     /**
-     * Not Found
+     * Bad Request
      */
-    404: ProblemDetails;
+    400: ProblemDetails;
     /**
      * Internal Server Error
      */
     500: unknown;
 };
 
-export type GetApiPhieuTrasReturnableQuantityByMaPbError = GetApiPhieuTrasReturnableQuantityByMaPbErrors[keyof GetApiPhieuTrasReturnableQuantityByMaPbErrors];
+export type PostApiPhieuTrasCheckReturnableError = PostApiPhieuTrasCheckReturnableErrors[keyof PostApiPhieuTrasCheckReturnableErrors];
 
-export type GetApiPhieuTrasReturnableQuantityByMaPbResponses = {
+export type PostApiPhieuTrasCheckReturnableResponses = {
     /**
      * OK
      */
-    200: ReturnableQuantityResponse;
+    200: boolean;
 };
 
-export type GetApiPhieuTrasReturnableQuantityByMaPbResponse = GetApiPhieuTrasReturnableQuantityByMaPbResponses[keyof GetApiPhieuTrasReturnableQuantityByMaPbResponses];
+export type PostApiPhieuTrasCheckReturnableResponse = PostApiPhieuTrasCheckReturnableResponses[keyof PostApiPhieuTrasCheckReturnableResponses];
 
 export type GetApiSanPhamsData = {
     body?: never;

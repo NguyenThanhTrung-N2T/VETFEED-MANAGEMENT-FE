@@ -2,16 +2,13 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { Edit, Trash2, Search, ChevronDown, Plus, Filter, Loader2 } from "lucide-react";
-import {
-    KhoHangResponse,
-    CreateKhoHangRequest,
-    UpdateKhoHangRequest
-} from "@/client/types.gen";
+import { KhoHangResponse, CreateKhoHangRequest, UpdateKhoHangRequest } from "@/client/types.gen";
 import AddKhoModal from "@/components/kho/AddKhoModal";
 import EditKhoModal from "@/components/kho/EditKhoModal";
 import DeleteKhoModal from "@/components/kho/DeleteKhoModal";
 import { khoHangService } from "@/services/kho-hang.service";
 import AddButton from "@/components/ui/AddButton";
+import { toast } from 'sonner';
 export default function KhoPage() {
     const [query, setQuery] = useState("");
     const [khoData, setKhoData] = useState<KhoHangResponse[]>([]);
@@ -26,8 +23,7 @@ export default function KhoPage() {
             const data = await khoHangService.getAll();
             setKhoData(data);
         } catch (error) {
-            console.error("Failed to fetch warehouses:", error);
-            // Optional: Add toast error here
+            toast.error("Đã xảy ra lỗi khi tải dữ liệu!");
         } finally {
             setIsLoading(false);
         }
@@ -63,29 +59,33 @@ export default function KhoPage() {
     const handleCreate = async (newData: CreateKhoHangRequest) => {
         try {
             await khoHangService.create(newData);
-            console.log(newData);
+            toast.success("Tạo kho hàng mới thành công!");
             await fetchData();
             closeModal();
         } catch (error) {
-            alert("Tạo kho hàng mới thất bại!");
+            toast.error(error as string);
+            throw error;
         }
     };
     const handleUpdate = async (id: string, updatedData: UpdateKhoHangRequest) => {
         try {
             await khoHangService.update(id, updatedData);
+            toast.success("Cập nhật kho hàng thành công!");
             await fetchData();
             closeModal();
         } catch (error) {
-            alert("Cập nhật kho hàng thất bại!");
+            toast.error(error as string);
+            throw error;
         }
     };
     const handleDelete = async (id: string) => {
         try {
             await khoHangService.delete(id);
-            setKhoData(prev => prev.filter(k => k.maKho !== id));
+            toast.success("Xóa kho hàng thành công!");
+            await fetchData();
             closeModal();
         } catch (error) {
-            alert("Xóa kho hàng thất bại!");
+            toast.error(error as string);
         }
     };
     const renderStatus = (status: string | null | undefined) => {
@@ -247,14 +247,14 @@ export default function KhoPage() {
             {modalType === 'edit' && selectedItem && (
                 <EditKhoModal
                     kho={selectedItem}
-                    onClose={() => closeModal()}
+                    onClose={closeModal}
                     onUpdate={handleUpdate}
                 />
             )}
             {modalType === 'delete' && selectedItem && (
                 <DeleteKhoModal
                     kho={selectedItem}
-                    onClose={() => closeModal()}
+                    onClose={closeModal}
                     onDelete={handleDelete}
                 />
             )}

@@ -298,7 +298,7 @@ export default function KhachHangPage() {
                 {totalItems > 0 && (
                     <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
                         <span className="text-sm text-slate-500">
-                            Hiển thị {((currentPage - 1) * ITEMS_PER_PAGE) + 1} đến {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)} của {totalItems} sản phẩm
+                            Hiển thị {((currentPage - 1) * ITEMS_PER_PAGE) + 1} đến {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)} của {totalItems} khách hàng
                         </span>
 
                         <div className="flex items-center gap-2">

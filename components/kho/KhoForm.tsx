@@ -114,7 +114,7 @@ export default function KhoForm({
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className="flex h-11 flex-1 items-center justify-center rounded-lg bg-[#3f861e] text-white font-semibold hover:bg-[#529E29] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex h-11 flex-1 items-center justify-center rounded-lg bg-[#3f861e] text-white font-semibold hover:bg-[#529E29] transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                 >
                     {isLoading ? (
                         <div className="flex items-center gap-2">
@@ -130,7 +130,7 @@ export default function KhoForm({
                     type="button"
                     onClick={onCancel}
                     disabled={isLoading}
-                    className="h-11 flex-1 rounded-lg border-2 border-red-500 text-red-500 font-semibold hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="h-11 flex-1 rounded-lg border-2 border-red-500 text-red-500 font-semibold hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                 >
                     Hủy
                 </button>

@@ -13,13 +13,8 @@ import {
     SanPhamResponsePagedResult
 } from '@/client/types.gen';
 
-// Define a helper type for search params based on GetApiSanPhamsData query
-export interface ProductSearchParams {
-    Keyword?: string;
-    LoaiSanPham?: string;
-    Page?: number;
-    PageSize?: number;
-}
+// Helper type for search params based on GetApiSanPhamsData query
+import { ProductSearchParams } from "@/types/product-search";
 
 export const sanPhamService = {
     // 1. GET LIST (With Pagination & Search)

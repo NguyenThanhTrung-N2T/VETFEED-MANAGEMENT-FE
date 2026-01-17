@@ -1,51 +1,25 @@
-import React, { useState, useEffect } from "react";
-import { X, Globe } from "lucide-react";
+"use client";
+
+import React, { useState } from "react";
+import { Globe } from "lucide-react";
 import NhaCungCapForm from "./NCCForm";
 import Modal from "@/components/ui/Modal";
-import { NhaCungCapDetailDTO } from "@/types";
-//import { nhaCungCapService } from "@/services/nha-cung-cap.service"; 
+import { NhaCungCapCreateRequest } from "@/client/types.gen";
+
 interface Props {
-    //data: NhaCungCapDTO; // This is the lightweight data from the table
     onClose: () => void;
-    onAdd: (data: any) => Promise<void>;
+    onAdd: (data: NhaCungCapCreateRequest) => Promise<void>;
 }
 
 export default function AddNCCModal({ onClose, onAdd }: Props) {
     const [isLoading, setIsLoading] = useState(false);
-    const [isFetchingDetails, setIsFetchingDetails] = useState(true);
-    // We start with the basic data
-    // const [detailData, setDetailData] = useState<Partial<NhaCungCapDetailDTO>>({
-    //     ...data,
-    //     SanPhams: [] // Start empty
-    // });
-    // --- BEST PRACTICE: Fetch Products when Modal Opens ---
-    // useEffect(() => {
-    //     const fetchDetails = async () => {
-    //         try {
-    //             setIsFetchingDetails(true);
-    //             // Call API: GET /api/nha-cung-cap/{id}/san-pham
-    //             const products = await nhaCungCapService.getProductsBySupplier(data.MaNCC);
 
-    // setDetailData(prev => ({
-    //     ...prev,
-    //     SanPhams: products
-    // }));
-    //         } catch (error) {
-    //             console.error("Failed to load products");
-    //             // Optional: Show toast error
-    //         } finally {
-    //             setIsFetchingDetails(false);
-    //         }
-    //     };
-
-    //     fetchDetails();
-    // }, [data.MaNCC]);
-    const handleSubmit = async (data: any) => {
+    const handleSubmit = async (formData: NhaCungCapCreateRequest) => {
         try {
             setIsLoading(true);
-            await onAdd(data);
+            await onAdd(formData);
         } catch (error) {
-            console.error("Failed to create", error);
+            console.error("Failed to create provider", error);
         } finally {
             setIsLoading(false);
         }
@@ -58,6 +32,11 @@ export default function AddNCCModal({ onClose, onAdd }: Props) {
                 <Globe size={28} />
                 <h2 className="text-2xl font-bold text-slate-900">Thêm nhà cung cấp</h2>
             </div>
+
+            {/* 
+                We don't pass 'defaultValues' here because it's a fresh form.
+                The Form component will handle the empty states.
+            */}
             <NhaCungCapForm
                 isLoading={isLoading}
                 onSubmit={handleSubmit}

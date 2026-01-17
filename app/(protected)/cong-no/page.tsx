@@ -1,44 +1,13 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Search, Plus, Edit, Trash2, ChevronDown, Eye, Filter } from "lucide-react";
-import { CongNo, CongNoHistory, CongNoSummary } from "@/types/index";
+import { CongNoHistoryResponse, CongNoTongHopResponse, CreateCongNoRequest } from "@/client/types.gen";
+import { congNoService } from "@/services/cong-no.service";
 import ViewCongNoModal from "@/components/cong-no/ViewCongNoModal";
 import AddCongNoModal from "@/components/cong-no/AddCongNoModal";
 import AddButton from "@/components/ui/AddButton";
-// Mock data thay cho API
-const mockData: CongNoSummary[] = [
-    {
-        maDoiTuong: "KH1",
-        tenDoiTuong: "Lê Tú An",
-        loaiDoiTuong: "KHACH_HANG",
-        tongPhatSinh: 20000000,
-        daThanhToan: 6000000,
-        duNo: 14000000,
-        coQuaHan: false,
-        hanThanhToanGanNhat: "2025-12-31",
-    },
-    {
-        maDoiTuong: "NCC2",
-        tenDoiTuong: "Vĩnh Kim",
-        loaiDoiTuong: "NHA_CUNG_CAP",
-        tongPhatSinh: 20000000,
-        daThanhToan: 28500000,
-        duNo: -8500000,
-        coQuaHan: true,
-        hanThanhToanGanNhat: "2025-12-31",
-    },
-    {
-        maDoiTuong: "NCC3",
-        tenDoiTuong: "Hoàng Văn Kim",
-        loaiDoiTuong: "NHA_CUNG_CAP",
-        tongPhatSinh: 20000000,
-        daThanhToan: 28500000,
-        duNo: -8500000,
-        coQuaHan: false,
-        hanThanhToanGanNhat: "2026-1-15",
-    }
-];
+import { toast } from 'sonner';
 
 const filterOptions = [
     { value: "ALL", label: "Tất cả" },
@@ -46,38 +15,105 @@ const filterOptions = [
     { value: "NHA_CUNG_CAP", label: "Nhà cung cấp" },
 ];
 
-export default function CongNoPage() {
-    const [searchTerm, setSearchTerm] = useState("");
-    const [filterType, setFilterType] = useState<"ALL" | "KHACH_HANG" | "NHA_CUNG_CAP">("ALL");
-    const [isFilterOpen, setIsFilterOpen] = useState<Boolean>(false);
-    const [userRole] = useState("manager"); // Mock user role, replace with real auth logic
-    const [modalType, setModalType] = useState<'filter' | 'add' | 'view' | 'delete' | null>(null);
-    const [selectedItem, setSelectedItem] = useState<CongNoSummary | null>(null);
+export const MOCK_CongNoTongHop: CongNoTongHopResponse[] = [
+    {
+        maDoiTuong: "b1e9f6c1-7f4d-4a9c-9c3e-1a9a7f2a1111",
+        maDoiTuongCode: "NCC-001",
+        tenDoiTuong: "Công ty TNHH Thức ăn Chăn Nuôi ABC",
+        loaiDoiTuong: "NHA_CUNG_CAP",
+        tongPhatSinh: 150_000_000,
+        daThanhToan: 90_000_000,
+        duNo: 60_000_000,
+        coQuaHan: true,
+        hanThanhToanGanNhat: "2025-12-31"
+    },
+    {
+        maDoiTuong: "c2a7a3d9-4e21-4f0a-8f6e-2b2c8e9b2222",
+        maDoiTuongCode: "NCC-002",
+        tenDoiTuong: "Hộ Kinh Doanh Minh Phát",
+        loaiDoiTuong: "NHA_CUNG_CAP",
+        tongPhatSinh: 85_500_000,
+        daThanhToan: 85_500_000,
+        duNo: 0,
+        coQuaHan: false,
+        hanThanhToanGanNhat: null
+    },
+    {
+        maDoiTuong: "d3b9e4f7-1a2b-4e5c-9d1a-3f3c9a333333",
+        maDoiTuongCode: "KH-001",
+        tenDoiTuong: "Trang trại heo Hòa Bình",
+        loaiDoiTuong: "KHACH_HANG",
+        tongPhatSinh: 42_000_000,
+        daThanhToan: 20_000_000,
+        duNo: 22_000_000,
+        coQuaHan: false,
+        hanThanhToanGanNhat: "2026-01-25"
+    },
+    {
+        maDoiTuong: "e4c8d6a1-9f3a-4c2b-b6c9-4a4f7b444444",
+        maDoiTuongCode: "NCC-003",
+        tenDoiTuong: "Công ty CP Dược Thú Y Việt",
+        loaiDoiTuong: "NHA_CUNG_CAP",
+        tongPhatSinh: 210_000_000,
+        daThanhToan: 120_000_000,
+        duNo: 90_000_000,
+        coQuaHan: true,
+        hanThanhToanGanNhat: "2025-11-30"
+    },
+    {
+        maDoiTuong: "f5a1b2c3-6d7e-4f8a-9b1c-5e5a9c555555",
+        maDoiTuongCode: "KH-002",
+        tenDoiTuong: "Trang trại gà Tân Phú",
+        loaiDoiTuong: "KHACH_HANG",
+        tongPhatSinh: 18_500_000,
+        daThanhToan: 10_000_000,
+        duNo: 8_500_000,
+        coQuaHan: false,
+        hanThanhToanGanNhat: "2026-02-05"
+    }
+];
 
-    const filteredData = useMemo(() => {
-        return mockData.filter((item) => {
-            const matchesSearch = item.tenDoiTuong.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesFilter = filterType === "ALL" || item.loaiDoiTuong === filterType;
-            return matchesSearch && matchesFilter;
-        });
-    }, [searchTerm, filterType]);
+export default function CongNoPage() {
+    const [query, setQuery] = useState("");
+    const [filterType, setFilterType] = useState<"ALL" | "KHACH_HANG" | "NHA_CUNG_CAP">("ALL");
+    const [isLoading, setIsLoading] = useState(false);
+    const [isFilterOpen, setIsFilterOpen] = useState<Boolean>(false);
+    const [userRole] = useState("manager");
+    const [congNoData, setCongNoData] = useState<CongNoTongHopResponse[]>([]);
+    const [modalType, setModalType] = useState<'filter' | 'add' | 'view' | null>(null);
+    const [selectedItem, setSelectedItem] = useState<CongNoTongHopResponse | null>(null);
+
+    const fetchData = async () => {
+        try {
+            setIsLoading(true);
+            const data = await congNoService.getAll();
+            setCongNoData(data);
+        } catch (error) {
+            toast.error("Đã xảy ra lỗi khi tải dữ liệu!");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    useEffect(() => {
+        fetchData();
+    }, []);
+    const filteredData = congNoData.filter((d) =>
+        `${d.tenDoiTuong}`
+            .toLowerCase()
+            .includes(query.toLowerCase())
+    );
 
     const formatCurrency = (value: number) =>
         new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value);
     const formatDate = (date?: string | null) => (date ? new Date(date).toLocaleDateString("vi-VN") : "");
-    const getLoaiDoiTuongLabel = (type: string) => (type === "KHACH_HANG" ? "KH" : "NCC");
 
     // --- Modal States ---
     const openAdd = () => {
         setModalType('add');
     };
-    const openView = (congNoSummary: CongNoSummary) => {
+    const openView = (congNoSummary: CongNoTongHopResponse) => {
         setSelectedItem(congNoSummary);
         setModalType('view');
-    };
-    const openDelete = (congNoSummary: CongNoSummary) => {
-        setSelectedItem(congNoSummary);
-        setModalType('delete');
     };
     const openFilter = () => {
         setModalType('filter');
@@ -87,38 +123,37 @@ export default function CongNoPage() {
         setSelectedItem(null);
     };
     // --- CRUD Handlers ---
-    const handleCreate = async (newData: CongNoHistory) => {
-        // MOCK
-        console.log("Saving new CongNo:", newData);
-
-
-        // Real App (API Call)
-        /*
+    const handleCreate = async (newData: CreateCongNoRequest) => {
         try {
-            await fetch('/api/khachHang', {
-                method: 'POST',
-                body: JSON.stringify(newData)
-            });
-            // Then refresh your data
-            router.refresh(); 
-        } catch (error) {
-            console.error(error);
+            await congNoService.create(newData);
+            toast.success("Tạo công nợ mới thành công!");
+            await fetchData();
+            closeModal();
+        } catch (error: any) {
+            toast.error(error as string);
+            throw error;
         }
-        */
     };
-    const handleUpdate = async (updatedData: CongNoHistory) => {
-        // MOCK
-        console.log("Updating cong no:", updatedData);
-        // setKhachHangData((prev) =>
-        //     prev.map((k) => (k.MaKH === updatedData.MaKH ? updatedData : k))
-        // );
-        // Real App (API Call)    
-    };
-    const handleDelete = async (id: string) => {
-        // API Call here...
-        //setKhachHangData(prev => prev.filter(k => k.MaKH !== id));
-    };
+    const renderType = (type: string | null | undefined) => {
+        if (!type) return null;
 
+        const isNhaCungCap = type === "NHA_CUNG_CAP";
+
+        return (
+            <span
+                className={`px-2 py-1 rounded-full text-xs font-medium ${isNhaCungCap
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-violet-100 text-violet-700"
+                    }`}
+            >
+                {isNhaCungCap ? "NCC" : "KH"}
+            </span>
+        );
+    };
+    const getDuNoClass = (duNo?: number) => {
+        const value = duNo ?? 0;
+        return value > 0 ? "text-red-600" : "text-green-600";
+    };
     return (
         <>
             {/* Search + Filter */}
@@ -127,7 +162,7 @@ export default function CongNoPage() {
                     {/* Filter Dropdown */}
                     <div className="relative">
                         <button
-                            onClick={() => setIsFilterOpen(true)}
+                            onClick={() => setIsFilterOpen(!isFilterOpen)}
                             className="w-40 px-4 py-2 text-sm font-medium flex items-center justify-between gap-2 bg-[#25396f] text-white rounded-l-lg hover:bg-[#1e2e5a] transition-colors shadow-md"
                         >
                             {/* Wrap text in a span to control truncation if it gets too long */}
@@ -162,8 +197,8 @@ export default function CongNoPage() {
                         <input
                             type="text"
                             placeholder="Tìm kiếm..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
                             className="w-72 py-2 pl-4 pr-10 text-sm border-0 outline-none h-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                         <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
@@ -188,39 +223,83 @@ export default function CongNoPage() {
                     <AddButton onClick={() => openAdd()} />
                 </div>
                 <div className="overflow-x-auto px-6 pb-6">
-                    <table className="w-full text-sm">
+                    <table className="w-full text-sm border-separate border-spacing-y-1 table-fixed min-w-200">
                         <thead>
-                            <tr className="text-xs text-slate-700 uppercase tracking-wider border-b border-slate-100 bg-[#E3EDF9] border-separate">
-                                <th className="py-3 pl-3 text-left rounded-l-xl">Mã đối tượng</th>
-                                <th className="py-3 text-left">Tên</th>
-                                <th className="py-3 text-left">Đối tượng</th>
-                                <th className="py-3 text-right">Tổng phát sinh</th>
-                                <th className="py-3 text-right">Đã thanh toán</th>
-                                <th className="py-3 text-right">Dư nợ</th>
-                                <th className="py-3 text-center">Hạn thanh toán</th>
-                                <th className="py-3 px-4 text-center rounded-r-xl w-px whitespace-nowrap">Hành động</th>
+                            <tr className="text-left text-xs font-semibold bg-[#e9eff6] text-slate-800 uppercase tracking-wider">
+                                <th className="py-3 pl-3 rounded-l-lg w-[10%]">Mã đối tượng</th>
+                                <th className="py-3 w-[22%]">Tên</th>
+                                <th className="py-3 w-[10%]">Đối tượng</th>
+                                <th className="py-3 w-[12%]">Tổng phát sinh</th>
+                                <th className="py-3 w-[12%]">Đã thanh toán</th>
+                                <th className="py-3 w-[12%]">Dư nợ</th>
+                                <th className="py-3 text-center w-[10%]">Hạn thanh toán</th>
+                                <th className="py-3 px-4 text-right rounded-r-lg whitespace-nowrap w-[12%]">Hành động</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredData.map((item) => (
+                            {isLoading ? [...Array(5)].map((_, i) => (
+                                <tr key={i}
+                                    className="bg-white shadow-sm rounded-lg animate-pulse">
+                                    {/* Mã đối tượng */}
+                                    <td className="py-3 pl-3 rounded-l-lg w-[10%]">
+                                        <div className="h-4 w-20 bg-slate-200 rounded" />
+                                    </td>
+
+                                    {/* Tên */}
+                                    <td className="py-3 w-[22%]">
+                                        <div className="h-4 w-44 bg-slate-200 rounded" />
+                                    </td>
+
+                                    {/* Đối tượng */}
+                                    <td className="py-3 w-[10%]">
+                                        <div className="h-4 w-24 bg-slate-200 rounded" />
+                                    </td>
+
+                                    {/* Tổng phát sinh */}
+                                    <td className="py-3 w-[12%]">
+                                        <div className="h-4 w-24 bg-slate-200 rounded" />
+                                    </td>
+
+                                    {/* Đã thanh toán */}
+                                    <td className="py-3 w-[12%]">
+                                        <div className="h-4 w-24 bg-slate-200 rounded " />
+                                    </td>
+
+                                    {/* Dư nợ */}
+                                    <td className="py-3 w-[12%]">
+                                        <div className="h-4 w-24 bg-slate-200 rounded" />
+                                    </td>
+
+                                    {/* Hạn thanh toán */}
+                                    <td className="py-3 text-center w-[10%]">
+                                        <div className="h-4 w-28 bg-slate-200 rounded" />
+                                    </td>
+
+                                    {/* Hành động */}
+                                    <td className="py-3 px-4 text-right rounded-r-lg w-[12%] whitespace-nowrap">
+                                        <div className="flex justify-end gap-2">
+                                            <div className="h-8 w-8 bg-slate-200 rounded-md"></div>
+                                            <div className="h-8 w-8 bg-slate-200 rounded-md"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )) : filteredData.map((item) => (
                                 <tr
                                     key={item.maDoiTuong}
-                                    className="hover:bg-slate-100 transition-colors last:border-0 odd:bg-white even:bg-[#E3EDF9]"
-                                >
-                                    <td className="pl-3 py-3 font-medium text-slate-700 rounded-l-xl">{item.maDoiTuong}</td>
-                                    <td className="py-3 text-gray-600">{item.tenDoiTuong}</td>
-                                    <td className="py-3 text-gray-600">{getLoaiDoiTuongLabel(item.loaiDoiTuong)}</td>
-                                    <td className="py-3 text-right text-gray-600">{formatCurrency(item.tongPhatSinh)}</td>
-                                    <td className="py-3 text-right text-gray-600">{formatCurrency(item.daThanhToan)}</td>
+                                    className="group hover:bg-slate-50 transition-colors odd:bg-white even:bg-[#f1f5f9] text-left">
+                                    <td className="py-3 pl-3 font-medium text-slate-700 border-y border-l border-slate-100 rounded-l-lg group-hover:border-slate-200">{item.maDoiTuongCode}</td>
+                                    <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 text-slate-700 font-medium">{item.tenDoiTuong}</td>
+                                    <td className="py-3 ">{renderType(item.loaiDoiTuong)}</td>
+                                    <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 text-slate-500">{formatCurrency(item.tongPhatSinh ?? 0)}</td>
+                                    <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 text-slate-500">{formatCurrency(item.daThanhToan ?? 0)}</td>
                                     <td
-                                        className={`py-3 text-right font-medium ${item.duNo > 0 ? "text-red-600" : "text-green-600"
-                                            }`}
+                                        className={`py-3 border-y border-slate-100 group-hover:border-slate-200 ${getDuNoClass(item.duNo)}`}
                                     >
-                                        {formatCurrency(item.duNo)}
+                                        {formatCurrency(item.duNo ?? 0)}
                                     </td>
-                                    <td className="py-3 text-center text-gray-600">{formatDate(item.hanThanhToanGanNhat)}</td>
-                                    <td className="py-3 px-4 text-right rounded-r-xl w-px whitespace-nowrap">
-                                        <div className="flex items-center justify-center gap-2">
+                                    <td className="py-3 text-center border-y border-slate-100 group-hover:border-slate-200 font-medium text-slate-700 ">{formatDate(item.hanThanhToanGanNhat)}</td>
+                                    <td className="py-3 px-4 text-right border-y border-r border-slate-100 rounded-r-lg group-hover:border-slate-200 whitespace-nowrap">
+                                        <div className="inline-flex items-center gap-2 justify-end">
                                             <button
                                                 onClick={() => openView(item)}
                                                 className="p-2 text-blue-600 hover:bg-blue-100 rounded-md transition-colors cursor-pointer"
@@ -228,13 +307,6 @@ export default function CongNoPage() {
                                             >
                                                 <Eye size={18} />
                                             </button>
-                                            {userRole == "manager" && (<button
-                                                onClick={() => openDelete(item)}
-                                                className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
-                                                title="Xóa"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>)}
                                         </div>
                                     </td>
                                 </tr>
@@ -243,27 +315,22 @@ export default function CongNoPage() {
                     </table>
                 </div>
 
-                {filteredData.length === 0 && (
-                    <div className="text-center py-12 text-gray-500">Không tìm thấy dữ liệu</div>
+                {!isLoading && filteredData.length === 0 && (
+                    <div className="text-center py-10 text-gray-400">Không tìm thấy dữ liệu</div>
                 )}
             </div>
             {/* ViewCongNoModal */}
             {modalType === 'view' && selectedItem && (
                 <ViewCongNoModal
-                    isOpen={modalType === 'view'}
-                    onClose={() => closeModal()}
+                    onClose={closeModal}
+                    onAdd={handleCreate}
                     congNoSummary={selectedItem}
                 />
             )}
             {/* AddCongNoModal */}
             {modalType === 'add' && <AddCongNoModal
-                isOpen={modalType === 'add'}
-                onClose={() => closeModal()}
-                onCreated={(created) => {
-                    // created: whatever your API returns. You should reload data from server here.
-                    console.log("New CongNo created:", created);
-                    // TODO: call summary reload (e.g., fetch /api/cong-no/summary again)
-                }}
+                onClose={closeModal}
+                onAdd={handleCreate}
             />}
         </>
     );

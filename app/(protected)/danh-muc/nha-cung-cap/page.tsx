@@ -2,70 +2,49 @@
 
 import React, { useState, useEffect } from "react";
 import { Edit, Trash2, Search, ChevronDown, Filter, Tag } from "lucide-react";
-import { NhaCungCapDTO } from "@/types";
 import AddButton from "@/components/ui/AddButton";
+import { NhaCungCapCreateRequest, NhaCungCapDetailedResponse, NhaCungCapResponse, NhaCungCapUpdateRequest } from "@/client/types.gen";
+import { nhaCungCapService } from "@/services/nha-cung-cap.service";
 import AddNCCModal from "@/components/nha-cung-cap/AddNCCModal";
+import { toast } from 'sonner';
 //import EditNhaCungCapModal from "@/components/nha-cung-cap/EditNhaCungCapModal";
-// Assume DeleteModal exists or reuse generic one
-import DeleteKhoModal from "@/components/kho/DeleteKhoModal";
-
 // MOCK DATA (Includes SanPhams now)
-const MOCK_NhaCungCap: NhaCungCapDTO[] = [
-    {
-        MaNCC: "1",
-        MaNCCCode: "NCC001",
-        TenNCC: "Công ty Thuốc Thú Y An Phát",
-        SoDienThoai: "0123781283",
-        DiaChi: "123 QL1A, TP. Thủ Đức, TP.HCM",
-        TrangThai: "HOAT_DONG",
-        GhiChu: "Đối tác chiến lược",
-        sanPhamCount: 2
-    },
-    {
-        MaNCC: "2",
-        MaNCCCode: "NCC002",
-        TenNCC: "Công ty Vaccine Gia Cầm Việt",
-        SoDienThoai: "0138434121",
-        DiaChi: "45 Nguyễn Văn Linh, Q.7, TP.HCM",
-        TrangThai: "HOAT_DONG",
-        GhiChu: null,
-        sanPhamCount: 0
-    },
-];
 
 export default function NhaCungCapPage() {
     const [query, setQuery] = useState("");
-    const [nhaCungCapData, setNhaCungCapData] = useState<NhaCungCapDTO[]>([]);
+    const [nhaCungCapData, setNhaCungCapData] = useState<NhaCungCapResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const [modalType, setModalType] = useState<'filter' | 'delete' | 'add' | 'edit' | null>(null);
-    const [selectedItem, setSelectedItem] = useState<NhaCungCapDTO | null>(null);
+    const [selectedItem, setSelectedItem] = useState<NhaCungCapResponse | null>(null);
 
-    // Mock Fetch
-    useEffect(() => {
-        const fetch = async () => {
+    const fetchData = async () => {
+        try {
             setIsLoading(true);
-            // Simulate API delay
-            await new Promise(r => setTimeout(r, 600));
-            setNhaCungCapData(MOCK_NhaCungCap);
+            const data = await nhaCungCapService.getAll();
+            setNhaCungCapData(data);
+        } catch (error) {
+            toast.error(error as string);
+        } finally {
             setIsLoading(false);
-        };
-        fetch();
+        }
+    };
+    useEffect(() => {
+        fetchData();
     }, []);
-
     const filteredData = nhaCungCapData.filter((n) =>
-        `${n.TenNCC} ${n.DiaChi ?? ""} ${n.SoDienThoai}`
+        `${n.tenNCC} ${n.diaChi ?? ""} ${n.soDienThoai}`
             .toLowerCase()
             .includes(query.toLowerCase())
     );
 
     // --- Modal Handlers ---
     const openAdd = () => setModalType('add');
-    const openEdit = (item: NhaCungCapDTO) => {
+    const openEdit = (item: NhaCungCapResponse) => {
         setSelectedItem(item);
         setModalType('edit');
     };
-    const openDelete = (item: NhaCungCapDTO) => {
+    const openDelete = (item: NhaCungCapResponse) => {
         setSelectedItem(item);
         setModalType('delete');
     };
@@ -76,21 +55,39 @@ export default function NhaCungCapPage() {
     };
 
     // --- CRUD Handlers ---
-    const handleCreate = async (newData: any) => {
-        // In real app: API call here
-        const newEntry = { ...newData, MaNCC: Date.now().toString(), TrangThai: "HOAT_DONG" };
-        setNhaCungCapData((prev) => [newEntry, ...prev]);
-        closeModal();
+    const handleCreate = async (newData: NhaCungCapCreateRequest) => {
+        try {
+            await nhaCungCapService.create(newData);
+            toast.success("Tạo nhà cung cấp mới thành công!");
+            await fetchData();
+            closeModal();
+        } catch (error: any) {
+            toast.error(error?.message ?? "Tạo nhà cung cấp thất bại!");
+            throw error;
+        }
     };
 
-    const handleUpdate = async (updatedData: NhaCungCapDTO) => {
-        setNhaCungCapData((prev) => prev.map((k) => (k.MaNCC === updatedData.MaNCC ? updatedData : k)));
-        closeModal();
+    const handleUpdate = async (id: string, updatedData: NhaCungCapUpdateRequest) => {
+        try {
+            await nhaCungCapService.update(id, updatedData);
+            toast.success("Cập nhật nhà cung cấp thành công!");
+            await fetchData();
+            closeModal();
+        } catch (error: any) {
+            toast.error(error?.message ?? "Xóa nhà cung cấp thất bại!");
+            throw error;
+        }
     };
 
     const handleDelete = async (id: string) => {
-        setNhaCungCapData(prev => prev.filter(k => k.MaNCC !== id));
-        closeModal();
+        try {
+            await nhaCungCapService.delete(id);
+            toast.success("Xóa kho hàng thành công!");
+            await fetchData();
+            closeModal();
+        } catch (error: any) {
+            toast.error(error?.message ?? "Xóa nhà cung cấp thất bại!");
+        }
     };
 
     const userRole = "manager";
@@ -153,7 +150,7 @@ export default function NhaCungCapPage() {
                         <tbody className="text-sm">
                             {isLoading ? (
                                 // --- SKELETON LOADER ---
-                                [...Array(5)].map((_, index) => (
+                                [...Array(4)].map((_, index) => (
                                     <tr key={index} className="animate-pulse bg-white border-b border-slate-100">
                                         <td className="py-4 pl-3 border-y border-l border-slate-50 rounded-l-lg"><div className="h-4 bg-slate-200 rounded w-16"></div></td>
                                         <td className="py-4 border-y border-slate-50"><div className="h-4 bg-slate-200 rounded w-48"></div></td>
@@ -169,37 +166,38 @@ export default function NhaCungCapPage() {
                             ) : (
                                 filteredData.map((n) => (
                                     <tr
-                                        key={n.MaNCC}
+                                        key={n.maNCC}
                                         className="group hover:bg-slate-50 transition-colors odd:bg-white even:bg-[#f1f5f9] text-left">
 
                                         <td className="py-3 pl-3 font-medium text-slate-700 border-y border-l border-slate-100 rounded-l-lg group-hover:border-slate-200">
-                                            {n.MaNCCCode}
+                                            {n.maNCCCode}
                                         </td>
 
                                         <td className="py-3 border-y border-slate-100 group-hover:border-slate-200">
-                                            <div className="font-medium text-slate-700 truncate" title={n.TenNCC}>{n.TenNCC}</div>
+                                            <div className="font-medium text-slate-700 truncate" title={n.tenNCC ?? ''}>{n.tenNCC}</div>
                                         </td>
 
                                         <td className="py-3 border-y border-slate-100 group-hover:border-slate-200">
-                                            <div className="text-slate-500 truncate" title={n.DiaChi}>{n.DiaChi ?? "-"}</div>
+                                            <div className="text-slate-500 truncate" title={n.diaChi ?? ''}>{n.diaChi ?? "-"}</div>
                                         </td>
 
                                         <td className="py-3 border-y text-center border-slate-100 group-hover:border-slate-200 text-slate-700">
-                                            {n.SoDienThoai}
+                                            {n.soDienThoai}
                                         </td>
 
                                         {/* Products Count Badge */}
                                         <td className="py-3 border-y text-center border-slate-100 group-hover:border-slate-200">
                                             <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                                ${(n.sanPhamCount) > 0 ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' : 'bg-slate-100 text-slate-500'}
+                                                ${typeof (n.sanPhamCount) === "number" && n.sanPhamCount > 0 ?
+                                                    'bg-indigo-50 text-indigo-700 border border-indigo-100' : 'bg-slate-100 text-slate-500'}
                                             `}>
                                                 <Tag size={12} />
-                                                {n.sanPhamCount}
+                                                {n.sanPhamCount ?? 0}
                                             </span>
                                         </td>
 
                                         <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 text-slate-500 truncate">
-                                            {n.GhiChu ?? "-"}
+                                            {n.ghiChu ?? "-"}
                                         </td>
 
                                         <td className="py-3 px-4 text-right border-y border-r border-slate-100 rounded-r-lg group-hover:border-slate-200 whitespace-nowrap">
@@ -227,6 +225,11 @@ export default function NhaCungCapPage() {
                             )}
                         </tbody>
                     </table>
+                    {!isLoading && filteredData.length === 0 && (
+                        <div className="text-center py-10 text-slate-400">
+                            Không tìm thấy nhà cung cấp nào.
+                        </div>
+                    )}
                 </div>
             </div>
 
