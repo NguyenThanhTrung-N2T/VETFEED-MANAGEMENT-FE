@@ -1,26 +1,56 @@
 "use client";
+
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Filter, Edit, Trash2, ShoppingCart, Loader2, XCircle } from 'lucide-react';
+import {
+    Search, Filter, Edit, Trash2, ShoppingCart,
+    Loader2, XCircle, Package, Calendar, MapPin, CheckCircle2, AlertCircle, Clock
+} from 'lucide-react';
 import ImportModals, { ImportFilterParams } from '@/components/ImportModals';
 import { importService, PhieuNhap } from '@/services/import.service';
 import { format } from 'date-fns';
 import AddButton from "@/components/ui/AddButton";
+import { motion, Variants } from 'framer-motion'; // Import Variants để fix lỗi TS
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+// --- Utility: Merge Class ---
+function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs));
+}
 
 export default function ImportPage() {
+    // --- State ---
     const [searchTerm, setSearchTerm] = useState('');
     const [data, setData] = useState<PhieuNhap[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [modalType, setModalType] = useState<'filter' | 'add' | 'edit' | 'detail' | 'delete' | null>(null);
-
-    // [MỚI] State lưu bộ lọc hiện tại
     const [filterParams, setFilterParams] = useState<ImportFilterParams>({});
 
-    // Fetch Data
+    // --- Animation Variants (Fix lỗi Type: thêm ": Variants") ---
+    const containerVariants: Variants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: { staggerChildren: 0.05, delayChildren: 0.1 }
+        }
+    };
+
+    const itemVariants: Variants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: {
+            y: 0, opacity: 1,
+            transition: { type: "spring", stiffness: 120, damping: 12 }
+        }
+    };
+
+    // --- Fetch Data ---
     const fetchData = async () => {
         try {
             setLoading(true);
             const res = await importService.getAll();
+            // Giả lập delay một chút nếu mạng quá nhanh để thấy hiệu ứng
+            // await new Promise(r => setTimeout(r, 300));
             setData(res);
         } catch (error) {
             console.error("Fetch import receipts failed:", error);
@@ -33,182 +63,273 @@ export default function ImportPage() {
         fetchData();
     }, []);
 
-    // [CẬP NHẬT] Logic Filter kết hợp
+    // --- Logic Filter ---
     const filteredData = data.filter(item => {
-        // 1. Tìm kiếm cơ bản
         const matchesSearch =
             (item.maPNCode?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
             (item.tenNCC?.toLowerCase() || '').includes(searchTerm.toLowerCase());
 
-        // 2. Bộ lọc nâng cao
         let matchesFilter = true;
-
         if (filterParams.fromDate) {
-            const itemDate = new Date(item.ngayCapNhat || item.ngayCapNhat); // Sử dụng ngày cập nhật
+            const itemDate = new Date(item.ngayCapNhat || item.ngayCapNhat);
             const fromDate = new Date(filterParams.fromDate);
             fromDate.setHours(0, 0, 0, 0);
             if (itemDate < fromDate) matchesFilter = false;
         }
-
         if (matchesFilter && filterParams.toDate) {
             const itemDate = new Date(item.ngayCapNhat || item.ngayCapNhat);
             const toDate = new Date(filterParams.toDate);
             toDate.setHours(23, 59, 59, 999);
             if (itemDate > toDate) matchesFilter = false;
         }
-
         if (matchesFilter && filterParams.supplierName) {
             if (!item.tenNCC?.toLowerCase().includes(filterParams.supplierName.toLowerCase())) {
                 matchesFilter = false;
             }
         }
-
         if (matchesFilter && filterParams.minTotal !== undefined) {
             if ((item.thanhTien || 0) < filterParams.minTotal) matchesFilter = false;
         }
-
         return matchesSearch && matchesFilter;
     });
 
-    const handleApplyFilter = (params: ImportFilterParams) => {
-        setFilterParams(params);
-    };
-
+    const handleApplyFilter = (params: ImportFilterParams) => setFilterParams(params);
     const isFiltering = Object.values(filterParams).some(x => x !== undefined && x !== '');
-
-    // Helper render trạng thái
-    const renderStatus = (status: string) => {
-        switch (status) {
-            case 'DA_NHAN': return <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-bold">Đã nhận hàng</span>;
-            case 'DA_HUY': return <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-bold">Đã hủy</span>;
-            case 'DA_DAT': return <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold">Đã đặt hàng</span>;
-            default: return <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-bold">{status}</span>;
-        }
-    };
-
     const handleOpenModal = (type: typeof modalType, id: string | null = null) => {
         setSelectedId(id);
         setModalType(type);
     };
+    const formatMoney = (amount: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+
+    // --- Helper Components ---
+    const StatusBadge = ({ status }: { status: string }) => {
+        let styles = "bg-gray-100 text-gray-600 border-gray-200";
+        let icon = <Clock size={12} />;
+        let label = status;
+
+        switch (status) {
+            case 'DA_NHAN':
+                styles = "bg-emerald-50 text-emerald-700 border-emerald-100";
+                icon = <CheckCircle2 size={12} />;
+                label = "Đã nhận hàng";
+                break;
+            case 'DA_HUY':
+                styles = "bg-rose-50 text-rose-700 border-rose-100";
+                icon = <XCircle size={12} />;
+                label = "Đã hủy";
+                break;
+            case 'DA_DAT':
+                styles = "bg-blue-50 text-blue-700 border-blue-100";
+                icon = <Clock size={12} />;
+                label = "Đã đặt hàng";
+                break;
+        }
+
+        return (
+            <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border shadow-sm", styles)}>
+                {icon}
+                {label}
+            </span>
+        );
+    };
 
     return (
         <div className="p-6 bg-[#eef2f6] min-h-screen font-sans relative">
-            {/* Header & Toolbar */}
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                    <ShoppingCart className="p-1 bg-slate-800 rounded text-white" size={28} /> Nhập hàng
-                </h1>
-            </div>
+            {/* Background Decoration */}
 
-            <div className="flex flex-col md:flex-row gap-4 mb-6 text-slate-800">
-                <div className="relative flex-1 max-w-lg">
+            {/* --- HEADER --- */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10"
+            >
+                <div>
+                    <h1 className="text-3xl font-extrabold text-slate-800 flex items-center gap-3">
+                        <div className="p-2 bg-gradient-to-br bg-[#25396f] rounded-xl text-white shadow-lg bg-[#25396f]-200">
+                            <ShoppingCart size={24} />
+                        </div>
+                        Quản lý Nhập hàng
+                    </h1>
+                    <p className="text-slate-500 text-sm mt-2 ml-1">Theo dõi đơn nhập và nhà cung cấp.</p>
+                </div>
+            </motion.div>
+
+            {/* --- TOOLBAR --- */}
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="flex flex-col md:flex-row gap-4 mb-6 text-slate-800 relative z-10"
+            >
+                <div className="relative flex-1 max-w-lg group">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search className="text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
+                    </div>
                     <input
                         type="text"
                         placeholder="Tìm kiếm mã phiếu, nhà cung cấp..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-4 pr-10 py-2.5 rounded-lg border-none shadow-sm outline-none bg-white"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white shadow-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
                     />
-                    <Search className="absolute right-3 top-2.5 text-slate-400" size={20} />
                 </div>
 
-                {/* Badge hiển thị khi đang lọc */}
                 {isFiltering && (
-                    <div className="flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-lg text-sm font-medium animate-in fade-in">
-                        <span>Đang lọc</span>
-                        <button onClick={() => setFilterParams({})} className="hover:text-red-500"><XCircle size={16} /></button>
-                    </div>
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                        className="flex items-center gap-2 bg-indigo-50 border border-indigo-100 text-indigo-700 px-4 py-2 rounded-xl text-sm font-medium shadow-sm"
+                    >
+                        <span>Đang lọc dữ liệu</span>
+                        <button onClick={() => setFilterParams({})} className="hover:text-red-500 p-1 hover:bg-white rounded-full transition-colors">
+                            <XCircle size={16} />
+                        </button>
+                    </motion.div>
                 )}
 
                 <AddButton onClick={() => handleOpenModal('add')} className="ml-auto" />
-            </div>
+            </motion.div>
 
-            {/* Table */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-[200px] border border-gray-100">
-                {/* Header Bảng + Nút Filter */}
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                    <h2 className="text-xl font-bold text-slate-800">Danh sách phiếu nhập</h2>
+            {/* --- TABLE CARD --- */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="bg-white rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-slate-100 overflow-hidden min-h-[700px] relative z-10"
+            >
+                {/* Header Table */}
+                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-white to-slate-50/50">
+                    <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <Package size={18} className="text-slate-400" />
+                        Danh sách phiếu nhập
+                        <span className="text-xs font-normal text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full ml-2">
+                            {filteredData.length} phiếu
+                        </span>
+                    </h2>
 
-                    {/* Nút Filter nằm ở đây */}
                     <button
                         onClick={() => handleOpenModal('filter')}
-                        className={`p-2 rounded-lg transition-all ${isFiltering
-                            ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
-                            : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
-                            }`}
-                        title="Bộ lọc"
+                        className={cn(
+                            "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
+                            isFiltering
+                                ? "text-blue-600 bg-blue-50 border-blue-100 shadow-inner"
+                                : "text-slate-600 bg-white border-slate-200 hover:border-blue-300 hover:text-blue-600 hover:shadow-sm"
+                        )}
                     >
-                        <Filter size={20} />
+                        <Filter size={16} />
+                        Bộ lọc
                     </button>
                 </div>
 
                 <div className="overflow-x-auto px-6 pb-6">
-                    <table className="w-full text-left border-collapse rounded-lg overflow-hidden">
+                    <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-[#e9eff6] text-slate-700 text-sm font-bold uppercase">
-                                <th className="p-4">Mã phiếu</th>
-                                <th className="p-4">Ngày cập nhật</th>
-                                <th className="p-4">Nhà cung cấp</th>
-                                <th className="p-4">Kho nhận</th>
-                                <th className="p-4 text-right">Thành tiền</th>
-                                <th className="p-4 text-center">Trạng thái</th>
-                                <th className="p-4 text-center">Hành động</th>
+                            <tr className="bg-slate-50/80 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-100">
+                                <th className="p-5 pl-6">Mã phiếu</th>
+                                <th className="p-5">Thời gian</th>
+                                <th className="p-5">Nhà cung cấp</th>
+                                <th className="p-5">Kho nhận</th>
+                                <th className="p-5 text-right">Tổng tiền</th>
+                                <th className="p-5 text-center">Trạng thái</th>
+                                <th className="p-5 text-center">Hành động</th>
                             </tr>
                         </thead>
-                        <tbody className="text-sm text-slate-700">
+
+                        <motion.tbody
+                            className="text-sm text-slate-700 divide-y divide-slate-50"
+                            variants={containerVariants}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                        >
                             {loading ? (
-                                // --- SKELETON LOADER ---
+                                // --- SKELETON ---
                                 [...Array(5)].map((_, index) => (
-                                    <tr key={index} className="animate-pulse bg-white border-b border-slate-100">
-                                        <td className="py-4 pl-3 border-y border-l border-slate-50 rounded-l-lg"><div className="h-4 bg-slate-200 rounded w-16"></div></td>
-                                        <td className="py-4 border-y border-slate-50"><div className="h-4 bg-slate-200 rounded w-48"></div></td>
-                                        <td className="py-4 border-y border-slate-50"><div className="h-4 bg-slate-200 rounded w-full"></div></td>
-                                        <td className="py-4 border-y border-slate-50 text-center"><div className="h-4 bg-slate-200 rounded w-24 mx-auto"></div></td>
-                                        <td className="py-4 border-y border-slate-50 text-center"><div className="h-6 bg-slate-200 rounded-full w-8 mx-auto"></div></td>
-                                        <td className="py-4 border-y border-slate-50"><div className="h-4 bg-slate-200 rounded w-16"></div></td>
-                                        <td className="py-4 px-4 text-right border-y border-r border-slate-50 rounded-r-lg">
-                                            <div className="flex justify-end gap-2"><div className="h-8 w-8 bg-slate-200 rounded-md"></div><div className="h-8 w-8 bg-slate-200 rounded-md"></div></div>
-                                        </td>
+                                    <tr key={index} className="animate-pulse">
+                                        <td className="p-5 pl-6"><div className="h-4 bg-slate-100 rounded w-20"></div></td>
+                                        <td className="p-5"><div className="h-4 bg-slate-100 rounded w-24"></div></td>
+                                        <td className="p-5"><div className="h-4 bg-slate-100 rounded w-40"></div></td>
+                                        <td className="p-5"><div className="h-4 bg-slate-100 rounded w-20"></div></td>
+                                        <td className="p-5"><div className="h-4 bg-slate-100 rounded w-24 ml-auto"></div></td>
+                                        <td className="p-5"><div className="h-6 bg-slate-100 rounded-full w-24 mx-auto"></div></td>
+                                        <td className="p-5"><div className="h-8 bg-slate-100 rounded-lg w-20 mx-auto"></div></td>
                                     </tr>
                                 ))
                             ) : filteredData.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="p-8 text-center text-slate-500">
-                                        {isFiltering ? 'Không tìm thấy kết quả phù hợp với bộ lọc' : 'Chưa có dữ liệu'}
+                                    <td colSpan={7} className="py-20 text-center">
+                                        <div className="flex flex-col items-center justify-center text-slate-400">
+                                            <div className="p-4 bg-slate-50 rounded-full mb-3">
+                                                <Package size={32} className="opacity-50" />
+                                            </div>
+                                            <p className="font-medium">Chưa có dữ liệu phiếu nhập</p>
+                                        </div>
                                     </td>
                                 </tr>
                             ) : (
                                 filteredData.map((item) => (
-                                    <tr key={item.maPN} className="hover:bg-blue-50 border-b border-gray-100">
-                                        <td className="p-4 font-bold text-emerald-700 cursor-pointer" onClick={() => handleOpenModal('detail', item.maPN)}>
-                                            {item.maPNCode || 'N/A'}
+                                    <motion.tr
+                                        key={item.maPN}
+                                        variants={itemVariants}
+                                        whileHover={{ backgroundColor: "rgba(241, 245, 249, 0.6)" }}
+                                        className="group transition-colors cursor-pointer"
+                                        onClick={() => handleOpenModal('detail', item.maPN)}
+                                    >
+                                        <td className="p-5 pl-6">
+                                            <span className="font-bold text-slate-700 group-hover:text-blue-600 transition-colors font-mono">
+                                                {item.maPNCode || 'N/A'}
+                                            </span>
                                         </td>
-                                        <td className="p-4">
-                                            {item.ngayCapNhat ? format(new Date(item.ngayCapNhat), 'dd/MM/yyyy') : '-'}
+                                        <td className="p-5 text-slate-500">
+                                            <div className="flex flex-col">
+                                                <div className="flex items-center gap-1.5">
+                                                    <Calendar size={12} className="opacity-70" />
+                                                    <span className="font-medium text-slate-700">
+                                                        {item.ngayCapNhat ? format(new Date(item.ngayCapNhat), 'dd/MM/yyyy') : '-'}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </td>
-                                        <td className="p-4 font-semibold">{item.tenNCC}</td>
-                                        <td className="p-4">{item.tenKho}</td>
-                                        <td className="p-4 text-right font-bold">
-                                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.thanhTien || 0)}
+                                        <td className="p-5 font-medium text-slate-800">
+                                            {item.tenNCC}
                                         </td>
-                                        <td className="p-4 text-center">{renderStatus(item.trangThai)}</td>
-                                        <td className="p-4 text-center">
-                                            <div className="flex items-center justify-center gap-2">
-                                                <button onClick={() => handleOpenModal('edit', item.maPN)} className="p-1.5 rounded hover:bg-slate-700 hover:text-white">
-                                                    <Edit size={16} />
+                                        <td className="p-5 text-slate-600">
+                                            <div className="flex items-center gap-1.5">
+                                                <MapPin size={12} className="opacity-70 text-slate-400" />
+                                                {item.tenKho}
+                                            </div>
+                                        </td>
+                                        <td className="p-5 text-right">
+                                            <span className="font-bold text-slate-800 bg-slate-100/50 px-2 py-1 rounded">
+                                                {formatMoney(item.thanhTien || 0)}
+                                            </span>
+                                        </td>
+                                        <td className="p-5 text-center">
+                                            <StatusBadge status={item.trangThai} />
+                                        </td>
+                                        <td className="p-5 text-center">
+                                            <div className="flex items-center justify-center gap-2 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                                                <button
+                                                    onClick={() => handleOpenModal('edit', item.maPN)}
+                                                    className="p-2 rounded-md text-slate-600 hover:bg-slate-200 cursor-pointer transition-colors"
+                                                    title="Chỉnh sửa"
+                                                >
+                                                    <Edit size={18} />
                                                 </button>
-                                                <button onClick={() => handleOpenModal('delete', item.maPN)} className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-red-500 hover:bg-red-50">
-                                                    <Trash2 size={16} />
+                                                <button
+                                                    onClick={() => handleOpenModal('delete', item.maPN)}
+                                                    className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                                                    title="Xóa"
+                                                >
+                                                    <Trash2 size={18} />
                                                 </button>
                                             </div>
                                         </td>
-                                    </tr>
+                                    </motion.tr>
                                 ))
                             )}
-                        </tbody>
+                        </motion.tbody>
                     </table>
                 </div>
-            </div>
+            </motion.div>
 
             <ImportModals
                 isOpen={modalType !== null}
@@ -219,7 +340,6 @@ export default function ImportPage() {
                     setSelectedId(null);
                     if (refresh) fetchData();
                 }}
-                // [MỚI] Truyền hàm apply filter
                 onApplyFilter={handleApplyFilter}
             />
         </div>
