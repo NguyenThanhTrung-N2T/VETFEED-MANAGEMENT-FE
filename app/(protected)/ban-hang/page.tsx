@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import {
     Search, Plus, Filter, Edit, Trash2,
-    ChevronDown, DollarSign, Loader2, Eye
+    DollarSign, Loader2, Eye, XCircle
 } from 'lucide-react';
-import SalesModals from '@/components/SalesModals';
+import SalesModals, { SalesFilterParams } from '@/components/SalesModals';
 import { salesService, PhieuBan } from '@/services/sales.service';
 import { format } from 'date-fns';
 import AddButton from "@/components/ui/AddButton";
@@ -15,6 +15,9 @@ export default function SalesPage() {
     const [loading, setLoading] = useState(true);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [modalType, setModalType] = useState<'filter' | 'add' | 'edit' | 'detail' | 'delete' | null>(null);
+
+    // State lưu bộ lọc hiện tại
+    const [filterParams, setFilterParams] = useState<SalesFilterParams>({});
 
     // Fetch Data
     const fetchData = async () => {
@@ -33,18 +36,54 @@ export default function SalesPage() {
         fetchData();
     }, []);
 
-    // Filter Logic
-    const filteredData = data.filter(item =>
-        (item.tenKhachHang?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-        (item.maPBCode?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-    );
+    // Logic Filter
+    const filteredData = data.filter(item => {
+        // 1. Tìm kiếm cơ bản
+        const matchesSearch =
+            (item.tenKhachHang?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+            (item.maPBCode?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+
+        // 2. Bộ lọc nâng cao
+        let matchesFilter = true;
+
+        if (filterParams.fromDate) {
+            const itemDate = new Date(item.ngayBan);
+            const fromDate = new Date(filterParams.fromDate);
+            fromDate.setHours(0, 0, 0, 0);
+            if (itemDate < fromDate) matchesFilter = false;
+        }
+
+        if (matchesFilter && filterParams.toDate) {
+            const itemDate = new Date(item.ngayBan);
+            const toDate = new Date(filterParams.toDate);
+            toDate.setHours(23, 59, 59, 999);
+            if (itemDate > toDate) matchesFilter = false;
+        }
+
+        if (matchesFilter && filterParams.customerName) {
+            if (!item.tenKhachHang?.toLowerCase().includes(filterParams.customerName.toLowerCase())) {
+                matchesFilter = false;
+            }
+        }
+
+        if (matchesFilter && filterParams.minTotal !== undefined) {
+            if (item.thanhTien < filterParams.minTotal) matchesFilter = false;
+        }
+
+        return matchesSearch && matchesFilter;
+    });
+
+    const handleApplyFilter = (params: SalesFilterParams) => {
+        setFilterParams(params);
+    };
+
+    const isFiltering = Object.values(filterParams).some(x => x !== undefined && x !== '');
 
     const handleOpenModal = (type: typeof modalType, id: string | null = null) => {
         setSelectedId(id);
         setModalType(type);
     };
 
-    // Helper format tiền
     const formatMoney = (amount: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
     return (
@@ -67,12 +106,34 @@ export default function SalesPage() {
                     />
                     <Search className="absolute right-3 top-2.5 text-slate-400" size={20} />
                 </div>
+
+                {/* Badge hiển thị khi đang lọc */}
+                {isFiltering && (
+                    <div className="flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-lg text-sm font-medium animate-in fade-in">
+                        <span>Đang lọc</span>
+                        <button onClick={() => setFilterParams({})} className="hover:text-red-500"><XCircle size={16} /></button>
+                    </div>
+                )}
+
                 <AddButton onClick={() => handleOpenModal('add')} className="ml-auto" />
             </div>
 
             <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-[200px] border border-gray-100">
-                <div className="p-6 border-b border-gray-100">
+                {/* Header Bảng + Nút Filter */}
+                <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                     <h2 className="text-xl font-bold text-slate-800">Lịch sử bán hàng</h2>
+
+                    {/* Nút Filter nằm ở đây */}
+                    <button
+                        onClick={() => handleOpenModal('filter')}
+                        className={`p-2 rounded-lg transition-all ${isFiltering
+                            ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
+                            : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                            }`}
+                        title="Bộ lọc"
+                    >
+                        <Filter size={20} />
+                    </button>
                 </div>
 
                 <div className="overflow-x-auto px-6 pb-6">
@@ -104,7 +165,11 @@ export default function SalesPage() {
                                     </tr>
                                 ))
                             ) : filteredData.length === 0 ? (
-                                <tr><td colSpan={6} className="p-8 text-center text-slate-500">Chưa có đơn hàng nào</td></tr>
+                                <tr>
+                                    <td colSpan={6} className="p-8 text-center text-slate-500">
+                                        {isFiltering ? 'Không tìm thấy kết quả phù hợp với bộ lọc' : 'Chưa có đơn hàng nào'}
+                                    </td>
+                                </tr>
                             ) : (
                                 filteredData.map((item, index) => (
                                     <tr key={index} className="hover:bg-blue-50 border-b border-gray-100">
@@ -150,6 +215,7 @@ export default function SalesPage() {
                     setSelectedId(null);
                     if (refresh) fetchData();
                 }}
+                onApplyFilter={handleApplyFilter}
             />
         </div>
     );

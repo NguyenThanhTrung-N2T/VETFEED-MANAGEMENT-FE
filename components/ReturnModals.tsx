@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { X, Plus, Trash2, Info, Save, FileText, Loader2, AlertTriangle, Search } from "lucide-react";
+import { X, Plus, Trash2, Info, Save, FileText, Loader2, AlertTriangle, Search, Filter, RefreshCcw } from "lucide-react";
 import {
     returnService,
     PhieuBanLookup,
@@ -10,6 +10,14 @@ import {
 import { format } from "date-fns";
 import { toast } from 'sonner';
 
+// --- TYPES ---
+export interface ReturnFilterParams {
+    fromDate?: string;
+    toDate?: string;
+    customerName?: string;
+    saleCode?: string;
+}
+
 type ModalType = "filter" | "add" | "edit" | "detail" | "delete" | null;
 
 interface ReturnModalsProps {
@@ -17,6 +25,8 @@ interface ReturnModalsProps {
     type: ModalType;
     selectedId: string | null;
     onClose: (refresh?: boolean) => void;
+    // Callback trả bộ lọc về Page
+    onApplyFilter?: (params: ReturnFilterParams) => void;
 }
 
 const money = (v: number) => new Intl.NumberFormat("vi-VN").format(v);
@@ -32,9 +42,17 @@ const DEFAULT_NEW_ITEM = () => ({
     ghiChu: "",
 });
 
-export default function ReturnModals({ isOpen, type, selectedId, onClose }: ReturnModalsProps) {
+export default function ReturnModals({ isOpen, type, selectedId, onClose, onApplyFilter }: ReturnModalsProps) {
     // --- Data Sources ---
     const [sales, setSales] = useState<PhieuBanLookup[]>([]);
+
+    // --- Filter State ---
+    const [filterState, setFilterState] = useState<ReturnFilterParams>({
+        fromDate: '',
+        toDate: '',
+        customerName: '',
+        saleCode: ''
+    });
 
     // --- Add Flow ---
     const [selectedSaleId, setSelectedSaleId] = useState("");
@@ -199,6 +217,23 @@ export default function ReturnModals({ isOpen, type, selectedId, onClose }: Retu
         setNewItemError(null);
     };
 
+    // --- Handlers (Filter) ---
+    const handleFilterSubmit = () => {
+        if (onApplyFilter) {
+            onApplyFilter(filterState);
+        }
+        handleRequestClose(false);
+    };
+
+    const handleResetFilter = () => {
+        const emptyFilter = { fromDate: '', toDate: '', customerName: '', saleCode: '' };
+        setFilterState(emptyFilter);
+        if (onApplyFilter) {
+            onApplyFilter(emptyFilter);
+        }
+        handleRequestClose(false);
+    };
+
     // --- Handlers (Add Mode) ---
     const handleSaleSelect = async (s: PhieuBanLookup) => {
         setSelectedSaleId(s.maPB);
@@ -266,7 +301,7 @@ export default function ReturnModals({ isOpen, type, selectedId, onClose }: Retu
         try {
             const isReturnable = await returnService.checkReturnable(selectedSaleId, newItem.maLo, newItem.soLuong);
             if (!isReturnable) {
-                setNewItemError("Số lượng trả vượt quá số lượng mua khả dụng (hoặc đã trả trước đó).");
+                toast.error("Số lượng trả vượt quá số lượng mua khả dụng (hoặc đã trả trước đó).");
                 return;
             }
 
@@ -361,7 +396,84 @@ export default function ReturnModals({ isOpen, type, selectedId, onClose }: Retu
 
     if (!isOpen) return null;
 
-    // --- RENDER ---
+    // --- RENDER 1: FILTER MODAL ---
+    if (type === 'filter') {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-slate-800">
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[600px] animate-in fade-in zoom-in duration-200">
+                    <div className="p-8 flex flex-col items-center">
+                        <Filter size={48} strokeWidth={1} className="text-slate-800 mb-2" />
+                        <h2 className="text-2xl font-bold mb-8 text-slate-800">Lọc phiếu trả</h2>
+
+                        <div className="w-full grid grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">Từ ngày</label>
+                                <input
+                                    type="date"
+                                    className="w-full p-2.5 bg-blue-50/50 border border-blue-100 rounded-lg text-sm outline-none text-slate-800 focus:border-emerald-500"
+                                    value={filterState.fromDate || ''}
+                                    onChange={(e) => setFilterState({ ...filterState, fromDate: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">Đến ngày</label>
+                                <input
+                                    type="date"
+                                    className="w-full p-2.5 bg-blue-50/50 border border-blue-100 rounded-lg text-sm outline-none text-slate-800 focus:border-emerald-500"
+                                    value={filterState.toDate || ''}
+                                    onChange={(e) => setFilterState({ ...filterState, toDate: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">Khách hàng</label>
+                                <input
+                                    type="text"
+                                    placeholder="Tên khách hàng..."
+                                    className="w-full p-2.5 bg-blue-50/50 border border-blue-100 rounded-lg text-sm outline-none text-slate-800 focus:border-emerald-500"
+                                    value={filterState.customerName || ''}
+                                    onChange={(e) => setFilterState({ ...filterState, customerName: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">Mã phiếu bán</label>
+                                <input
+                                    type="text"
+                                    placeholder="Ví dụ: PB001..."
+                                    className="w-full p-2.5 bg-blue-50/50 border border-blue-100 rounded-lg text-sm outline-none text-slate-800 focus:border-emerald-500"
+                                    value={filterState.saleCode || ''}
+                                    onChange={(e) => setFilterState({ ...filterState, saleCode: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-4 w-full mt-8">
+                            <button
+                                onClick={handleFilterSubmit}
+                                className="flex-1 py-3 bg-[#43a047] hover:bg-green-700 text-white font-bold rounded-lg transition-colors shadow-lg shadow-green-100"
+                            >
+                                Áp dụng lọc
+                            </button>
+                            <button
+                                onClick={handleResetFilter}
+                                className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-slate-600 font-bold rounded-lg transition-colors"
+                                title="Xóa bộ lọc"
+                            >
+                                <RefreshCcw size={20} />
+                            </button>
+                            <button
+                                onClick={() => handleRequestClose()}
+                                className="flex-1 py-3 border border-red-500 text-red-600 hover:bg-red-50 font-bold rounded-lg transition-colors"
+                            >
+                                Đóng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // --- RENDER 2: DELETE MODAL ---
     if (type === "delete") {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-slate-800">
@@ -400,7 +512,8 @@ export default function ReturnModals({ isOpen, type, selectedId, onClose }: Retu
         );
     }
 
-    const viewData = isDetail ? detailData : null;
+    const isDetailMode = type === "detail";
+    const viewData = isDetailMode ? detailData : null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-slate-800">
@@ -409,10 +522,10 @@ export default function ReturnModals({ isOpen, type, selectedId, onClose }: Retu
                 <div className="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-white text-slate-800">
                     <div>
                         <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                            {isDetail ? <Info size={24} /> : <FileText size={24} />}
-                            {isDetail ? "Chi tiết phiếu trả" : "Tạo phiếu trả hàng"}
+                            {isDetailMode ? <Info size={24} /> : <FileText size={24} />}
+                            {isDetailMode ? "Chi tiết phiếu trả" : "Tạo phiếu trả hàng"}
                         </h2>
-                        {!isDetail && (
+                        {!isDetailMode && (
                             <p className="text-xs text-slate-500 mt-1">Mẹo: chọn phiếu bán → chọn sản phẩm → Enter để thêm nhanh.</p>
                         )}
                     </div>
@@ -436,8 +549,8 @@ export default function ReturnModals({ isOpen, type, selectedId, onClose }: Retu
                             </div>
                         )}
 
-                        {/* Selection Section (Add) */}
-                        {!isDetail && (
+                        {/* 1. Selection Section (Only Add Mode) */}
+                        {!isDetailMode && (
                             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6 text-slate-800">
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     {/* Sale autocomplete */}
@@ -551,7 +664,7 @@ export default function ReturnModals({ isOpen, type, selectedId, onClose }: Retu
                         )}
 
                         {/* Detail header */}
-                        {isDetail && viewData && (
+                        {isDetailMode && viewData && (
                             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-800">
                                 <div>
                                     <span className="font-bold text-slate-500">Mã Phiếu Trả:</span>{" "}
@@ -573,11 +686,15 @@ export default function ReturnModals({ isOpen, type, selectedId, onClose }: Retu
                                     <span className="font-bold text-slate-500">Lý do:</span>{" "}
                                     <span className="text-slate-800">{viewData.lyDoTra}</span>
                                 </div>
+                                <div>
+                                    <span className="font-bold text-slate-500">Hoàn tiền:</span>{" "}
+                                    <span className="text-slate-800">{viewData.hinhThucHoanTien}</span>
+                                </div>
                             </div>
                         )}
 
-                        {/* Add Item (Add + sale selected) */}
-                        {!isDetail && saleDetail && (
+                        {/* Add Item Form (Only Add Mode & Sale Selected) */}
+                        {!isDetailMode && saleDetail && (
                             <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100 mb-6 shadow-sm text-slate-800">
                                 <div className="flex items-start justify-between gap-3 flex-wrap">
                                     <div className="text-sm font-bold text-blue-900">Thêm sản phẩm trả</div>
@@ -656,12 +773,6 @@ export default function ReturnModals({ isOpen, type, selectedId, onClose }: Retu
                                                 </div>
                                             )}
                                         </div>
-
-                                        {newItemError && (
-                                            <p className="mt-2 text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg p-2">
-                                                ⚠ {newItemError}
-                                            </p>
-                                        )}
                                     </div>
 
                                     {/* Qty */}
@@ -670,8 +781,8 @@ export default function ReturnModals({ isOpen, type, selectedId, onClose }: Retu
                                         <input
                                             ref={qtyRef}
                                             type="number"
-                                            min={1}
-                                            step="1"
+                                            min={0.01}
+                                            step="0.01"
                                             className="w-full p-2.5 border border-blue-200 rounded-xl text-sm text-center font-bold text-slate-800 outline-none focus:ring-2 focus:ring-emerald-200 bg-white"
                                             value={newItem.soLuong}
                                             onChange={(e) => {
@@ -716,6 +827,7 @@ export default function ReturnModals({ isOpen, type, selectedId, onClose }: Retu
                                         </button>
                                     </div>
                                 </div>
+                                {newItemError && <p className="mt-2 text-xs text-red-500 font-medium">{newItemError}</p>}
                             </div>
                         )}
 
@@ -732,11 +844,11 @@ export default function ReturnModals({ isOpen, type, selectedId, onClose }: Retu
                                             <th className="p-3 text-right w-32">Đơn giá hoàn</th>
                                             <th className="p-3 text-right w-36">Thành tiền</th>
                                             <th className="p-3 min-w-[180px]">Ghi chú</th>
-                                            {!isDetail && <th className="p-3 text-center w-16">Xóa</th>}
+                                            {!isDetailMode && <th className="p-3 text-center w-16">Xóa</th>}
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-50">
-                                        {(isDetail ? viewData?.danhSachChiTiet || [] : returnItems).map((item: any, index: number) => {
+                                        {(isDetailMode ? viewData?.danhSachChiTiet || [] : returnItems).map((item: any, index: number) => {
                                             const qty = item.soLuong ?? item.soLuongTra ?? 0;
                                             const price = item.donGia ?? item.donGiaHoan ?? 0;
                                             return (
@@ -744,7 +856,7 @@ export default function ReturnModals({ isOpen, type, selectedId, onClose }: Retu
                                                     key={index}
                                                     className={[
                                                         "hover:bg-slate-50 transition-colors",
-                                                        !isDetail && flashRowIndex === index ? "bg-emerald-50" : "",
+                                                        !isDetailMode && flashRowIndex === index ? "bg-emerald-50" : "",
                                                     ].join(" ")}
                                                 >
                                                     <td className="p-3">{index + 1}</td>
@@ -754,7 +866,7 @@ export default function ReturnModals({ isOpen, type, selectedId, onClose }: Retu
                                                     <td className="p-3 text-right text-slate-800">{Number(price).toLocaleString()}</td>
                                                     <td className="p-3 text-right font-bold text-emerald-700">{(qty * price).toLocaleString()}</td>
                                                     <td className="p-3 text-slate-500 italic">{item.ghiChu || "—"}</td>
-                                                    {!isDetail && (
+                                                    {!isDetailMode && (
                                                         <td className="p-3 text-center">
                                                             <button
                                                                 onClick={() => handleRemoveItem(index)}
@@ -769,7 +881,7 @@ export default function ReturnModals({ isOpen, type, selectedId, onClose }: Retu
                                             );
                                         })}
 
-                                        {(isDetail ? (viewData?.danhSachChiTiet?.length || 0) : returnItems.length) === 0 && (
+                                        {(isDetailMode ? (viewData?.danhSachChiTiet?.length || 0) : returnItems.length) === 0 && (
                                             <tr>
                                                 <td colSpan={8} className="p-10 text-center text-slate-400">
                                                     Chưa có sản phẩm trả
@@ -782,7 +894,7 @@ export default function ReturnModals({ isOpen, type, selectedId, onClose }: Retu
                                                 Tổng hoàn trả:
                                             </td>
                                             <td className="p-3 text-right text-emerald-700 text-lg">
-                                                {(isDetail ? viewData?.thanhTien : totalRefund)?.toLocaleString()} đ
+                                                {(isDetailMode ? viewData?.thanhTien : totalRefund)?.toLocaleString()} đ
                                             </td>
                                             <td colSpan={2}></td>
                                         </tr>
@@ -795,7 +907,7 @@ export default function ReturnModals({ isOpen, type, selectedId, onClose }: Retu
 
                 {/* Footer (sticky) */}
                 <div className="p-5 border-t border-gray-100 flex justify-end gap-4 bg-white sticky bottom-0 text-slate-800">
-                    {!isDetail && (
+                    {!isDetailMode && (
                         <button
                             onClick={handleSubmit}
                             disabled={isSubmitting || returnItems.length === 0}
@@ -809,7 +921,7 @@ export default function ReturnModals({ isOpen, type, selectedId, onClose }: Retu
                         onClick={() => handleRequestClose()}
                         className="px-8 py-3 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl font-bold"
                     >
-                        {isDetail ? "Đóng" : "Hủy bỏ"}
+                        {isDetailMode ? "Đóng" : "Hủy bỏ"}
                     </button>
                 </div>
             </div>

@@ -1,9 +1,21 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { X, Plus, Trash2, Edit, Info, Save, Loader2, Search, AlertTriangle } from "lucide-react";
+import { X, Plus, Trash2, Edit, Info, Save, Loader2, Search, AlertTriangle, Filter, RefreshCcw } from "lucide-react";
 import { transferService, CTChuyenKhoItem } from "@/services/transfer.service";
 import { format } from "date-fns";
 import { toast } from 'sonner';
+
+// --- TYPES ---
+export interface TransferFilterParams {
+    fromDate?: string;
+    toDate?: string;
+    sourceWarehouse?: string; // ID (để giữ trạng thái dropdown)
+    destWarehouse?: string;   // ID
+
+    // Thêm tên để logic lọc ở Page hoạt động chính xác
+    sourceWarehouseName?: string;
+    destWarehouseName?: string;
+}
 
 type ModalType = "filter" | "add" | "edit" | "detail" | "delete" | null;
 
@@ -12,6 +24,8 @@ interface TransferModalsProps {
     type: ModalType;
     selectedId: string | null;
     onClose: (refresh?: boolean) => void;
+    // Callback trả bộ lọc về Page
+    onApplyFilter?: (params: TransferFilterParams) => void;
 }
 
 const DEFAULT_FORM = () => ({
@@ -23,10 +37,18 @@ const DEFAULT_FORM = () => ({
 
 const DEFAULT_NEW_ITEM = { maLo: "", soLuong: 1, ghiChu: "" };
 
-export default function TransferModals({ isOpen, type, selectedId, onClose }: TransferModalsProps) {
+export default function TransferModals({ isOpen, type, selectedId, onClose, onApplyFilter }: TransferModalsProps) {
     // --- Master Data ---
     const [warehouses, setWarehouses] = useState<any[]>([]);
     const [batches, setBatches] = useState<any[]>([]);
+
+    // --- Filter State ---
+    const [filterState, setFilterState] = useState<TransferFilterParams>({
+        fromDate: '',
+        toDate: '',
+        sourceWarehouse: '',
+        destWarehouse: ''
+    });
 
     // --- Form State ---
     const [formData, setFormData] = useState(DEFAULT_FORM());
@@ -73,7 +95,7 @@ export default function TransferModals({ isOpen, type, selectedId, onClose }: Tr
         onClose(refresh);
     };
 
-    // --- Memo: filtered batches (always called, no conditional hook) ---
+    // --- Memo: filtered batches ---
     const filteredBatches = useMemo(() => {
         const kw = batchKeyword.trim().toLowerCase();
         if (!kw) return batches.slice(0, 12);
@@ -113,6 +135,7 @@ export default function TransferModals({ isOpen, type, selectedId, onClose }: Tr
         setNewItemError(null);
         setFlashRowIndex(null);
 
+        // Luôn load data kho để dùng cho Filter
         loadMasterData();
 
         if (type === "add") {
@@ -143,14 +166,10 @@ export default function TransferModals({ isOpen, type, selectedId, onClose }: Tr
     const parseStatus = (status: string | number): number => {
         if (typeof status === "number") return status;
         switch (status) {
-            case "TAO":
-                return 0;
-            case "DANG_CHUYEN":
-                return 1;
-            case "DA_NHAN":
-                return 2;
-            default:
-                return 0;
+            case "TAO": return 0;
+            case "DANG_CHUYEN": return 1;
+            case "DA_NHAN": return 2;
+            default: return 0;
         }
     };
 
@@ -171,8 +190,6 @@ export default function TransferModals({ isOpen, type, selectedId, onClose }: Tr
             }));
 
             setItemList(mappedItems);
-
-            // reset add-item UI
             setNewItem(DEFAULT_NEW_ITEM);
             setBatchKeyword("");
             setIsBatchDropdownOpen(false);
@@ -188,7 +205,32 @@ export default function TransferModals({ isOpen, type, selectedId, onClose }: Tr
     const visibleItems = useMemo(() => itemList.filter((i) => !i.isDeleted), [itemList]);
     const disableAddItem = !formData.maKhoXuat || isCheckingStock;
 
-    // --- Handlers ---
+    // --- Filter Handlers ---
+    const handleFilterSubmit = () => {
+        if (onApplyFilter) {
+            // Tìm tên kho dựa trên ID đã chọn trong dropdown
+            const sourceName = warehouses.find(w => w.maKho === filterState.sourceWarehouse)?.tenKho;
+            const destName = warehouses.find(w => w.maKho === filterState.destWarehouse)?.tenKho;
+
+            onApplyFilter({
+                ...filterState,
+                sourceWarehouseName: sourceName,
+                destWarehouseName: destName
+            });
+        }
+        handleRequestClose(false);
+    };
+
+    const handleResetFilter = () => {
+        const emptyFilter = { fromDate: '', toDate: '', sourceWarehouse: '', destWarehouse: '', sourceWarehouseName: '', destWarehouseName: '' };
+        setFilterState(emptyFilter);
+        if (onApplyFilter) {
+            onApplyFilter(emptyFilter);
+        }
+        handleRequestClose(false);
+    };
+
+    // --- Handlers (Form) ---
     const validateNewItem = () => {
         if (!formData.maKhoXuat) return "Vui lòng chọn Kho xuất trước.";
         if (!newItem.maLo) return "Vui lòng chọn Lô hàng.";
@@ -240,7 +282,7 @@ export default function TransferModals({ isOpen, type, selectedId, onClose }: Tr
             setNewItemError(null);
             markDirty();
         } catch (error: any) {
-            setNewItemError(error.response?.data?.detail || "Không đủ tồn kho!");
+            toast.error("Không đủ tồn kho!");
         } finally {
             setIsCheckingStock(false);
         }
@@ -251,7 +293,6 @@ export default function TransferModals({ isOpen, type, selectedId, onClose }: Tr
         if (newQty === originalQty) return;
         if (newQty <= 0) {
             setFormError("Số lượng phải lớn hơn 0.");
-            // revert
             setItemList((prev) => {
                 const next = [...prev];
                 next[index].soLuongChuyen = originalQty;
@@ -264,7 +305,6 @@ export default function TransferModals({ isOpen, type, selectedId, onClose }: Tr
             await transferService.checkInventory(formData.maKhoXuat, visibleItems[index].maLo, newQty);
 
             setItemList((prev) => {
-                // important: index is relative to visibleItems; map to real index by using object identity
                 const item = visibleItems[index];
                 const realIndex = prev.findIndex((x) => x === item);
                 if (realIndex === -1) return prev;
@@ -352,13 +392,13 @@ export default function TransferModals({ isOpen, type, selectedId, onClose }: Tr
                     ngayLap: new Date(formData.ngayLap).toISOString(),
                     maKhoNhan: formData.maKhoNhan,
                     ghiChu: formData.ghiChu,
-                    danhSachChiTiet: itemList, // send all for update (include deleted/status changes)
+                    danhSachChiTiet: itemList,
                 };
                 await transferService.update(selectedId, payload);
             }
             setHasUnsavedChanges(false);
             handleRequestClose(true);
-            toast.success("Thêm phiếu chuyển thành công!");
+            toast.success("Thao tác thành công!");
         } catch (error: any) {
             setFormError("Có lỗi xảy ra: " + (error.response?.data?.detail || error.message));
         } finally {
@@ -368,7 +408,6 @@ export default function TransferModals({ isOpen, type, selectedId, onClose }: Tr
 
     const handleUpdateStatus = async (maCTCK: string, newStatus: number) => {
         setFormError(null);
-
         if (newStatus === 2) {
             if (!confirm("Xác nhận đã nhận hàng? Hành động này sẽ cập nhật tồn kho.")) return;
             try {
@@ -400,9 +439,90 @@ export default function TransferModals({ isOpen, type, selectedId, onClose }: Tr
 
     if (!isOpen) return null;
 
-    // --- RENDER ---
+    // --- RENDER 1: FILTER MODAL ---
+    if (type === 'filter') {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-slate-800">
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[600px] animate-in fade-in zoom-in duration-200">
+                    <div className="p-8 flex flex-col items-center">
+                        <Filter size={48} strokeWidth={1} className="text-slate-800 mb-2" />
+                        <h2 className="text-2xl font-bold mb-8 text-slate-800">Lọc phiếu chuyển</h2>
 
-    // Modal Xóa
+                        <div className="w-full grid grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">Từ ngày</label>
+                                <input
+                                    type="date"
+                                    className="w-full p-2.5 bg-blue-50/50 border border-blue-100 rounded-lg text-sm outline-none text-slate-800 focus:border-emerald-500"
+                                    value={filterState.fromDate || ''}
+                                    onChange={(e) => setFilterState({ ...filterState, fromDate: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">Đến ngày</label>
+                                <input
+                                    type="date"
+                                    className="w-full p-2.5 bg-blue-50/50 border border-blue-100 rounded-lg text-sm outline-none text-slate-800 focus:border-emerald-500"
+                                    value={filterState.toDate || ''}
+                                    onChange={(e) => setFilterState({ ...filterState, toDate: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">Kho xuất</label>
+                                <select
+                                    className="w-full p-2.5 bg-blue-50/50 border border-blue-100 rounded-lg text-sm outline-none text-slate-800 focus:border-emerald-500"
+                                    value={filterState.sourceWarehouse || ''}
+                                    onChange={(e) => setFilterState({ ...filterState, sourceWarehouse: e.target.value })}
+                                >
+                                    <option value="">-- Tất cả --</option>
+                                    {warehouses.map(w => (
+                                        <option key={w.maKho} value={w.maKho}>{w.tenKho}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">Kho nhập</label>
+                                <select
+                                    className="w-full p-2.5 bg-blue-50/50 border border-blue-100 rounded-lg text-sm outline-none text-slate-800 focus:border-emerald-500"
+                                    value={filterState.destWarehouse || ''}
+                                    onChange={(e) => setFilterState({ ...filterState, destWarehouse: e.target.value })}
+                                >
+                                    <option value="">-- Tất cả --</option>
+                                    {warehouses.map(w => (
+                                        <option key={w.maKho} value={w.maKho}>{w.tenKho}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-4 w-full mt-8">
+                            <button
+                                onClick={handleFilterSubmit}
+                                className="flex-1 py-3 bg-[#43a047] hover:bg-green-700 text-white font-bold rounded-lg transition-colors shadow-lg shadow-green-100"
+                            >
+                                Áp dụng lọc
+                            </button>
+                            <button
+                                onClick={handleResetFilter}
+                                className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-slate-600 font-bold rounded-lg transition-colors"
+                                title="Xóa bộ lọc"
+                            >
+                                <RefreshCcw size={20} />
+                            </button>
+                            <button
+                                onClick={() => handleRequestClose()}
+                                className="flex-1 py-3 border border-red-500 text-red-600 hover:bg-red-50 font-bold rounded-lg transition-colors"
+                            >
+                                Đóng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // --- RENDER 2: DELETE MODAL ---
     if (type === "delete") {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-slate-800">
@@ -640,12 +760,6 @@ export default function TransferModals({ isOpen, type, selectedId, onClose }: Tr
                                                 </div>
                                             )}
                                         </div>
-
-                                        {newItemError && (
-                                            <p className="mt-2 text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg p-2">
-                                                ⚠ {newItemError}
-                                            </p>
-                                        )}
                                     </div>
 
                                     {/* Qty */}

@@ -1,9 +1,9 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import {
-    Search, Plus, Filter, Trash2, CornerUpLeft, FileText, Loader2, Eye
+    Search, Plus, Filter, Trash2, CornerUpLeft, FileText, Loader2, Eye, XCircle
 } from 'lucide-react';
-import ReturnModals from '@/components/ReturnModals';
+import ReturnModals, { ReturnFilterParams } from '@/components/ReturnModals';
 import { returnService, PhieuTra } from '@/services/return.service';
 import { format } from 'date-fns';
 import AddButton from "@/components/ui/AddButton";
@@ -14,6 +14,9 @@ export default function ReturnPage() {
     const [loading, setLoading] = useState(true);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [modalType, setModalType] = useState<'filter' | 'add' | 'detail' | 'delete' | null>(null);
+
+    // [MỚI] State lưu bộ lọc hiện tại
+    const [filterParams, setFilterParams] = useState<ReturnFilterParams>({});
 
     // Fetch Data
     const fetchData = async () => {
@@ -32,12 +35,51 @@ export default function ReturnPage() {
         fetchData();
     }, []);
 
-    // Filter Logic
-    const filteredData = data.filter(item =>
-        (item.maPTCode?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-        (item.tenKhachHang?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-        (item.maPBCode?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-    );
+    // [CẬP NHẬT] Filter Logic: Kết hợp Tìm kiếm + Bộ lọc nâng cao
+    const filteredData = data.filter(item => {
+        // 1. Tìm kiếm cơ bản (ô search bar)
+        const matchesSearch =
+            (item.maPTCode?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+            (item.tenKhachHang?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+            (item.maPBCode?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+
+        // 2. Bộ lọc nâng cao (từ Modal Filter)
+        let matchesFilter = true;
+
+        if (filterParams.fromDate) {
+            const itemDate = new Date(item.ngayTra);
+            const fromDate = new Date(filterParams.fromDate);
+            fromDate.setHours(0, 0, 0, 0);
+            if (itemDate < fromDate) matchesFilter = false;
+        }
+
+        if (matchesFilter && filterParams.toDate) {
+            const itemDate = new Date(item.ngayTra);
+            const toDate = new Date(filterParams.toDate);
+            toDate.setHours(23, 59, 59, 999);
+            if (itemDate > toDate) matchesFilter = false;
+        }
+
+        if (matchesFilter && filterParams.customerName) {
+            if (!item.tenKhachHang?.toLowerCase().includes(filterParams.customerName.toLowerCase())) {
+                matchesFilter = false;
+            }
+        }
+
+        if (matchesFilter && filterParams.saleCode) {
+            if (!item.maPBCode?.toLowerCase().includes(filterParams.saleCode.toLowerCase())) {
+                matchesFilter = false;
+            }
+        }
+
+        return matchesSearch && matchesFilter;
+    });
+
+    const handleApplyFilter = (params: ReturnFilterParams) => {
+        setFilterParams(params);
+    };
+
+    const isFiltering = Object.values(filterParams).some(x => x !== undefined && x !== '');
 
     const handleOpenModal = (type: typeof modalType, id: string | null = null) => {
         setSelectedId(id);
@@ -68,12 +110,34 @@ export default function ReturnPage() {
                     />
                     <Search className="absolute right-3 top-2.5 text-slate-400" size={20} />
                 </div>
+
+                {/* [MỚI] Badge hiển thị khi đang lọc */}
+                {isFiltering && (
+                    <div className="flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-lg text-sm font-medium animate-in fade-in">
+                        <span>Đang lọc</span>
+                        <button onClick={() => setFilterParams({})} className="hover:text-red-500"><XCircle size={16} /></button>
+                    </div>
+                )}
+
                 <AddButton onClick={() => handleOpenModal('add')} className="ml-auto" />
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-[200px]">
-                <div className="p-6 border-b border-gray-100">
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-[200px] border border-gray-100">
+                {/* Header Bảng + Nút Filter */}
+                <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                     <h2 className="text-xl font-bold text-slate-800">Danh sách phiếu trả</h2>
+
+                    {/* [MỚI] Nút Filter nằm ở đây */}
+                    <button
+                        onClick={() => handleOpenModal('filter')}
+                        className={`p-2 rounded-lg transition-all ${isFiltering
+                            ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
+                            : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                            }`}
+                        title="Bộ lọc"
+                    >
+                        <Filter size={20} />
+                    </button>
                 </div>
 
                 <div className="overflow-x-auto px-6 pb-6">
@@ -106,7 +170,11 @@ export default function ReturnPage() {
                                     </tr>
                                 ))
                             ) : filteredData.length === 0 ? (
-                                <tr><td colSpan={7} className="p-8 text-center text-slate-500">Chưa có phiếu trả nào</td></tr>
+                                <tr>
+                                    <td colSpan={7} className="p-8 text-center text-slate-500">
+                                        {isFiltering ? 'Không tìm thấy kết quả phù hợp với bộ lọc' : 'Chưa có phiếu trả nào'}
+                                    </td>
+                                </tr>
                             ) : (
                                 filteredData.map((item) => (
                                     <tr key={item.maPT} className="hover:bg-blue-50 border-b border-gray-100">
@@ -155,6 +223,7 @@ export default function ReturnPage() {
                     setSelectedId(null);
                     if (refresh) fetchData();
                 }}
+                onApplyFilter={handleApplyFilter}
             />
         </div>
     );

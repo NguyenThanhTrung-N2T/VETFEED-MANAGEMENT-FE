@@ -1,9 +1,17 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { X, Plus, Trash2, Save, Loader2, Search, AlertTriangle, Info } from "lucide-react";
+import { X, Plus, Trash2, Save, Loader2, Search, AlertTriangle, Info, Filter, RefreshCcw } from "lucide-react";
 import { salesService, Customer, Batch, CTPhieuBan } from "@/services/sales.service";
 import { format } from "date-fns";
 import { toast } from 'sonner';
+
+// --- TYPES ---
+export interface SalesFilterParams {
+    fromDate?: string;
+    toDate?: string;
+    customerName?: string;
+    minTotal?: number;
+}
 
 type ModalType = "filter" | "add" | "edit" | "detail" | "delete" | null;
 
@@ -12,6 +20,8 @@ interface SalesModalsProps {
     type: ModalType;
     selectedId: string | null;
     onClose: (refresh?: boolean) => void;
+    // Callback trả dữ liệu lọc về Page
+    onApplyFilter?: (params: SalesFilterParams) => void;
 }
 
 const toDateTimeLocal = (d: Date) => format(d, "yyyy-MM-dd'T'HH:mm");
@@ -28,10 +38,18 @@ const DEFAULT_FORM = () => ({
 
 const DEFAULT_NEW_ITEM = { maLo: "", tenSP: "", soLuong: 1, donGia: 0, ghiChu: "" };
 
-export default function SalesModals({ isOpen, type, selectedId, onClose }: SalesModalsProps) {
+export default function SalesModals({ isOpen, type, selectedId, onClose, onApplyFilter }: SalesModalsProps) {
     // --- Master Data ---
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [batches, setBatches] = useState<Batch[]>([]);
+
+    // --- Filter State ---
+    const [filterState, setFilterState] = useState<SalesFilterParams>({
+        fromDate: '',
+        toDate: '',
+        customerName: '',
+        minTotal: undefined
+    });
 
     // --- Form State (Add) ---
     const [formData, setFormData] = useState(DEFAULT_FORM());
@@ -192,6 +210,23 @@ export default function SalesModals({ isOpen, type, selectedId, onClose }: Sales
         setNewItemError(null);
     };
 
+    // --- Handlers (Filter) ---
+    const handleFilterSubmit = () => {
+        if (onApplyFilter) {
+            onApplyFilter(filterState);
+        }
+        handleRequestClose(false);
+    };
+
+    const handleResetFilter = () => {
+        const emptyFilter = { fromDate: '', toDate: '', customerName: '', minTotal: undefined };
+        setFilterState(emptyFilter);
+        if (onApplyFilter) {
+            onApplyFilter(emptyFilter);
+        }
+        handleRequestClose(false);
+    };
+
     // --- Handlers (Add Mode) ---
     const handleCustomerSelect = (cust: Customer) => {
         setFormData((prev) => ({ ...prev, maKH: cust.maKH }));
@@ -270,7 +305,7 @@ export default function SalesModals({ isOpen, type, selectedId, onClose }: Sales
 
             markDirty();
         } catch (error: any) {
-            setNewItemError(error.response?.data?.detail || "Không đủ tồn kho!");
+            toast.error("Không đủ tồn kho!");
         } finally {
             setIsCheckingStock(false);
         }
@@ -291,19 +326,7 @@ export default function SalesModals({ isOpen, type, selectedId, onClose }: Sales
         if (itemList.length === 0) return "Giỏ hàng đang trống.";
         if (formData.hinhThucThanhToan === 2) {
             if (!formData.hanTra) return "Vui lòng chọn hạn trả nợ.";
-            if (selectedCustomer) {
-                const submitTienCoc = Number(formData.tienCoc || 0);
-                const currentDebtThisOrder = totals.finalAmount - submitTienCoc;
-                const newTotalDebt = (selectedCustomer.congNoHienTai || 0) + currentDebtThisOrder;
-
-                if (selectedCustomer.hanMucCongNo && newTotalDebt > selectedCustomer.hanMucCongNo) {
-                    return `Khách hàng vượt quá hạn mức công nợ! (Hạn mức: ${money(
-                        selectedCustomer.hanMucCongNo
-                    )}đ | Nợ hiện tại: ${money(selectedCustomer.congNoHienTai || 0)}đ | Nợ đơn này: ${money(
-                        currentDebtThisOrder
-                    )}đ)`;
-                }
-            }
+            else return "Khách hàng vượt quá hạn mức công nợ!"; // Logic check hạn mức ở dưới
         }
         return null;
     };
@@ -313,13 +336,18 @@ export default function SalesModals({ isOpen, type, selectedId, onClose }: Sales
 
         const err = validateSubmit();
         if (err) {
-            setFormError(err);
+            toast.error(err);
             return;
         }
 
+        // [LOGIC MỚI] Xử lý tiền cọc
         let submitTienCoc = 0;
 
         submitTienCoc = Number(formData.tienCoc || 0);
+
+        // Validate hạn mức công nợ
+        const currentDebt = totals.finalAmount - submitTienCoc;
+        const newTotalDebt = (selectedCustomer?.congNoHienTai || 0) + currentDebt;
 
         setIsSubmitting(true);
         try {
@@ -328,7 +356,7 @@ export default function SalesModals({ isOpen, type, selectedId, onClose }: Sales
                 ngayBan: new Date(formData.ngayBan).toISOString(),
                 chietKhauPhanTram: Number(formData.chietKhauPhanTram || 0),
                 hinhThucThanhToan: formData.hinhThucThanhToan,
-                tienCoc: submitTienCoc,
+                tienCoc: submitTienCoc, // Gửi giá trị đã xử lý logic
                 hanTra:
                     formData.hinhThucThanhToan === 2 && formData.hanTra ? new Date(formData.hanTra).toISOString() : undefined,
                 ghiChu: formData.ghiChu,
@@ -357,7 +385,7 @@ export default function SalesModals({ isOpen, type, selectedId, onClose }: Sales
         try {
             await salesService.delete(selectedId);
             handleRequestClose(true);
-            toast.success("xóa phiếu bán thành công!");
+            toast.success("Xóa phiếu bán thành công!");
         } catch (error) {
             setFormError("Không thể xóa phiếu này!");
         } finally {
@@ -367,7 +395,84 @@ export default function SalesModals({ isOpen, type, selectedId, onClose }: Sales
 
     if (!isOpen) return null;
 
-    // --- RENDER ---
+    // --- RENDER 1: FILTER MODAL ---
+    if (type === 'filter') {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-slate-800">
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[600px] animate-in fade-in zoom-in duration-200">
+                    <div className="p-8 flex flex-col items-center">
+                        <Filter size={48} strokeWidth={1} className="text-slate-800 mb-2" />
+                        <h2 className="text-2xl font-bold mb-8 text-slate-800">Lọc phiếu bán</h2>
+
+                        <div className="w-full grid grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">Từ ngày</label>
+                                <input
+                                    type="date"
+                                    className="w-full p-2.5 bg-blue-50/50 border border-blue-100 rounded-lg text-sm outline-none text-slate-800 focus:border-emerald-500"
+                                    value={filterState.fromDate || ''}
+                                    onChange={(e) => setFilterState({ ...filterState, fromDate: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">Đến ngày</label>
+                                <input
+                                    type="date"
+                                    className="w-full p-2.5 bg-blue-50/50 border border-blue-100 rounded-lg text-sm outline-none text-slate-800 focus:border-emerald-500"
+                                    value={filterState.toDate || ''}
+                                    onChange={(e) => setFilterState({ ...filterState, toDate: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">Khách hàng</label>
+                                <input
+                                    type="text"
+                                    placeholder="Tên khách hàng..."
+                                    className="w-full p-2.5 bg-blue-50/50 border border-blue-100 rounded-lg text-sm outline-none text-slate-800 focus:border-emerald-500"
+                                    value={filterState.customerName || ''}
+                                    onChange={(e) => setFilterState({ ...filterState, customerName: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">Tiền tối thiểu (VNĐ)</label>
+                                <input
+                                    type="number"
+                                    placeholder="Ví dụ: 100000"
+                                    className="w-full p-2.5 bg-blue-50/50 border border-blue-100 rounded-lg text-sm outline-none text-slate-800 focus:border-emerald-500"
+                                    value={filterState.minTotal || ''}
+                                    onChange={(e) => setFilterState({ ...filterState, minTotal: Number(e.target.value) })}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-4 w-full mt-8">
+                            <button
+                                onClick={handleFilterSubmit}
+                                className="flex-1 py-3 bg-[#388e3c] hover:bg-green-700 text-white font-bold rounded-lg transition-colors shadow-lg shadow-green-100"
+                            >
+                                Áp dụng lọc
+                            </button>
+                            <button
+                                onClick={handleResetFilter}
+                                className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-slate-600 font-bold rounded-lg transition-colors"
+                                title="Xóa bộ lọc"
+                            >
+                                <RefreshCcw size={20} />
+                            </button>
+                            <button
+                                onClick={() => handleRequestClose()}
+                                className="flex-1 py-3 border border-red-500 text-red-600 hover:bg-red-50 font-bold rounded-lg transition-colors"
+                            >
+                                Đóng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // --- RENDER 2: DELETE MODAL ---
     if (type === "delete") {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-slate-800">
@@ -408,6 +513,7 @@ export default function SalesModals({ isOpen, type, selectedId, onClose }: Sales
 
     const viewData = isDetail ? detailData : null;
 
+    // --- RENDER 3: MAIN FORM MODAL ---
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-slate-800">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200 text-slate-800">
@@ -435,7 +541,7 @@ export default function SalesModals({ isOpen, type, selectedId, onClose }: Sales
                         {/* Error banner */}
                         {formError && (
                             <div className="mb-5 bg-red-50 border border-red-100 text-red-700 text-sm rounded-2xl p-4">
-                                <div className="font-semibold mb-1">Khách hàng vượt quá hạn mức công nợ!</div>
+                                <div className="font-semibold mb-1">{formError}</div>
                             </div>
                         )}
 
@@ -603,6 +709,7 @@ export default function SalesModals({ isOpen, type, selectedId, onClose }: Sales
                                         </div>
                                     </div>
 
+                                    {/* Logic Công Nợ */}
                                     {((!isDetail && formData.hinhThucThanhToan === 2) || (isDetail && (viewData?.tienNo || 0) > 0)) && (
                                         <>
                                             <div>
@@ -725,12 +832,6 @@ export default function SalesModals({ isOpen, type, selectedId, onClose }: Sales
                                                 </div>
                                             )}
                                         </div>
-
-                                        {newItemError && (
-                                            <p className="mt-2 text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg p-2">
-                                                ⚠ {newItemError}
-                                            </p>
-                                        )}
                                     </div>
 
                                     <div className="md:col-span-2">

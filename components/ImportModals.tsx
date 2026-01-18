@@ -1,9 +1,17 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { X, Trash2, Save, AlertTriangle, Loader2, Search, Plus, Edit, Info } from "lucide-react";
+import { X, Trash2, Save, AlertTriangle, Loader2, Search, Plus, Edit, Info, Filter, RefreshCcw } from "lucide-react";
 import { importService, SanPhamNCC, CTPhieuNhap } from "@/services/import.service";
 import { format } from "date-fns";
 import { toast } from 'sonner';
+
+// --- TYPES ---
+export interface ImportFilterParams {
+    fromDate?: string;
+    toDate?: string;
+    supplierName?: string;
+    minTotal?: number;
+}
 
 type ModalType = "filter" | "add" | "edit" | "detail" | "delete" | null;
 
@@ -12,6 +20,8 @@ interface ImportModalsProps {
     type: ModalType;
     selectedId: string | null;
     onClose: (refresh?: boolean) => void;
+    // Callback trả bộ lọc về Page
+    onApplyFilter?: (params: ImportFilterParams) => void;
 }
 
 const DEFAULT_FORM = {
@@ -31,10 +41,18 @@ const DEFAULT_NEW_ITEM = {
     ngaySanXuat: "",
 };
 
-export default function ImportModals({ isOpen, type, selectedId, onClose }: ImportModalsProps) {
+export default function ImportModals({ isOpen, type, selectedId, onClose, onApplyFilter }: ImportModalsProps) {
     // --- Master Data ---
     const [suppliers, setSuppliers] = useState<any[]>([]);
     const [warehouses, setWarehouses] = useState<any[]>([]);
+
+    // --- Filter State ---
+    const [filterState, setFilterState] = useState<ImportFilterParams>({
+        fromDate: '',
+        toDate: '',
+        supplierName: '',
+        minTotal: undefined
+    });
 
     // --- Data for Selection ---
     const [availableProducts, setAvailableProducts] = useState<SanPhamNCC[]>([]);
@@ -72,18 +90,20 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
     useEffect(() => {
         if (!isOpen) return;
 
-        loadInitialData();
-
         setFormError(null);
         setNewItemError(null);
         setFlashRowIndex(null);
 
         if (type === "add") {
+            loadInitialData(); // Load master data for Add
             resetForm();
             setHasUnsavedChanges(false);
         } else if ((type === "edit" || type === "detail") && selectedId) {
+            loadInitialData(); // Load master data for Edit too (NCC, Kho)
             fetchDetail(selectedId);
             setHasUnsavedChanges(false);
+        } else if (type === "filter") {
+            // No specific load needed for filter, or maybe load suppliers if we want dropdown
         }
     }, [isOpen, type, selectedId]);
 
@@ -122,7 +142,6 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
             });
             if (data.maNCC) await loadProductsOfSupplier(data.maNCC);
             setItemList(data.danhSachChiTiet || []);
-            // Reset add-item UI
             resetNewItem();
             setProductKeyword("");
             setIsProductDropdownOpen(false);
@@ -159,11 +178,28 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
     };
 
     const handleRequestClose = (refresh?: boolean) => {
-        if (!refresh && !isDetail && hasUnsavedChanges) {
+        if (!refresh && (type === 'add' || type === 'edit') && hasUnsavedChanges) {
             const ok = window.confirm("Bạn có thay đổi chưa lưu. Bạn chắc chắn muốn đóng?");
             if (!ok) return;
         }
         onClose(refresh);
+    };
+
+    // --- Filter Handlers ---
+    const handleFilterSubmit = () => {
+        if (onApplyFilter) {
+            onApplyFilter(filterState);
+        }
+        handleRequestClose(false);
+    };
+
+    const handleResetFilter = () => {
+        const emptyFilter = { fromDate: '', toDate: '', supplierName: '', minTotal: undefined };
+        setFilterState(emptyFilter);
+        if (onApplyFilter) {
+            onApplyFilter(emptyFilter);
+        }
+        handleRequestClose(false);
     };
 
     const handleSupplierChange = async (maNCC: string) => {
@@ -171,7 +207,6 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
         setFormError(null);
         markDirty();
 
-        // reset product selection / items on supplier change when creating new
         await loadProductsOfSupplier(maNCC);
         if (isAdd) setItemList([]);
         resetNewItem();
@@ -190,12 +225,11 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
     };
 
     const handleProductSelect = async (product: SanPhamNCC) => {
-        setProductKeyword(product.tenSP);
+        setProductKeyword(product.tenSanPham);
         setIsProductDropdownOpen(false);
         setActiveProductIndex(0);
 
         await handleProductChange(product.maSP);
-        // Focus quantity for fast input
         setTimeout(() => qtyRef.current?.focus(), 0);
     };
 
@@ -203,30 +237,22 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
         const productBasic = availableProducts.find(p => p.maSP === maSP);
         if (!productBasic) return;
 
-        // Set thông tin cơ bản
         setNewItem(prev => ({
             ...prev,
             maSP,
-            tenSP: productBasic.tenSP,
+            tenSP: productBasic.tenSanPham,
             donGia: productBasic.giaNhapMacDinh || 0
         }));
 
         try {
-            // Gọi API lấy chi tiết để lấy Đơn vị quy đổi
             const detail = await importService.getProductDetail(maSP);
-
-            // [LOGIC MỚI] Chỉ lấy danh sách đơn vị quy đổi (bỏ đơn vị cơ sở)
             const units = detail.donViQuyDoi?.map(d => ({ name: d.donViNhap, rate: d.tyLe })) || [];
-
             setSelectedProductUnits(units);
 
-            // Tự động chọn đơn vị quy đổi đầu tiên nếu có
             if (units.length > 0) {
                 setNewItem(prev => ({ ...prev, donViNhap: units[0].name }));
             } else {
                 setNewItem(prev => ({ ...prev, donViNhap: '' }));
-                // Có thể cảnh báo nếu sản phẩm không có đơn vị quy đổi
-                // alert("Sản phẩm này chưa cấu hình đơn vị quy đổi!");
             }
         } catch (err) { console.error(err); }
     };
@@ -246,7 +272,7 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
     const handleAddItem = () => {
         const err = validateNewItem();
         if (err) {
-            setNewItemError(err);
+            toast.error(err);
             return;
         }
 
@@ -263,7 +289,6 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
         setItemList((prev) => {
             const next = [...prev, item];
             setFlashRowIndex(next.length - 1);
-            // remove highlight after a moment
             setTimeout(() => setFlashRowIndex(null), 800);
             return next;
         });
@@ -333,7 +358,7 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
             }
             setHasUnsavedChanges(false);
             handleRequestClose(true);
-            toast.success("Thêm phiếu nhập thành công!");
+            toast.success("Lưu phiếu nhập thành công!");
         } catch (error: any) {
             setFormError("Lỗi: " + (error.response?.data?.detail || error.message));
         } finally {
@@ -355,17 +380,14 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
         }
     };
 
-
-
     const filteredProducts = useMemo(() => {
         const kw = productKeyword.trim().toLowerCase();
         if (!kw) return availableProducts.slice(0, 12);
-        // basic fuzzy-ish: contains in name, then startsWith priority via sort
         const list = availableProducts
-            .filter((p) => (p.tenSP || "").toLowerCase().includes(kw))
+            .filter((p) => (p.tenSanPham || "").toLowerCase().includes(kw))
             .sort((a, b) => {
-                const an = (a.tenSP || "").toLowerCase();
-                const bn = (b.tenSP || "").toLowerCase();
+                const an = (a.tenSanPham || "").toLowerCase();
+                const bn = (b.tenSanPham || "").toLowerCase();
                 const aStarts = an.startsWith(kw) ? 0 : 1;
                 const bStarts = bn.startsWith(kw) ? 0 : 1;
                 if (aStarts !== bStarts) return aStarts - bStarts;
@@ -377,8 +399,84 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
     const disableNewItemFields = !newItem.maSP;
     if (!isOpen) return null;
 
-    // --- RENDER ---
-    // Modal Delete
+    // --- RENDER 1: FILTER MODAL ---
+    if (type === 'filter') {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-slate-800">
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[600px] animate-in fade-in zoom-in duration-200">
+                    <div className="p-8 flex flex-col items-center">
+                        <Filter size={48} strokeWidth={1} className="text-slate-800 mb-2" />
+                        <h2 className="text-2xl font-bold font-serif mb-8 text-slate-800">Lọc phiếu nhập</h2>
+
+                        <div className="w-full grid grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">Từ ngày</label>
+                                <input
+                                    type="date"
+                                    className="w-full p-2.5 bg-blue-50/50 border border-blue-100 rounded-lg text-sm outline-none text-slate-800 focus:border-emerald-500"
+                                    value={filterState.fromDate || ''}
+                                    onChange={(e) => setFilterState({ ...filterState, fromDate: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">Đến ngày</label>
+                                <input
+                                    type="date"
+                                    className="w-full p-2.5 bg-blue-50/50 border border-blue-100 rounded-lg text-sm outline-none text-slate-800 focus:border-emerald-500"
+                                    value={filterState.toDate || ''}
+                                    onChange={(e) => setFilterState({ ...filterState, toDate: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">Nhà cung cấp</label>
+                                <input
+                                    type="text"
+                                    placeholder="Tên nhà cung cấp..."
+                                    className="w-full p-2.5 bg-blue-50/50 border border-blue-100 rounded-lg text-sm outline-none text-slate-800 focus:border-emerald-500"
+                                    value={filterState.supplierName || ''}
+                                    onChange={(e) => setFilterState({ ...filterState, supplierName: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">Thành tiền tối thiểu</label>
+                                <input
+                                    type="number"
+                                    placeholder="Ví dụ: 100000"
+                                    className="w-full p-2.5 bg-blue-50/50 border border-blue-100 rounded-lg text-sm outline-none text-slate-800 focus:border-emerald-500"
+                                    value={filterState.minTotal || ''}
+                                    onChange={(e) => setFilterState({ ...filterState, minTotal: Number(e.target.value) })}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-4 w-full mt-8">
+                            <button
+                                onClick={handleFilterSubmit}
+                                className="flex-1 py-3 bg-[#43a047] hover:bg-green-700 text-white font-bold rounded-lg transition-colors shadow-lg shadow-green-100"
+                            >
+                                Áp dụng lọc
+                            </button>
+                            <button
+                                onClick={handleResetFilter}
+                                className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-slate-600 font-bold rounded-lg transition-colors"
+                                title="Xóa bộ lọc"
+                            >
+                                <RefreshCcw size={20} />
+                            </button>
+                            <button
+                                onClick={() => handleRequestClose()}
+                                className="flex-1 py-3 border border-red-500 text-red-600 hover:bg-red-50 font-bold rounded-lg transition-colors"
+                            >
+                                Đóng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // --- RENDER 2: DELETE MODAL ---
     if (type === "delete") {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-slate-800">
@@ -443,10 +541,9 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
                     </div>
                 ) : (
                     <div className="flex-1 overflow-y-auto p-6 bg-[#f8fafc]">
-                        {/* Error banner */}
                         {formError && (
                             <div className="mb-4 bg-red-50 border border-red-100 text-red-700 text-sm rounded-xl p-4">
-                                <div className="font-semibold mb-1">Không thể cập nhật</div>
+                                <div className="font-semibold mb-1">{formError}</div>
                             </div>
                         )}
 
@@ -490,7 +587,6 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
                                     </select>
                                 </div>
 
-                                {/* Hide status on add, only show when Edit/Detail */}
                                 {type !== "add" && (
                                     <div>
                                         <label className="text-xs font-semibold text-slate-600">Trạng thái</label>
@@ -534,7 +630,6 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
                             </div>
                         </div>
 
-                        {/* 2. Add Product Form (Hidden in Detail) */}
                         {!isDetail && (
                             <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 mb-4 text-slate-800">
                                 <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -603,7 +698,7 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
                                                                 >
                                                                     <div className="flex items-start justify-between gap-2">
                                                                         <div className="min-w-0">
-                                                                            <div className="font-medium text-slate-800 truncate">{p.tenSP}</div>
+                                                                            <div className="font-medium text-slate-800 truncate">{p.tenSanPham}</div>
                                                                             <div className="text-xs text-slate-500">
                                                                                 Mã: <span className="font-mono">{p.maSP}</span>
                                                                             </div>
@@ -737,14 +832,12 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
                             </div>
                         )}
 
-                        {/* 3. Product Table */}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden text-slate-800">
                             {isEdit && (
                                 <div className="px-4 py-3 border-b border-slate-100 text-xs text-slate-600 bg-slate-50">
                                     ✏️ Bạn có thể chỉnh sửa <b>Số lượng</b> và <b>Đơn giá</b> trực tiếp trong bảng.
                                 </div>
                             )}
-
                             <div className="overflow-auto">
                                 <table className="w-full text-left text-sm">
                                     <thead className="bg-slate-100 text-slate-700 font-bold sticky top-0 z-10">
@@ -800,7 +893,7 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
                                                         <input
                                                             type="number"
                                                             min={0}
-                                                            className="w-28 text-right border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-emerald-200"
+                                                            className="w-24 text-right border border-slate-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-emerald-200"
                                                             value={item.donGia}
                                                             onChange={(e) => {
                                                                 const v = Number(e.target.value);
@@ -816,26 +909,18 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
                                                         money(item.donGia || 0)
                                                     )}
                                                 </td>
-
                                                 <td className="p-3 text-right font-bold text-emerald-700">
                                                     {money(item.soLuong * (item.donGia || 0))}
                                                 </td>
-
                                                 <td className="p-3 text-xs text-slate-500">
-                                                    {item.ngaySanXuat ? format(new Date(item.ngaySanXuat), "dd/MM/yyyy") : "-"}
+                                                    {item.ngaySanXuat ? format(new Date(item.ngaySanXuat), 'dd/MM/yyyy') : '-'}
                                                 </td>
                                                 <td className="p-3 text-xs text-slate-500">
-                                                    {item.hanSuDung ? format(new Date(item.hanSuDung), "dd/MM/yyyy") : "-"}
+                                                    {item.hanSuDung ? format(new Date(item.hanSuDung), 'dd/MM/yyyy') : '-'}
                                                 </td>
-
                                                 {!isDetail && (
                                                     <td className="p-3 text-center">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleRemoveItem(index)}
-                                                            className="inline-flex items-center justify-center w-9 h-9 rounded-lg text-red-500 hover:bg-red-50"
-                                                            title="Xóa dòng"
-                                                        >
+                                                        <button onClick={() => handleRemoveItem(index)} className="inline-flex items-center justify-center w-9 h-9 rounded-lg text-red-500 hover:bg-red-50">
                                                             <Trash2 size={16} />
                                                         </button>
                                                     </td>
@@ -843,33 +928,16 @@ export default function ImportModals({ isOpen, type, selectedId, onClose }: Impo
                                             </tr>
                                         ))}
                                         {itemList.length === 0 && (
-                                            <tr>
-                                                <td colSpan={9} className="p-10 text-center text-slate-400">
-                                                    Chưa có sản phẩm
-                                                </td>
-                                            </tr>
+                                            <tr><td colSpan={9} className="p-10 text-center text-slate-400">Chưa có sản phẩm</td></tr>
                                         )}
                                     </tbody>
                                 </table>
-                            </div>
-
-                            {/* Table footer: summary */}
-                            <div className="px-4 py-3 border-t border-slate-100 bg-white flex items-center justify-between">
-                                <div className="text-xs text-slate-500">
-                                    Tổng dòng: <span className="font-semibold text-slate-700">{itemList.length}</span>
-                                </div>
-                                <div className="text-sm font-bold text-slate-800">
-                                    Tổng tiền:{" "}
-                                    <span className="text-emerald-700">
-                                        {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(calculateTotal())}
-                                    </span>
-                                </div>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {/* Footer (sticky) */}
+                {/* Footer */}
                 <div className="p-4 border-t border-gray-100 flex justify-end gap-3 bg-white sticky bottom-0 text-slate-800">
                     {!isDetail && (
                         <button

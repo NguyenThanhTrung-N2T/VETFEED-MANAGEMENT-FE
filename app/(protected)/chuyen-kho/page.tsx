@@ -1,9 +1,9 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import {
-    Search, Plus, ChevronDown, Edit, Trash2, ArrowRightLeft, Filter, FileText, Loader2
+    Search, Plus, Edit, Trash2, ArrowRightLeft, Filter, Loader2, XCircle
 } from 'lucide-react';
-import TransferModals from '@/components/TransferModals';
+import TransferModals, { TransferFilterParams } from '@/components/TransferModals';
 import { transferService, PhieuChuyenKho } from '@/services/transfer.service';
 import { format } from 'date-fns';
 import AddButton from "@/components/ui/AddButton";
@@ -14,6 +14,9 @@ export default function TransferPage() {
     const [loading, setLoading] = useState(true);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [modalType, setModalType] = useState<'filter' | 'add' | 'edit' | 'detail' | 'delete' | null>(null);
+
+    // State lưu bộ lọc hiện tại
+    const [filterParams, setFilterParams] = useState<TransferFilterParams>({});
 
     // Fetch Data
     const fetchData = async () => {
@@ -32,12 +35,54 @@ export default function TransferPage() {
         fetchData();
     }, []);
 
-    // Filter Logic
-    const filteredData = data.filter(item =>
-        (item.maCKCode?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-        (item.tenKhoXuat?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-        (item.tenKhoNhan?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-    );
+    // Filter Logic: Kết hợp Tìm kiếm + Bộ lọc nâng cao (theo Tên Kho)
+    const filteredData = data.filter(item => {
+        // 1. Tìm kiếm cơ bản (ô search)
+        const matchesSearch =
+            (item.maCKCode?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+            (item.tenKhoXuat?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+            (item.tenKhoNhan?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+
+        // 2. Bộ lọc nâng cao
+        let matchesFilter = true;
+
+        if (filterParams.fromDate) {
+            const itemDate = new Date(item.ngayLap);
+            const fromDate = new Date(filterParams.fromDate);
+            fromDate.setHours(0, 0, 0, 0);
+            if (itemDate < fromDate) matchesFilter = false;
+        }
+
+        if (matchesFilter && filterParams.toDate) {
+            const itemDate = new Date(item.ngayLap);
+            const toDate = new Date(filterParams.toDate);
+            toDate.setHours(23, 59, 59, 999);
+            if (itemDate > toDate) matchesFilter = false;
+        }
+
+        // [LOGIC MỚI] So sánh theo TÊN KHO
+        if (matchesFilter && filterParams.sourceWarehouseName) {
+            // So sánh chính xác tên kho
+            if (item.tenKhoXuat !== filterParams.sourceWarehouseName) {
+                matchesFilter = false;
+            }
+        }
+
+        if (matchesFilter && filterParams.destWarehouseName) {
+            if (item.tenKhoNhan !== filterParams.destWarehouseName) {
+                matchesFilter = false;
+            }
+        }
+
+        return matchesSearch && matchesFilter;
+    });
+
+    const handleApplyFilter = (params: TransferFilterParams) => {
+        setFilterParams(params);
+    };
+
+    // Kiểm tra có đang lọc không (dựa trên các trường params chính)
+    const isFiltering = !!(filterParams.fromDate || filterParams.toDate || filterParams.sourceWarehouse || filterParams.destWarehouse);
 
     const handleOpenModal = (type: typeof modalType, id: string | null = null) => {
         setSelectedId(id);
@@ -52,7 +97,7 @@ export default function TransferPage() {
 
     return (
         <div className="p-6 bg-[#eef2f6] min-h-screen font-sans relative">
-            {/* Header & Toolbar giữ nguyên UI cũ... */}
+            {/* Header */}
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
                     <div className="p-1 bg-slate-800 rounded text-white">
@@ -63,7 +108,6 @@ export default function TransferPage() {
             </div>
 
             <div className="flex flex-col md:flex-row gap-4 mb-6 text-slate-800">
-                {/* ... Toolbar Search ... */}
                 <div className="relative flex-1 max-w-lg">
                     <input
                         type="text"
@@ -74,13 +118,34 @@ export default function TransferPage() {
                     />
                     <Search className="absolute right-3 top-2.5 text-slate-400" size={20} />
                 </div>
+
+                {/* Badge hiển thị khi đang lọc */}
+                {isFiltering && (
+                    <div className="flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-lg text-sm font-medium animate-in fade-in">
+                        <span>Đang lọc</span>
+                        <button onClick={() => setFilterParams({})} className="hover:text-red-500"><XCircle size={16} /></button>
+                    </div>
+                )}
+
                 <AddButton onClick={() => handleOpenModal('add')} className="ml-auto" />
             </div>
 
             {/* Table Card */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-gray-100">
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-[200px] border border-gray-100">
+                {/* Header Bảng + Nút Filter */}
+                <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                     <h2 className="text-xl font-bold text-slate-800">Danh sách phiếu chuyển</h2>
+
+                    <button
+                        onClick={() => handleOpenModal('filter')}
+                        className={`p-2 rounded-lg transition-all ${isFiltering
+                            ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
+                            : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                            }`}
+                        title="Bộ lọc"
+                    >
+                        <Filter size={20} />
+                    </button>
                 </div>
 
                 <div className="overflow-x-auto px-6 pb-6">
@@ -113,7 +178,9 @@ export default function TransferPage() {
                                 ))
                             ) : filteredData.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="p-8 text-center text-slate-500">Chưa có dữ liệu</td>
+                                    <td colSpan={6} className="p-8 text-center text-slate-500">
+                                        {isFiltering ? 'Không tìm thấy kết quả phù hợp với bộ lọc' : 'Chưa có dữ liệu'}
+                                    </td>
                                 </tr>
                             ) : (
                                 filteredData.map((item, index) => (
@@ -124,15 +191,15 @@ export default function TransferPage() {
                                         <td className="p-4">
                                             {item.ngayLap ? format(new Date(item.ngayLap), 'dd/MM/yyyy') : '-'}
                                         </td>
-                                        <td className="p-4">{item.tenKhoXuat}</td>
-                                        <td className="p-4">{item.tenKhoNhan}</td>
+                                        <td className="p-4 font-medium">{item.tenKhoXuat}</td>
+                                        <td className="p-4 font-medium">{item.tenKhoNhan}</td>
                                         <td className="p-4 text-slate-500 truncate max-w-[200px]">{item.ghiChu}</td>
                                         <td className="p-4">
                                             <div className="flex items-center justify-center gap-2">
-                                                <button onClick={() => handleOpenModal('edit', item.maCK)} className="p-1.5 rounded hover:bg-slate-800 hover:text-white transition-all">
+                                                <button onClick={() => handleOpenModal('edit', item.maCK)} className="p-1.5 border border-slate-300 rounded hover:bg-slate-700 hover:text-white transition-all">
                                                     <Edit size={16} />
                                                 </button>
-                                                <button onClick={() => handleOpenModal('delete', item.maCK)} className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-red-500 hover:bg-red-50">
+                                                <button onClick={() => handleOpenModal('delete', item.maCK)} className="p-1.5 border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-all">
                                                     <Trash2 size={16} />
                                                 </button>
                                             </div>
@@ -148,8 +215,9 @@ export default function TransferPage() {
             <TransferModals
                 isOpen={modalType !== null}
                 type={modalType}
-                selectedId={selectedId} // Prop mới để truyền ID
+                selectedId={selectedId}
                 onClose={handleCloseModal}
+                onApplyFilter={handleApplyFilter}
             />
         </div>
     );
