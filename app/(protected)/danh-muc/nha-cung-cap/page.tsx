@@ -9,6 +9,8 @@ import EditNCCModal from "@/components/nha-cung-cap/EditNCCModal";
 import DeleteNCCModal from "@/components/nha-cung-cap/DeleteNCCModal";
 import AddButton from "@/components/ui/AddButton";
 import { toast } from 'sonner';
+import { motion } from "framer-motion";
+import { pageVariants, tableContainerVariants, tableRowVariants } from "@/lib/animation-variants";
 
 export default function NhaCungCapPage() {
     const [query, setQuery] = useState("");
@@ -96,33 +98,42 @@ export default function NhaCungCapPage() {
     return (
         <>
             {/* Search Bar */}
-            <div className="flex justify-end w-full mb-6">
-                <div className="flex shadow-sm rounded-md overflow-hidden bg-white border-slate-200">
-                    <button className="px-4 py-2 text-sm font-medium flex items-center gap-2 bg-[#25396f] text-white rounded-l-lg hover:bg-[#1e2e5a] transition-colors shadow-md">
-                        <span>Tất cả</span>
-                        <ChevronDown size={14} />
-                    </button>
-                    <div className="relative">
-                        <input
-                            type="text"
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                            placeholder="Tìm kiếm..."
-                            className="w-72 py-2 pl-4 pr-10 text-sm border-0 focus:ring-0 outline-none h-full"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                            <Search size={16} />
-                        </span>
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="flex flex-col md:flex-row gap-4 mb-6 text-slate-800 relative z-20"
+            >
+                {/* Search Input */}
+                <div className="relative flex-1 max-w-lg group">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search className="text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
                     </div>
+                    <input
+                        type="text"
+                        placeholder="Tìm kiếm theo tên, mã nhà cung cấp..."
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white shadow-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
+                    />
                 </div>
-            </div>
+
+                <AddButton onClick={openAdd} className="ml-auto" />
+            </motion.div>
 
             {/* Content Card */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-125 border border-slate-100">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="bg-white rounded-xl shadow-sm overflow-hidden min-h-125 border border-slate-100">
                 <div className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div className="flex items-center gap-2">
                         <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                             Danh sách nhà cung cấp
+                            <span className="text-sm font-normal text-slate-500 ml-2 bg-slate-100 px-2 py-0.5 rounded-full">
+                                {nhaCungCapData.length ?? 0}
+                            </span>
                             <Filter
                                 onClick={() => openFilter()}
                                 className="cursor-pointer hover:text-green-600 transition-colors ml-1"
@@ -131,7 +142,6 @@ export default function NhaCungCapPage() {
                             />
                         </h2>
                     </div>
-                    {userRole === "manager" && <AddButton onClick={openAdd} />}
                 </div>
 
                 <div className="overflow-x-auto px-6 pb-6">
@@ -148,7 +158,12 @@ export default function NhaCungCapPage() {
                                 <th className="py-3 px-4 text-right rounded-r-lg w-[11%] whitespace-nowrap">Hành động</th>
                             </tr>
                         </thead>
-                        <tbody className="text-sm">
+                        <motion.tbody
+                            className="text-sm text-slate-700 divide-y divide-slate-50"
+                            variants={tableContainerVariants} // Apply stagger effect
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                        >
                             {isLoading ? (
                                 // --- SKELETON LOADER ---
                                 [...Array(4)].map((_, index) => (
@@ -166,9 +181,11 @@ export default function NhaCungCapPage() {
                                 ))
                             ) : (
                                 filteredData.map((n) => (
-                                    <tr
+                                    <motion.tr
                                         key={n.maNCC}
-                                        className="group hover:bg-slate-50 transition-colors odd:bg-white even:bg-[#f1f5f9] text-left">
+                                        variants={tableRowVariants} // Apply fade up item
+                                        className="group hover:bg-slate-50 transition-colors odd:bg-white even:bg-[#f1f5f9] text-left"
+                                    >
 
                                         <td className="py-3 pl-3 font-medium text-slate-700 border-y border-l border-slate-100 rounded-l-lg group-hover:border-slate-200">
                                             {n.maNCCCode}
@@ -221,10 +238,10 @@ export default function NhaCungCapPage() {
                                                 )}
                                             </div>
                                         </td>
-                                    </tr>
+                                    </motion.tr>
                                 ))
                             )}
-                        </tbody>
+                        </motion.tbody>
                     </table>
                     {!isLoading && filteredData.length === 0 && (
                         <div className="text-center py-10 text-slate-400">
@@ -232,7 +249,7 @@ export default function NhaCungCapPage() {
                         </div>
                     )}
                 </div>
-            </div>
+            </motion.div>
 
             {modalType === 'add' && (
                 <AddNCCModal onClose={closeModal} onAdd={handleCreate} />
@@ -246,5 +263,5 @@ export default function NhaCungCapPage() {
                     onClose={closeModal}
                     onDelete={handleDelete} />}
         </>
-    );
+    )
 }
