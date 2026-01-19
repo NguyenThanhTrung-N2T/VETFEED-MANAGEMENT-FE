@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { CreateCongNoRequest } from "@/client/types.gen";
+import { AlertTriangle, ShieldCheck } from "lucide-react";
 
 type FormDataType = CreateCongNoRequest;
 
@@ -12,6 +13,8 @@ type Props = {
     onCancel: () => void;
     submitText?: string;
     isLoading?: boolean;
+    hanMucCongNo?: number | null; // The max debt allowed
+    duNo?: number;         // The customer's current debt balance
 };
 
 // Helper to format ISO string to YYYY-MM-DDTHH:mm for input
@@ -37,6 +40,8 @@ export default function AddCongNoForm({
     onCancel,
     submitText = "Lưu thông tin",
     isLoading = false,
+    hanMucCongNo = null,
+    duNo = 0
 }: Props) {
     // 1. Initialize State (Controlled Component)
     const [formData, setFormData] = useState<FormDataType>({
@@ -65,6 +70,27 @@ export default function AddCongNoForm({
     };
 
     // 3. Validation Logic
+    const debtAnalysis = useMemo(() => {
+        // Only calculate if there is a limit and we are adding debt (positive amount)
+        if (hanMucCongNo === null || hanMucCongNo === undefined) return null;
+
+        const newAmount = formData.soTien || 0;
+        const projectedDebt = duNo + newAmount;
+        const remainingLimit = hanMucCongNo - duNo;
+        const isExceeded = projectedDebt > hanMucCongNo;
+
+        return {
+            hasLimit: true,
+            limit: hanMucCongNo,
+            current: duNo,
+            projected: projectedDebt,
+            remaining: remainingLimit,
+            isExceeded,
+            // Only block if they are trying to ADD debt that pushes over limit
+            // Allowing negative amounts (payments) is important even if over limit
+            isBlocking: isExceeded && newAmount > 0
+        };
+    }, [formData.soTien, hanMucCongNo, duNo]);
     const validate = () => {
         const newErrors: Record<string, string> = {};
 
@@ -78,9 +104,15 @@ export default function AddCongNoForm({
             newErrors.ngayPhatSinh = "Ngày phát sinh là bắt buộc";
         }
 
+        // Validate Debt
+        if (debtAnalysis?.isBlocking) {
+            newErrors.soTien = `Vượt hạn mức công nợ (${debtAnalysis.limit.toLocaleString()} đ)`;
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
+
 
     // 4. Handle Submit
     const handleSubmit = (e: React.FormEvent) => {
@@ -103,6 +135,36 @@ export default function AddCongNoForm({
             onSubmit={handleSubmit}
             className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 animate-in fade-in duration-300"
         >
+            {/* --- Credit Limit Alert --- */}
+            {debtAnalysis && (
+                <div className={`sm:col-span-2 p-3 rounded-lg border text-sm flex items-start gap-3 transition-colors ${debtAnalysis.isExceeded
+                    ? "bg-amber-50 border-amber-200 text-amber-800"
+                    : "bg-blue-50 border-blue-100 text-blue-700"
+                    }`}>
+                    {debtAnalysis.isExceeded ? <AlertTriangle size={18} className="mt-0.5 shrink-0" /> : <ShieldCheck size={18} className="mt-0.5 shrink-0" />}
+                    <div className="flex-1">
+                        <div className="font-semibold mb-1">
+                            {debtAnalysis.isExceeded ? "Cảnh báo: Vượt hạn mức công nợ" : "Thông tin hạn mức"}
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 text-xs">
+                            <div>
+                                <span className="block opacity-70">Hạn mức:</span>
+                                <span className="font-bold">{debtAnalysis.limit.toLocaleString()}</span>
+                            </div>
+                            <div>
+                                <span className="block opacity-70">Dư nợ hiện tại:</span>
+                                <span className="font-bold">{debtAnalysis.current.toLocaleString()}</span>
+                            </div>
+                            <div>
+                                <span className="block opacity-70">Dự kiến:</span>
+                                <span className={`font-bold ${debtAnalysis.isExceeded ? "text-red-600" : ""}`}>
+                                    {debtAnalysis.projected.toLocaleString()}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
             {/* 1. Số tiền */}
             <div className="flex flex-col gap-1 sm:col-span-2">
                 <label className="text-sm font-medium text-slate-700">

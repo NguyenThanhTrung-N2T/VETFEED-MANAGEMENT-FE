@@ -9,7 +9,7 @@ import { CreateCongNoRequest, KhachHangResponse } from "@/client/types.gen";
 
 type KhachHangOption = Pick<
     KhachHangResponse,
-    "maKH" | "maKHCode" | "tenKH" | "loaiKhachHang" | "diaChi" | "hanMucCongNo"
+    "maKH" | "maKHCode" | "tenKH" | "loaiKhachHang" | "diaChi" | "hanMucCongNo" | "congNoHienTai"
 >;
 
 interface Props {
@@ -43,6 +43,7 @@ export default function AddCongNoModal({ onClose, onAdd }: Props) {
         tenKH: kh.tenKH ?? "",
         loaiKhachHang: kh.loaiKhachHang,
         hanMucCongNo: kh.hanMucCongNo,
+        congNoHienTai: kh.congNoHienTai,
         diaChi: kh.diaChi
     });
     // --- Effects ---
@@ -176,6 +177,7 @@ export default function AddCongNoModal({ onClose, onAdd }: Props) {
                                                     <div className="text-xs text-slate-500 flex gap-2">
                                                         <span className="bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">{item.maKHCode}</span>
                                                         {item.diaChi && <span>📍 {item.diaChi}</span>}
+                                                        {typeof (item.hanMucCongNo) === "number" && <span> Hạn mức: {item.hanMucCongNo.toLocaleString('vi')}đ</span>}
                                                     </div>
                                                 </div>
                                                 <ChevronRight size={16} className="text-slate-300 group-hover:text-blue-500" />
@@ -235,6 +237,8 @@ export default function AddCongNoModal({ onClose, onAdd }: Props) {
                         onCancel={onClose}
                         isLoading={isSubmitting}
                         submitText={isSubmitting ? "Đang lưu..." : "Lưu phiếu"}
+                        hanMucCongNo={selectedItem.hanMucCongNo}
+                        duNo={selectedItem.congNoHienTai}
                     />
                 </div>
             )}

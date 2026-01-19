@@ -158,6 +158,7 @@ export type CongNoTongHopResponse = {
     tongPhatSinh?: number;
     daThanhToan?: number;
     duNo?: number;
+    hanMucCongNo?: number;
     coQuaHan?: boolean;
     hanThanhToanGanNhat?: string | null;
 };

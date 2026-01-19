@@ -80,6 +80,8 @@ export default function ViewCongNoModal({ onClose, onAdd, congNoSummary }: Props
                         onCancel={() => setShowAddForm(false)}
                         isLoading={isSubmittingForm}
                         submitText={isSubmittingForm ? "Đang lưu..." : "Lưu phiếu"}
+                        hanMucCongNo={congNoSummary.hanMucCongNo}
+                        duNo={congNoSummary.duNo}
                     />
                 </div>
             )}
