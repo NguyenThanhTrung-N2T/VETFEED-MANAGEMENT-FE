@@ -1,5 +1,5 @@
 import { format } from "date-fns"; // Assuming you use date-fns, or use native Date
-import { InventoryItemRow, RevenueOrderRow, ProfitProductRow } from "@/types/reports";
+import { TonKhoSanPhamItemResponse, DoanhThuDonHangItemResponse, LoiNhuanSanPhamItemResponse } from "@/client/types.gen";
 // ============================================================================
 // 1. THE CORE ENGINE (Generic)
 // ============================================================================
@@ -54,7 +54,7 @@ export const exportToCSV = (filename: string, data: any[]): void => {
  * 1. SALES REPORT (Doanh Thu)
  * Formatting logic for Sales Table
  */
-export const prepareRevenueData = (data: RevenueOrderRow[]) => {
+export const prepareRevenueData = (data: DoanhThuDonHangItemResponse[]) => {
     if (!data) return [];
 
     return data.map((item) => ({
@@ -72,7 +72,7 @@ export const prepareRevenueData = (data: RevenueOrderRow[]) => {
  * 2. PROFIT REPORT (Lợi Nhuận)
  * Formatting logic for Profit Table
  */
-export const prepareProfitData = (data: ProfitProductRow[]) => {
+export const prepareProfitData = (data: LoiNhuanSanPhamItemResponse[]) => {
     if (!data) return [];
 
     return data.map((item) => ({
@@ -89,15 +89,16 @@ export const prepareProfitData = (data: ProfitProductRow[]) => {
  * 3. INVENTORY REPORT (Tồn Kho)
  * Formatting logic for Inventory Table
  */
-const mapInventoryStatus = (status: string) => {
+const mapInventoryStatus = (status?: string | null) => {
     switch (status) {
         case 'CON_HAN': return 'Còn hạn';
         case 'SAP_HET_HAN': return 'Sắp hết hạn';
-        case 'HET_HAN': return 'Hết hạn';
-        default: return status;
+        case 'HET_HAN':
+        default:
+            return 'Hết hạn';
     }
 };
-export const prepareInventoryData = (data: InventoryItemRow[]) => {
+export const prepareInventoryData = (data: TonKhoSanPhamItemResponse[]) => {
     if (!data) return [];
 
     return data.map((item) => ({

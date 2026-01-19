@@ -9,7 +9,7 @@ import { CreateCongNoRequest, KhachHangResponse } from "@/client/types.gen";
 
 type KhachHangOption = Pick<
     KhachHangResponse,
-    "maKH" | "maKHCode" | "tenKH" | "loaiKhachHang" | "diaChi"
+    "maKH" | "maKHCode" | "tenKH" | "loaiKhachHang" | "diaChi" | "hanMucCongNo"
 >;
 
 interface Props {
@@ -42,6 +42,7 @@ export default function AddCongNoModal({ onClose, onAdd }: Props) {
         maKHCode: kh.maKHCode,
         tenKH: kh.tenKH ?? "",
         loaiKhachHang: kh.loaiKhachHang,
+        hanMucCongNo: kh.hanMucCongNo,
         diaChi: kh.diaChi
     });
     // --- Effects ---

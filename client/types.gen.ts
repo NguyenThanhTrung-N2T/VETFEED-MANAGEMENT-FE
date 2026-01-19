@@ -202,9 +202,46 @@ export type CreateTaiKhoanRequest = {
     password: string;
 };
 
+export type DashboardSummaryResponse = {
+    todayRevenue?: TodayRevenueResponse;
+    todayOrders?: TodayOrdersResponse;
+    totalInventory?: TotalInventoryResponse;
+};
+
+export type DoanhThuDonHangItemResponse = {
+    maPhieuBanCode?: string | null;
+    ngay?: string;
+    tenSanPham?: string | null;
+    maSPCode?: string | null;
+    tenKhachHang?: string | null;
+    soLuong?: number;
+    donGia?: number;
+    thanhTien?: number;
+};
+
+export type DoanhThuDonHangResponse = {
+    data?: Array<DoanhThuDonHangItemResponse> | null;
+    meta?: PaginationMeta;
+};
+
+export type DoanhThuPhanTichResponse = {
+    tongQuan?: TongQuanResponse;
+    xuHuongChart?: Array<XuHuongChartItemResponse> | null;
+};
+
 export type DonViQuyDoiItem = {
     donViNhap?: string | null;
     tyLe?: number;
+};
+
+export type ExpiringProductResponse = {
+    maLo?: string;
+    maLoCode?: string | null;
+    tenSanPham?: string | null;
+    loaiSanPham?: string | null;
+    hanSuDung?: string;
+    soNgayConLai?: number;
+    soLuongTon?: number;
 };
 
 export type ForgotPasswordRequest = {
@@ -316,6 +353,38 @@ export type LoginRequest = {
     password: string;
 };
 
+export type LoiNhuanPhanTichResponse = {
+    tongQuan?: LoiNhuanTongQuanResponse;
+    topSanPhamChart?: Array<TopSanPhamLoiNhuanResponse> | null;
+};
+
+export type LoiNhuanSanPhamItemResponse = {
+    maSPCode?: string | null;
+    tenSanPham?: string | null;
+    soLuongBan?: number;
+    doanhThu?: number;
+    chiPhi?: number;
+    loiNhuan?: number;
+    tiSuat?: number;
+};
+
+export type LoiNhuanSanPhamResponse = {
+    data?: Array<LoiNhuanSanPhamItemResponse> | null;
+    meta?: PaginationMeta;
+};
+
+export type LoiNhuanTongQuanResponse = {
+    doanhThu?: number;
+    chiPhi?: number;
+    loiNhuan?: number;
+    tiSuat?: number;
+};
+
+export type MonthlyRevenueResponse = {
+    year?: number;
+    data?: Array<number> | null;
+};
+
 export type NhaCungCapCreateRequest = {
     tenNCC?: string | null;
     soDienThoai?: string | null;
@@ -374,6 +443,13 @@ export type NhaCungCapUpdateRequest = {
     trangThai?: string | null;
     ghiChu?: string | null;
     sanPhams?: Array<NhaCungCapSanPhamItemDto> | null;
+};
+
+export type PaginationMeta = {
+    page?: number;
+    limit?: number;
+    total_Items?: number;
+    total_Pages?: number;
 };
 
 export type PhieuBanDetailResponse = {
@@ -563,6 +639,68 @@ export type SearchKhoHangRequest = {
     keyWord?: string | null;
 };
 
+export type SoLuongChartItemResponse = {
+    tenSanPham?: string | null;
+    soLuong?: number;
+};
+
+export type TodayOrdersResponse = {
+    orderCount?: number;
+    trendPercent?: number;
+    isIncrease?: boolean;
+};
+
+export type TodayRevenueResponse = {
+    revenue?: number;
+    trendPercent?: number;
+    isIncrease?: boolean;
+};
+
+export type TonKhoPhanTichResponse = {
+    tongQuan?: TonKhoTongQuanResponse;
+    soLuongChart?: Array<SoLuongChartItemResponse> | null;
+};
+
+export type TonKhoSanPhamItemResponse = {
+    maSP?: string;
+    maSPCode?: string | null;
+    tenSanPham?: string | null;
+    maLoCode?: string | null;
+    soLuong?: number;
+    donVi?: string | null;
+    ngayHetHan?: string;
+    trangThai?: string | null;
+    soNgayDenKhiHetHan?: number;
+};
+
+export type TonKhoSanPhamResponse = {
+    data?: Array<TonKhoSanPhamItemResponse> | null;
+    meta?: PaginationMeta;
+};
+
+export type TonKhoTongQuanResponse = {
+    tongSanPhamCount?: number;
+    tongSoLuong?: number;
+    soLuongSapHetHan?: number;
+};
+
+export type TongQuanResponse = {
+    tongDoanhThu?: number;
+    tongDonHangCount?: number;
+    tongSanPhamCount?: number;
+};
+
+export type TopSanPhamLoiNhuanResponse = {
+    tenSanPham?: string | null;
+    doanhThu?: number;
+    chiPhi?: number;
+    loiNhuan?: number;
+};
+
+export type TotalInventoryResponse = {
+    totalQuantity?: number;
+};
+
 export type TrangThaiKhachHangEnum = 0 | 1;
 
 export type TrangThaiKhoEnum = 0 | 1;
@@ -604,6 +742,12 @@ export type UpdateTrangThaiCtChuyenKho = {
     trangThai: TrangThaiPhieuChuyenKhoChiTietEnum;
 };
 
+export type XuHuongChartItemResponse = {
+    ngay?: string | null;
+    doanhThu?: number;
+    donHangCount?: number;
+};
+
 export type CtPhieuNhapResponseWritable = {
     maCTPN?: string;
     maPN?: string;
@@ -632,6 +776,127 @@ export type PhieuNhapDetailedResponseWritable = {
     ngayCapNhat?: string;
     danhSachChiTiet?: Array<CtPhieuNhapResponseWritable> | null;
 };
+
+export type GetApiBaoCaosDoanhthuPhantichData = {
+    body?: never;
+    path?: never;
+    query?: {
+        from?: string;
+        to?: string;
+    };
+    url: '/api/BaoCaos/doanhthu/phantich';
+};
+
+export type GetApiBaoCaosDoanhthuPhantichResponses = {
+    /**
+     * OK
+     */
+    200: DoanhThuPhanTichResponse;
+};
+
+export type GetApiBaoCaosDoanhthuPhantichResponse = GetApiBaoCaosDoanhthuPhantichResponses[keyof GetApiBaoCaosDoanhthuPhantichResponses];
+
+export type GetApiBaoCaosDoanhthuDonhangData = {
+    body?: never;
+    path?: never;
+    query?: {
+        from?: string;
+        to?: string;
+        page?: number;
+        limit?: number;
+    };
+    url: '/api/BaoCaos/doanhthu/donhang';
+};
+
+export type GetApiBaoCaosDoanhthuDonhangResponses = {
+    /**
+     * OK
+     */
+    200: DoanhThuDonHangResponse;
+};
+
+export type GetApiBaoCaosDoanhthuDonhangResponse = GetApiBaoCaosDoanhthuDonhangResponses[keyof GetApiBaoCaosDoanhthuDonhangResponses];
+
+export type GetApiBaoCaosLoinhuanPhantichData = {
+    body?: never;
+    path?: never;
+    query?: {
+        from?: string;
+        to?: string;
+    };
+    url: '/api/BaoCaos/loinhuan/phantich';
+};
+
+export type GetApiBaoCaosLoinhuanPhantichResponses = {
+    /**
+     * OK
+     */
+    200: LoiNhuanPhanTichResponse;
+};
+
+export type GetApiBaoCaosLoinhuanPhantichResponse = GetApiBaoCaosLoinhuanPhantichResponses[keyof GetApiBaoCaosLoinhuanPhantichResponses];
+
+export type GetApiBaoCaosLoinhuanSanphamData = {
+    body?: never;
+    path?: never;
+    query?: {
+        from?: string;
+        to?: string;
+        page?: number;
+        limit?: number;
+        sort_by?: string;
+        order?: string;
+    };
+    url: '/api/BaoCaos/loinhuan/sanpham';
+};
+
+export type GetApiBaoCaosLoinhuanSanphamResponses = {
+    /**
+     * OK
+     */
+    200: LoiNhuanSanPhamResponse;
+};
+
+export type GetApiBaoCaosLoinhuanSanphamResponse = GetApiBaoCaosLoinhuanSanphamResponses[keyof GetApiBaoCaosLoinhuanSanphamResponses];
+
+export type GetApiBaoCaosTonkhoPhantichData = {
+    body?: never;
+    path?: never;
+    query?: {
+        maKho?: string;
+    };
+    url: '/api/BaoCaos/tonkho/phantich';
+};
+
+export type GetApiBaoCaosTonkhoPhantichResponses = {
+    /**
+     * OK
+     */
+    200: TonKhoPhanTichResponse;
+};
+
+export type GetApiBaoCaosTonkhoPhantichResponse = GetApiBaoCaosTonkhoPhantichResponses[keyof GetApiBaoCaosTonkhoPhantichResponses];
+
+export type GetApiBaoCaosTonkhoSanphamData = {
+    body?: never;
+    path?: never;
+    query?: {
+        maKho?: string;
+        page?: number;
+        limit?: number;
+        trangThai?: string;
+    };
+    url: '/api/BaoCaos/tonkho/sanpham';
+};
+
+export type GetApiBaoCaosTonkhoSanphamResponses = {
+    /**
+     * OK
+     */
+    200: TonKhoSanPhamResponse;
+};
+
+export type GetApiBaoCaosTonkhoSanphamResponse = GetApiBaoCaosTonkhoSanphamResponses[keyof GetApiBaoCaosTonkhoSanphamResponses];
 
 export type GetApiCongNosSummaryData = {
     body?: never;
@@ -689,6 +954,59 @@ export type PostApiCongNosResponses = {
      */
     201: unknown;
 };
+
+export type GetApiDashBoardSummaryData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/DashBoard/summary';
+};
+
+export type GetApiDashBoardSummaryResponses = {
+    /**
+     * OK
+     */
+    200: DashboardSummaryResponse;
+};
+
+export type GetApiDashBoardSummaryResponse = GetApiDashBoardSummaryResponses[keyof GetApiDashBoardSummaryResponses];
+
+export type GetApiDashBoardRevenueMonthlyData = {
+    body?: never;
+    path?: never;
+    query?: {
+        year?: number;
+    };
+    url: '/api/DashBoard/revenue/monthly';
+};
+
+export type GetApiDashBoardRevenueMonthlyResponses = {
+    /**
+     * OK
+     */
+    200: MonthlyRevenueResponse;
+};
+
+export type GetApiDashBoardRevenueMonthlyResponse = GetApiDashBoardRevenueMonthlyResponses[keyof GetApiDashBoardRevenueMonthlyResponses];
+
+export type GetApiDashBoardProductsExpiringData = {
+    body?: never;
+    path?: never;
+    query?: {
+        limit?: number;
+        daysThreshold?: number;
+    };
+    url: '/api/DashBoard/products/expiring';
+};
+
+export type GetApiDashBoardProductsExpiringResponses = {
+    /**
+     * OK
+     */
+    200: Array<ExpiringProductResponse>;
+};
+
+export type GetApiDashBoardProductsExpiringResponse = GetApiDashBoardProductsExpiringResponses[keyof GetApiDashBoardProductsExpiringResponses];
 
 export type GetApiGiaBansData = {
     body?: never;

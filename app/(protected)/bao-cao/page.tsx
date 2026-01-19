@@ -9,19 +9,20 @@ import {
     PieChart, Pie, Cell, BarChart, Bar
 } from "recharts";
 import { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
-import {
-    RevenueAnalyticsResponse, RevenueOrdersResponse,
-    ProfitAnalyticsResponse, ProfitProductsResponse,
-    InventoryAnalyticsResponse, InventoryItemsResponse,
-    WarehouseOption
-} from "@/types/reports";
 
 import * as reportService from "@/services/bao-cao.service";
+import { khoHangService, KhoOption } from "@/services/kho-hang.service";
 import { toast } from "sonner";
 import { OverviewLoading } from "@/components/bao-cao/OverviewLoading";
 import { TableBodyLoading } from "@/components/bao-cao/TableLoading";
 import ExportButton from "@/components/ui/ExportButton";
 import { exportToCSV, prepareInventoryData, prepareRevenueData, prepareProfitData } from "@/utils/csvHelper";
+import {
+    DoanhThuPhanTichResponse, TongQuanResponse, XuHuongChartItemResponse, DoanhThuDonHangResponse, DoanhThuDonHangItemResponse,
+    LoiNhuanPhanTichResponse, LoiNhuanTongQuanResponse, TopSanPhamLoiNhuanResponse, LoiNhuanSanPhamResponse, LoiNhuanSanPhamItemResponse,
+    TonKhoPhanTichResponse, TonKhoTongQuanResponse, SoLuongChartItemResponse, TonKhoSanPhamResponse, TonKhoSanPhamItemResponse, PaginationMeta
+} from "@/client/types.gen";
+
 type ReportType = "sales" | "profit" | "inventory";
 
 export default function BaoCaoPage() {
@@ -41,37 +42,61 @@ export default function BaoCaoPage() {
     const LIMIT = 20;
 
     // --- Data State ---
-    const [warehouses, setWarehouses] = useState<WarehouseOption[]>([]);
+    const [warehouses, setWarehouses] = useState<KhoOption[]>([]);
 
     // Revenue Data
-    const [revAnalytics, setRevAnalytics] = useState<RevenueAnalyticsResponse | null>(null);
-    const [revOrders, setRevOrders] = useState<RevenueOrdersResponse | null>(null);
+    const [revAnalytics, setRevAnalytics] = useState<DoanhThuPhanTichResponse | null>(null);
+    const [revOrders, setRevOrders] = useState<DoanhThuDonHangResponse | null>(null);
 
     // Profit Data
-    const [profAnalytics, setProfAnalytics] = useState<ProfitAnalyticsResponse | null>(null);
-    const [profProducts, setProfProducts] = useState<ProfitProductsResponse | null>(null);
+    const [profAnalytics, setProfAnalytics] = useState<LoiNhuanPhanTichResponse | null>(null);
+    const [profProducts, setProfProducts] = useState<LoiNhuanSanPhamResponse | null>(null);
 
     // Inventory Data
-    const [invAnalytics, setInvAnalytics] = useState<InventoryAnalyticsResponse | null>(null);
-    const [invItems, setInvItems] = useState<InventoryItemsResponse | null>(null);
+    const [invAnalytics, setInvAnalytics] = useState<TonKhoPhanTichResponse | null>(null);
+    const [invItems, setInvItems] = useState<TonKhoSanPhamResponse | null>(null);
 
     const [loading, setLoading] = useState(true);
     const [tableLoading, setTableLoading] = useState(true);
 
     // --- Formatters ---
-    const formatCurrency = (v: number) => new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(v);
-    const formatNumber = (v: number) => new Intl.NumberFormat("vi-VN").format(v);
-    const formatDate = (dateStr: string) => {
+    const formatCurrency = (
+        v?: number | null,
+        fallback: number = 0
+    ): string => {
+        return new Intl.NumberFormat("vi-VN", {
+            style: "currency",
+            currency: "VND",
+            maximumFractionDigits: 0
+        }).format(v ?? fallback);
+    };
+
+    const formatNumber = (
+        v?: number | null,
+        fallback: number = 0
+    ): string => {
+        return new Intl.NumberFormat("vi-VN").format(v ?? fallback);
+    };
+
+    const formatDate = (dateStr?: string) => {
         if (!dateStr) return "";
         return new Date(dateStr).toLocaleDateString("vi-VN");
     };
-
-    // --- Initial Load ---
-    useEffect(() => {
-        reportService.getWarehouses().then(data => {
+    const fetchWarehouses = async () => {
+        try {
+            const data = await khoHangService.getOptions();
+            console.log('data', data);
             setWarehouses(data);
             if (data.length > 0) setSelectedWarehouse(data[0].maKho);
-        });
+        }
+        catch (error) {
+            toast.error("Đã xảy ra lỗi khi tải dữ liệu!");
+            console.log(error);
+        }
+    }
+    // --- Initial Load ---
+    useEffect(() => {
+        fetchWarehouses();
     }, []);
 
     // --- Fetch Analytics (Charts/Cards) ---
@@ -133,7 +158,6 @@ export default function BaoCaoPage() {
         }
     }, [reportType, fromDate, toDate, selectedWarehouse, currentPage]);
 
-
     const exportToCSV = (filename: string, data: any[]) => {
         if (!data || data.length === 0) return;
         const headers = Object.keys(data[0]);
@@ -150,25 +174,30 @@ export default function BaoCaoPage() {
     };
 
     const PIE_COLORS = ['#253D90', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
-
+    const defaultMeta: PaginationMeta = {
+        page: 1,
+        limit: 20,
+        total_Items: 0,
+        total_Pages: 0
+    };
     // --- Render Helpers ---
-    const PaginationControls = ({ meta }: { meta: any }) => {
+    const PaginationControls = ({ meta }: { meta: PaginationMeta }) => {
         if (!meta) return null;
         return (
             <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
                 <span className="text-sm text-gray-700">
-                    Trang {meta.page} / {meta.total_pages} ({meta.total_items} mục)
+                    Trang {meta.page} / {meta.total_Pages ?? 0} ({meta.total_Items ?? 0} mục)
                 </span>
                 <div className="flex gap-2">
                     <button
-                        disabled={meta.page <= 1}
+                        disabled={!meta.page || meta.page <= 1}
                         onClick={() => setCurrentPage(p => p - 1)}
                         className="p-2 border rounded hover:bg-gray-50 disabled:opacity-50"
                     >
                         <ChevronLeft size={16} />
                     </button>
                     <button
-                        disabled={meta.page >= meta.total_pages}
+                        disabled={!meta.page || !meta.total_Pages || meta.page >= meta.total_Pages}
                         onClick={() => setCurrentPage(p => p + 1)}
                         className="p-2 border rounded hover:bg-gray-50 disabled:opacity-50"
                     >
@@ -179,7 +208,7 @@ export default function BaoCaoPage() {
         );
     }
     const tooltipFormatter = (value?: ValueType, name?: NameType): [string | number, string] => {
-        if (name === "doanhThu") {
+        if (name === "Doanh thu") {
             return [
                 typeof value === "number" ? formatCurrency(value) : "-",
                 "Doanh thu"
@@ -190,6 +219,21 @@ export default function BaoCaoPage() {
             typeof value === "number" ? value : "-",
             "Số đơn"
         ];
+    };
+    const handleFromDateChange = (value: string) => {
+        setFromDate(value);
+        // auto-correct toDate if needed
+        if (toDate && value > toDate) {
+            setToDate(value);
+        }
+    };
+
+    const handleToDateChange = (value: string) => {
+        setToDate(value);
+        // auto-correct fromDate if needed
+        if (fromDate && value < fromDate) {
+            setFromDate(value);
+        }
     };
     return (
         <div className="mx-auto space-y-6">
@@ -215,11 +259,21 @@ export default function BaoCaoPage() {
                         <>
                             <div className="flex items-center gap-2">
                                 <label className="text-sm font-semibold text-gray-700">Từ ngày:</label>
-                                <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="px-3 py-2 border-2 border-gray-300 rounded-xl text-sm" />
+                                <input
+                                    type="date"
+                                    value={fromDate}
+                                    max={toDate || undefined} // prevent selecting after toDate
+                                    onChange={(e) => handleFromDateChange(e.target.value)}
+                                    className="px-3 py-2 border-2 border-gray-300 rounded-xl text-sm" />
                             </div>
                             <div className="flex items-center gap-2">
                                 <label className="text-sm font-semibold text-gray-700">Đến ngày:</label>
-                                <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="px-3 py-2 border-2 border-gray-300 rounded-xl text-sm" />
+                                <input
+                                    type="date"
+                                    value={toDate}
+                                    min={fromDate || undefined} // prevent selecting before fromDate
+                                    onChange={(e) => handleToDateChange(e.target.value)}
+                                    className="px-3 py-2 border-2 border-gray-300 rounded-xl text-sm" />
                             </div>
                         </>
                     )}
@@ -260,21 +314,25 @@ export default function BaoCaoPage() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div className="bg-linear-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-xl">
                                     <div className="flex justify-between mb-2"><span className="text-blue-100 font-semibold">TỔNG DOANH THU</span><DollarSign className="text-blue-200" /></div>
-                                    <div className="text-4xl font-bold">{formatCurrency(revAnalytics.tongQuan.tongDoanhThu)}</div>
+                                    <div className="text-4xl font-bold">{formatCurrency(revAnalytics.tongQuan ? revAnalytics.tongQuan.tongDoanhThu : 0)}</div>
                                 </div>
                                 <div className="bg-linear-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-xl">
                                     <div className="flex justify-between mb-2"><span className="text-green-100 font-semibold">SỐ ĐƠN HÀNG</span><TrendingUp className="text-green-200" /></div>
-                                    <div className="text-4xl font-bold">{revAnalytics.tongQuan.tongDonHangCount}</div>
+                                    <div className="text-4xl font-bold">{revAnalytics.tongQuan ? revAnalytics.tongQuan.tongDonHangCount : 0}</div>
                                 </div>
                                 <div className="bg-linear-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-xl">
                                     <div className="flex justify-between mb-2"><span className="text-purple-100 font-semibold">TỔNG SẢN PHẨM</span><Package className="text-purple-200" /></div>
-                                    <div className="text-4xl font-bold">{formatNumber(revAnalytics.tongQuan.tongSanPhamCount)}</div>
+                                    <div className="text-4xl font-bold">{formatNumber(revAnalytics.tongQuan ? revAnalytics.tongQuan.tongSanPhamCount : 0)}</div>
                                 </div>
                             </div>
                             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
                                 <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2"><TrendingUp className="text-[#253D90]" /> Xu Hướng Doanh Thu</h3>
                                 <ResponsiveContainer width="100%" height={350}>
-                                    <LineChart data={revAnalytics.xuHuongChart}>
+                                    <LineChart data={revAnalytics.xuHuongChart?.map(i => ({
+                                        ngay: i.ngay,
+                                        doanhThu: i.doanhThu ?? 0,
+                                        donHangCount: i.donHangCount ?? 0
+                                    })) ?? []}>
                                         <CartesianGrid strokeDasharray="3 3" />
                                         <XAxis dataKey="ngay" tickFormatter={formatDate} />
                                         <YAxis />
@@ -336,15 +394,20 @@ export default function BaoCaoPage() {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={6} className="text-center py-6 text-gray-500">
-                                                Không có dữ liệu
+                                            <td colSpan={6} className="py-20 text-center">
+                                                <div className="flex flex-col items-center justify-center text-slate-400">
+                                                    <div className="p-4 bg-slate-50 rounded-full mb-3">
+                                                        <Package size={32} className="opacity-50" />
+                                                    </div>
+                                                    <p className="font-medium">Chưa có dữ liệu doanh thu đơn hàng.</p>
+                                                </div>
                                             </td>
                                         </tr>
                                     )}
                                 </tbody>
                             </table>
                         </div>
-                        <PaginationControls meta={revOrders?.meta} />
+                        <PaginationControls meta={revOrders?.meta ?? defaultMeta} />
                     </div>
                 </div>
             )}
@@ -367,26 +430,37 @@ export default function BaoCaoPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                                     <div className="bg-linear-to-br from-indigo-500 to-indigo-600 rounded-2xl p-6 text-white shadow-xl">
                                         <div className="text-indigo-100 text-sm font-semibold mb-2">DOANH THU</div>
-                                        <div className="text-4xl font-bold">{formatCurrency(profAnalytics.tongQuan.doanhThu)}</div>
+                                        <div className="text-4xl font-bold">{formatCurrency(profAnalytics.tongQuan ? profAnalytics.tongQuan.doanhThu : 0)}</div>
                                     </div>
                                     <div className="bg-linear-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-xl">
                                         <div className="text-orange-100 text-sm font-semibold mb-2">CHI PHÍ</div>
-                                        <div className="text-4xl font-bold">{formatCurrency(profAnalytics.tongQuan.chiPhi)}</div>
+                                        <div className="text-4xl font-bold">{formatCurrency(profAnalytics.tongQuan ? profAnalytics.tongQuan.chiPhi : 0)}</div>
                                     </div>
                                     <div className="bg-linear-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 text-white shadow-xl">
                                         <div className="text-emerald-100 text-sm font-semibold mb-2">LỢI NHUẬN</div>
-                                        <div className="text-4xl font-bold">{formatCurrency(profAnalytics.tongQuan.loiNhuan)}</div>
+                                        <div className="text-4xl font-bold">{formatCurrency(profAnalytics.tongQuan ? profAnalytics.tongQuan.loiNhuan : 0)}</div>
                                     </div>
                                     <div className="bg-linear-to-br from-pink-500 to-pink-600 rounded-2xl p-6 text-white shadow-xl">
                                         <div className="text-pink-100 text-sm font-semibold mb-2">TỶ SUẤT</div>
-                                        <div className="text-4xl font-bold">{profAnalytics.tongQuan.tiSuat.toFixed(2)}%</div>
+                                        <div className="text-4xl font-bold">
+                                            {profAnalytics.tongQuan?.tiSuat == null
+                                                ? "--"
+                                                : `${profAnalytics.tongQuan.tiSuat.toFixed(2)}%`}
+                                        </div>
                                     </div>
                                 </div>
 
                                 <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
                                     <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2"><BarChart3 className="text-[#253D90]" /> Top Sản Phẩm Lợi Nhuận</h3>
                                     <ResponsiveContainer width="100%" height={400}>
-                                        <BarChart data={profAnalytics.topSanPhamChart}>
+                                        <BarChart data={
+                                            profAnalytics.topSanPhamChart?.map(i => ({
+                                                tenSanPham: i.tenSanPham,
+                                                doanhThu: i.doanhThu ?? 0,
+                                                chiPhi: i.chiPhi ?? 0,
+                                                loiNhuan: i.loiNhuan ?? 0
+                                            })) ?? []
+                                        }>
                                             <CartesianGrid strokeDasharray="3 3" />
                                             <XAxis dataKey="tenSanPham" angle={-45} textAnchor="end" height={100} style={{ fontSize: '11px' }} />
                                             <YAxis tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`} />
@@ -438,21 +512,26 @@ export default function BaoCaoPage() {
                                             <td className="px-6 py-4 text-right text-orange-600">{formatCurrency(row.chiPhi)}</td>
                                             <td className="px-6 py-4 text-right text-emerald-600 font-bold">{formatCurrency(row.loiNhuan)}</td>
                                             <td className="px-6 py-4 text-right">
-                                                <span className="px-2 py-1 bg-emerald-100 text-emerald-800 rounded text-xs font-bold">{row.tiSuat.toFixed(2)}%</span>
+                                                <span className="px-2 py-1 bg-emerald-100 text-emerald-800 rounded text-xs font-bold">{row.tiSuat ? row.tiSuat.toFixed(2) : 0}%</span>
                                             </td>
                                         </tr>
                                     )))
                                         : (
                                             <tr>
-                                                <td colSpan={6} className="text-center py-6 text-gray-500">
-                                                    Không có dữ liệu
+                                                <td colSpan={6} className="py-20 text-center">
+                                                    <div className="flex flex-col items-center justify-center text-slate-400">
+                                                        <div className="p-4 bg-slate-50 rounded-full mb-3">
+                                                            <Package size={32} className="opacity-50" />
+                                                        </div>
+                                                        <p className="font-medium">Chưa có dữ liệu lợi nhuận sản phẩm.</p>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         )}
                                 </tbody>
                             </table>
                         </div>
-                        <PaginationControls meta={profProducts?.meta} />
+                        <PaginationControls meta={profProducts?.meta ?? defaultMeta} />
                     </div>
                 </div>
             )}
@@ -473,15 +552,15 @@ export default function BaoCaoPage() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div className="bg-linear-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-xl">
                                     <div className="flex justify-between mb-3"><span className="text-blue-100 font-semibold">TỔNG SẢN PHẨM</span><Package className="text-blue-200" /></div>
-                                    <div className="text-4xl font-bold">{invAnalytics.tongQuan.tongSanPhamCount}</div>
+                                    <div className="text-4xl font-bold">{invAnalytics.tongQuan?.tongSanPhamCount ?? 0}</div>
                                 </div>
                                 <div className="bg-linear-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-xl">
                                     <div className="flex justify-between mb-3"><span className="text-green-100 font-semibold">TỔNG SỐ LƯỢNG</span><TrendingUp className="text-green-200" /></div>
-                                    <div className="text-4xl font-bold">{formatNumber(invAnalytics.tongQuan.tongSoLuong)}</div>
+                                    <div className="text-4xl font-bold">{formatNumber(invAnalytics.tongQuan?.tongSoLuong ?? 0)}</div>
                                 </div>
                                 <div className="bg-linear-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-xl">
                                     <div className="flex justify-between mb-3"><span className="text-orange-100 font-semibold">SẮP HẾT HẠN</span><AlertTriangle className="text-orange-200" /></div>
-                                    <div className="text-4xl font-bold">{invAnalytics.tongQuan.soLuongSapHetHan}</div>
+                                    <div className="text-4xl font-bold">{invAnalytics.tongQuan?.soLuongSapHetHan ?? 0}</div>
                                 </div>
                             </div>
                             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
@@ -489,14 +568,17 @@ export default function BaoCaoPage() {
                                 <ResponsiveContainer width="100%" height={400}>
                                     <PieChart>
                                         <Pie
-                                            data={invAnalytics.soLuongChart}
+                                            data={invAnalytics.soLuongChart?.map(i => ({
+                                                name: i.tenSanPham ?? "Khác",
+                                                value: i.soLuong ?? 0
+                                            })) ?? []}
                                             dataKey="soLuong"
                                             nameKey="tenSanPham"
                                             cx="50%" cy="50%"
                                             outerRadius={140}
                                             label={({ percent }) => `${(percent ? percent * 100 : 0).toFixed(0)}%`}
                                         >
-                                            {invAnalytics.soLuongChart.map((entry, index) => (
+                                            {(invAnalytics.soLuongChart ?? []).map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                                             ))}
                                         </Pie>
@@ -554,15 +636,20 @@ export default function BaoCaoPage() {
                                     ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={6} className="text-center py-6 text-gray-500">
-                                                Không có dữ liệu
+                                            <td colSpan={7} className="py-20 text-center">
+                                                <div className="flex flex-col items-center justify-center text-slate-400">
+                                                    <div className="p-4 bg-slate-50 rounded-full mb-3">
+                                                        <Package size={32} className="opacity-50" />
+                                                    </div>
+                                                    <p className="font-medium">Chưa có dữ liệu tồn kho.</p>
+                                                </div>
                                             </td>
                                         </tr>
                                     )}
                                 </tbody>
                             </table>
                         </div>
-                        <PaginationControls meta={invItems?.meta} />
+                        <PaginationControls meta={invItems?.meta ?? defaultMeta} />
                     </div>
                 </div>
             )
