@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { SanPhamCreateRequest, SanPhamResponse, DonViQuyDoiItem } from "@/client/types.gen";
-import { Plus, Trash2, ArrowRight } from "lucide-react";
+import { Plus, Trash2, ArrowRight, Image as ImageIcon, X, UploadCloud } from "lucide-react";
+import { CldUploadWidget } from "next-cloudinary";
+import Image from "next/image";
 
 // This matches what the User sees on screen, not exactly the API request
 export type SanPhamFormData = {
@@ -12,6 +14,7 @@ export type SanPhamFormData = {
     ghiChu?: string | null;
     price?: number | null; // Generic price (maps to giaBanDau OR giaMoi)
     donViQuyDoi: DonViQuyDoiItem[];
+    anhSanPham?: string | null;
 };
 
 type Props = {
@@ -25,7 +28,7 @@ type Props = {
 
 export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitText, isLoading = false }: Props) {
     // --- STATE MANAGEMENT ---
-
+    console.log(defaultValues?.anhSanPham);
     // Map default units. We assume the backend returns an array matching the Item shape.
     // We explicitly cast to LocalDonViQuyDoiItem[] if types.gen doesn't fully match the inferred shape.
     const [units, setUnits] = useState<DonViQuyDoiItem[]>(
@@ -41,7 +44,9 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
     // Temporary state for the "Add Unit" inputs
     const [newUnitName, setNewUnitName] = useState("");
     const [newUnitRatio, setNewUnitRatio] = useState<number | "">("");
-
+    const [imageUrl, setImageUrl] = useState<string | null>(
+        defaultValues?.anhSanPham || null
+    );
     // --- HANDLERS ---
 
     const handleAddUnit = () => {
@@ -76,6 +81,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
             donViTinh: baseUnit,
             ghiChu: (form.get("ghiChu") as string) || null,
             price: price || null, // Pass the state value
+            anhSanPham: imageUrl,
             donViQuyDoi: units as unknown as DonViQuyDoiItem[],
         };
 
@@ -84,6 +90,56 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
 
     return (
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-x-6 gap-y-4">
+            {/* --- SECTION 0: IMAGE UPLOAD --- */}
+            <div className="col-span-2 flex justify-center mb-4">
+                {imageUrl ? (
+                    // Display uploaded image
+                    <div className="relative h-40 w-40 rounded-xl border-2 border-slate-200 overflow-hidden group bg-white">
+                        <Image
+                            src={imageUrl}
+                            alt="Product preview"
+                            fill
+                            className="object-cover"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setImageUrl(null)}
+                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                            <X size={14} />
+                        </button>
+                    </div>
+                ) : (
+                    // Display Upload Button
+                    <CldUploadWidget
+                        // REPLACE THIS with your specific Upload Preset from Cloudinary Settings
+                        uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "YOUR_UPLOAD_PRESET_HERE"}
+                        onSuccess={(result) => {
+                            // Validating result structure from Cloudinary
+                            if (typeof result.info === 'object' && 'secure_url' in result.info) {
+                                setImageUrl(result.info.secure_url);
+                            }
+                        }}
+                        options={{
+                            maxFiles: 1,
+                            resourceType: "image",
+                            clientAllowedFormats: ["jpg", "jpeg", "png", "webp"],
+                        }}
+                    >
+                        {({ open }) => (
+                            <div
+                                onClick={() => open()}
+                                className="h-40 w-40 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-blue-400 transition-colors"
+                            >
+                                <div className="bg-blue-100 p-3 rounded-full mb-2">
+                                    <UploadCloud className="text-blue-600" size={24} />
+                                </div>
+                                <span className="text-xs font-semibold text-slate-500">Tải ảnh lên</span>
+                            </div>
+                        )}
+                    </CldUploadWidget>
+                )}
+            </div>
             {/* --- SECTION 1: BASIC INFO --- */}
 
             {/* Tên sản phẩm */}

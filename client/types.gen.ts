@@ -602,6 +602,7 @@ export type SanPhamCreateRequest = {
     tenSP: string;
     loaiSanPham: string;
     donViTinh?: string | null;
+    anhSanPham?: string | null;
     ghiChu?: string | null;
     giaBanDau?: number | null;
     donViQuyDoi?: Array<DonViQuyDoiItem> | null;
@@ -613,6 +614,7 @@ export type SanPhamResponse = {
     tenSP?: string | null;
     loaiSanPham?: string | null;
     donViCoSo?: string | null;
+    anhSanPham?: string | null;
     ghiChu?: string | null;
     ngayTao?: string;
     donGia?: number | null;
@@ -630,6 +632,7 @@ export type SanPhamUpdateRequest = {
     tenSP: string;
     loaiSanPham: string;
     donViTinh?: string | null;
+    anhSanPham?: string | null;
     ghiChu?: string | null;
     giaMoi?: number | null;
     donViQuyDoi?: Array<DonViQuyDoiItem> | null;

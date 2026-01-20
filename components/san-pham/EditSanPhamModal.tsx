@@ -15,7 +15,6 @@ interface Props {
 
 export default function EditSanPhamModal({ sanPham, onClose, onUpdate }: Props) {
     const [isSubmitting, setIsSubmitting] = useState(false);
-
     async function handleSubmit(formData: SanPhamFormData) {
         if (!sanPham.maSP) {
             console.error("Cannot update: Missing Product ID");
@@ -31,7 +30,7 @@ export default function EditSanPhamModal({ sanPham, onClose, onUpdate }: Props) 
                 donViTinh: formData.donViTinh,
                 ghiChu: formData.ghiChu,
                 donViQuyDoi: formData.donViQuyDoi,
-
+                anhSanPham: formData.anhSanPham,
                 // MAPPING: Map the form's generic 'price' to 'giaMoi' (New Price) for updates
                 giaMoi: formData.price ?? undefined,
             };

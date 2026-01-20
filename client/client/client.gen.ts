@@ -2,7 +2,8 @@
 
 import type { AxiosError, AxiosInstance, RawAxiosRequestHeaders } from 'axios';
 import axios from 'axios';
-
+// --- ADD THIS LINE ---
+import apiClient from '@/lib/axios';
 import { createSseClient } from '../core/serverSentEvents.gen';
 import type { HttpMethod } from '../core/types.gen';
 import { getValidRequestBody } from '../core/utils.gen';
@@ -24,8 +25,9 @@ export const createClient = (config: Config = {}): Client => {
     instance = _config.axios;
   } else {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { auth, ...configWithoutAuth } = _config;
-    instance = axios.create(configWithoutAuth);
+    // const { auth, ...configWithoutAuth } = _config;
+    // instance = axios.create(configWithoutAuth);
+    instance = apiClient;
   }
 
   const getConfig = (): Config => ({ ..._config });

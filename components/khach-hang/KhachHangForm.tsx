@@ -21,6 +21,7 @@ const DEFAULT_VALUES: KhachHangCreateRequest = {
     trangThai: 0,
     ghiChu: "",
 };
+const mapHanMucCongNo: Record<string, number> = { 'CA_NHAN': 500000, 'DAI_LY': 2000000, 'TRANG_TRAI': 10000000 };
 export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoading = false, submitText = "Lưu thông tin" }: Props) {
     // Merge default values with any initial data (for edit mode)
     const [formData, setFormData] = useState<KhachHangCreateRequest>({
@@ -171,7 +172,7 @@ export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoadi
                         <input
                             type="number"
                             disabled={isLoading}
-                            value={formData.hanMucCongNo ?? '0'}
+                            value={mapHanMucCongNo(formData.hanMucCongNo)}
                             onChange={(e) =>
                                 handleChange("hanMucCongNo", parseFloat(e.target.value) || 0)
                             }

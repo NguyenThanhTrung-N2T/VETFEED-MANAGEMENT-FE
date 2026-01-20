@@ -26,7 +26,7 @@ export default function AddSanPhamModal({ onClose, onAdd }: Props) {
                 donViTinh: formData.donViTinh,
                 ghiChu: formData.ghiChu,
                 donViQuyDoi: formData.donViQuyDoi,
-
+                anhSanPham: formData.anhSanPham,
                 // MAPPING: Map the form's generic 'price' to 'giaBanDau' for creation
                 giaBanDau: formData.price ?? undefined,
             };

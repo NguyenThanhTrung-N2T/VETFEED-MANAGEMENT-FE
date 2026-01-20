@@ -2,7 +2,7 @@ import {
     getApiBaoCaosDoanhthuPhantich, getApiBaoCaosDoanhthuDonhang,
     getApiBaoCaosLoinhuanPhantich, getApiBaoCaosLoinhuanSanpham,
     getApiBaoCaosTonkhoPhantich, getApiBaoCaosTonkhoSanpham
-} from "@/client/sdk.gen";
+} from "@/client/index";
 import {
     DoanhThuPhanTichResponse, TongQuanResponse, XuHuongChartItemResponse, DoanhThuDonHangResponse, DoanhThuDonHangItemResponse,
     LoiNhuanPhanTichResponse, LoiNhuanTongQuanResponse, TopSanPhamLoiNhuanResponse, LoiNhuanSanPhamResponse, LoiNhuanSanPhamItemResponse,

@@ -173,7 +173,16 @@ export default function BaoCaoPage() {
         link.click();
     };
 
-    const PIE_COLORS = ['#253D90', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+    const PIE_COLORS = [
+        '#1E3A8A',
+        '#2563EB',
+        '#06B6D4',
+        '#10B981',
+        '#84CC16',
+        '#F59E0B',
+        '#EF4444',
+        '#A855F7',
+    ];
     const defaultMeta: PaginationMeta = {
         page: 1,
         limit: 20,
@@ -234,6 +243,15 @@ export default function BaoCaoPage() {
         if (fromDate && value < fromDate) {
             setFromDate(value);
         }
+    };
+    const formatYAxis = (num: number) => {
+        if (num >= 1000000) {
+            return `${(num / 1000000).toFixed(1)}M`; // 1.5M
+        }
+        if (num >= 1000) {
+            return `${(num / 1000).toFixed(0)}k`; // 60k
+        }
+        return num.toString(); // 500
     };
     return (
         <div className="mx-auto space-y-6">
@@ -463,7 +481,7 @@ export default function BaoCaoPage() {
                                         }>
                                             <CartesianGrid strokeDasharray="3 3" />
                                             <XAxis dataKey="tenSanPham" angle={-45} textAnchor="end" height={100} style={{ fontSize: '11px' }} />
-                                            <YAxis tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`} />
+                                            <YAxis tickFormatter={formatYAxis} />
                                             <Tooltip formatter={(value: any) => formatCurrency(value)} />
                                             <Legend />
                                             <Bar dataKey="doanhThu" fill="#6366F1" name="Doanh thu" />
@@ -572,8 +590,8 @@ export default function BaoCaoPage() {
                                                 name: i.tenSanPham ?? "Khác",
                                                 value: i.soLuong ?? 0
                                             })) ?? []}
-                                            dataKey="soLuong"
-                                            nameKey="tenSanPham"
+                                            dataKey="value"
+                                            nameKey="name"
                                             cx="50%" cy="50%"
                                             outerRadius={140}
                                             label={({ percent }) => `${(percent ? percent * 100 : 0).toFixed(0)}%`}
