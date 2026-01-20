@@ -68,12 +68,12 @@ export default function Sidebar() {
         <aside className="w-64 bg-[#0f172a] text-white flex flex-col shrink-0 h-screen sticky top-0">
             {/* ... Phần Logo ... */}
             <div className="p-6 flex justify-center">
-                <h1 className="text-2xl font-bold tracking-wide uppercase">VET<span className="text-emerald-500">FEED</span></h1>
+                <h1 className="text-2xl font-bold tracking-wide uppercase">VET<span className="text-[#d4af37]">FEED</span></h1>
             </div>
 
             {/* User Info lấy từ AuthContext */}
             <div className="px-6 pb-6 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-white shrink-0 shadow-lg shadow-emerald-900/20">
+                <div className="w-10 h-10 rounded-full bg-[#d4af37] flex items-center justify-center font-bold text-white shrink-0 shadow-lg shadow-emerald-900/20">
                     {/* Hiển thị Avatar nếu có, không thì lấy chữ cái đầu */}
                     {user.avatar ? (
                         <img src={user.avatar} alt="User" className="w-full h-full rounded-full object-cover" />
@@ -85,7 +85,7 @@ export default function Sidebar() {
                     <p className="font-medium text-sm truncate text-slate-100" title={user.hoTen}>
                         {user.hoTen}
                     </p>
-                    <p className="text-[11px] text-emerald-400 font-bold uppercase tracking-wider">
+                    <p className="text-[11px] text-[#d4af37] font-bold uppercase tracking-wider">
                         {user.role === 'NHAN_VIEN' ? 'Nhân viên' : user.role}
                     </p>
                 </div>
@@ -103,15 +103,15 @@ export default function Sidebar() {
                             href={item.href}
                             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group relative
                                 ${isActive
-                                    ? 'bg-emerald-600/90 text-white font-medium shadow-md shadow-emerald-900/20'
-                                    : 'text-slate-400 hover:bg-white/5 hover:text-emerald-400'
+                                    ? 'bg-[#d4af37]/90 text-white font-medium shadow-md shadow-emerald-900/20'
+                                    : 'text-slate-400 hover:bg-white/5 hover:text-[#d4af37]'
                                 }`}
                         >
                             {/* Icon */}
-                            <span className={`transition-colors ${isActive ? 'text-white' : 'group-hover:text-emerald-400'}`}>
+                            <span className={`transition-colors ${isActive ? 'text-[#0f172a]' : 'group-hover:text-[#d4af37]'}`}>
                                 {item.icon}
                             </span>
-                            <span className="text-sm">{item.name}</span>
+                            <span className={`transition-colors ${isActive ? 'text-[#0f172a] text-sm font-bold' : 'group-hover:text-[#d4af37] text-sm font-bold'}`}>{item.name}</span>
 
                             {/* Active Indicator bar */}
                             {isActive && (

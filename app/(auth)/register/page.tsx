@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Eye, EyeOff, User, Mail, Lock, Loader2, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/providers/auth-provider';
 
 export default function RegisterPage() {
@@ -46,99 +46,134 @@ export default function RegisterPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4 font-sans">
-            <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in duration-300">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1a237e] via-[#25396f] to-[#3949ab] p-4 font-sans relative overflow-hidden">
 
-                <div className="bg-emerald-800 p-8 text-center relative overflow-hidden">
-                    <div className="relative z-10">
-                        <h2 className="text-2xl font-bold text-white mb-2">Tạo tài khoản mới</h2>
-                        <p className="text-emerald-200 text-sm">Tham gia VetFeed để quản lý tốt hơn</p>
+            {/* Background Decoration Circles (Trang trí nền giống hình) */}
+            <div className="absolute top-[-10%] left-[-10%] w-96 h-96 rounded-full border-[40px] border-white/5 opacity-30 pointer-events-none"></div>
+            <div className="absolute top-[10%] left-[10%] w-72 h-72 rounded-full border-[30px] border-white/5 opacity-20 pointer-events-none"></div>
+            <div className="absolute bottom-[-10%] right-[-10%] w-80 h-80 rounded-full border-[35px] border-white/5 opacity-30 pointer-events-none"></div>
+            <div className="absolute bottom-[20%] right-[10%] w-60 h-60 rounded-full border-[25px] border-white/5 opacity-20 pointer-events-none"></div>
+
+            {/* Main Card Container */}
+            <div className="bg-[#fdfbf7] w-full max-w-5xl min-h-[600px] rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row relative">
+
+                {/* --- LEFT SIDE: WELCOME (BLUE) --- */}
+                {/* Logic CSS tạo đường cong ngược lại so với màn Login:
+                    - 'rounded-r-[100px]': Bo tròn mạnh phía bên phải của khối xanh.
+                    - 'mr-[-50px]': Margin âm để khối xanh đè lên khối trắng bên phải.
+                    - 'z-20': Đảm bảo khối xanh nằm trên khối trắng tại điểm giao nhau.
+                */}
+                <div className="hidden md:flex w-1/2 bg-[#0f172a] text-white flex-col justify-center items-center p-12 relative rounded-r-[100px] shadow-[10px_0_30px_rgba(0,0,0,0.2)] mr-[-50px] z-20 overflow-hidden">
+                    {/* Background decoration */}
+                    <div className="absolute top-[-10%] left-[-10%] w-64 h-64 rounded-full border-[20px] border-white/5 opacity-20"></div>
+                    <div className="absolute bottom-[-10%] right-[-10%] w-48 h-48 rounded-full border-[15px] border-white/5 opacity-20"></div>
+
+                    <div className="z-10 text-center max-w-xs">
+                        <h2 className="text-4xl font-bold mb-4 font-serif leading-tight">Xin chào,</h2>
+                        <h3 className="text-l font-medium mb-8">Chào mừng bạn đã đến với VetFeed</h3>
+
+                        <p className="text-slate-400 text-sm mb-4">Đã có tài khoản ?</p>
+
+                        <Link href="/login">
+                            <button className="px-20 py-3 bg-[#d4af37] hover:bg-[#c5a028] text-[#0f172a] font-bold rounded-full transition-all shadow-lg shadow-yellow-900/20 transform hover:scale-105">
+                                Đăng nhập
+                            </button>
+                        </Link>
                     </div>
                 </div>
 
-                <div className="p-8">
+                {/* --- RIGHT SIDE: REGISTER FORM (CREAM) --- */}
+                <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center md:pl-20 z-10">
+                    <div className="text-center md:text-left mb-6">
+                        <h2 className="text-3xl font-bold text-slate-800 font-serif tracking-wide text-center">ĐĂNG KÝ</h2>
+                    </div>
+
                     {errorMsg && (
-                        <div className="mb-4 p-3 bg-red-50 text-red-600 text-xs rounded border border-red-200">
+                        <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded border border-red-200 text-center">
                             {errorMsg}
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-4 text-slate-500">
                         {/* Họ Tên */}
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Họ và tên</label>
-                            <div className="relative">
-                                <User className="absolute left-3 top-3 text-slate-400" size={18} />
-                                <input required type="text" placeholder="Nguyễn Văn A"
-                                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
-                                    value={formData.hoTen}
-                                    onChange={(e) => setFormData({ ...formData, hoTen: e.target.value })}
-                                />
-                            </div>
+                        <div className="space-y-1">
+                            <label className="block text-sm font-semibold text-slate-600 pl-1 font-serif">Họ và tên</label>
+                            <input
+                                required
+                                type="text"
+                                placeholder=""
+                                className="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#25396f] transition-all shadow-sm"
+                                value={formData.hoTen}
+                                onChange={(e) => setFormData({ ...formData, hoTen: e.target.value })}
+                            />
                         </div>
 
                         {/* Email */}
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                            <div className="relative">
-                                <Mail className="absolute left-3 top-3 text-slate-400" size={18} />
-                                <input required type="email" placeholder="email@example.com"
-                                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                />
-                            </div>
+                        <div className="space-y-1">
+                            <label className="block text-sm font-semibold text-slate-600 pl-1 font-serif">Email</label>
+                            <input
+                                required
+                                type="email"
+                                placeholder=""
+                                className="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#25396f] transition-all shadow-sm"
+                                value={formData.email}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            />
                         </div>
 
                         {/* Mật khẩu */}
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Mật khẩu</label>
+                        <div className="space-y-1">
+                            <label className="block text-sm font-semibold text-slate-600 pl-1 font-serif">Mật khẩu</label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-3 text-slate-400" size={18} />
-                                <input required
+                                <input
+                                    required
                                     type={showPassword ? "text" : "password"}
-                                    placeholder="••••••••"
-                                    className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                                    placeholder=""
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#25396f] transition-all shadow-sm"
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                 />
-                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-slate-400 hover:text-slate-600">
-                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                 </button>
                             </div>
-                            <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
-                                <ShieldCheck size={12} /> Tối thiểu 8 ký tự, hoa, thường, số, ký tự đặc biệt.
+                            <p className="text-[10px] text-slate-400 mt-1 pl-1 flex items-center gap-1">
+                                <ShieldCheck size={12} /> 8+ ký tự, hoa, thường, số & ký tự đặc biệt.
                             </p>
                         </div>
 
-                        {/* Nhập lại Mật khẩu */}
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Nhập lại mật khẩu</label>
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-3 text-slate-400" size={18} />
-                                <input required
-                                    type="password"
-                                    placeholder="••••••••"
-                                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
-                                    value={formData.confirmPassword}
-                                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                />
-                            </div>
+                        {/* Nhập lại mật khẩu */}
+                        <div className="space-y-1">
+                            <label className="block text-sm font-semibold text-slate-600 pl-1 font-serif">Nhập lại mật khẩu</label>
+                            <input
+                                required
+                                type="password"
+                                placeholder=""
+                                className="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#25396f] transition-all shadow-sm"
+                                value={formData.confirmPassword}
+                                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="flex justify-between items-center mt-2 md:hidden">
+                            <p className="text-xs text-slate-500 italic">Đã có tài khoản?</p>
+                            <Link href="/login" className="text-xs font-bold text-[#25396f] hover:underline">Đăng nhập ngay</Link>
                         </div>
 
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3 rounded-lg transition-all shadow-lg flex justify-center items-center disabled:opacity-70"
+                            className="w-full bg-[#25396f] hover:bg-[#1a2850] text-white font-bold py-3 rounded-full transition-all shadow-lg transform hover:scale-[1.02] flex justify-center items-center disabled:opacity-70 mt-6"
                         >
-                            {isLoading ? <Loader2 className="animate-spin mr-2" size={20} /> : "Đăng ký tài khoản"}
+                            {isLoading ? <Loader2 className="animate-spin mr-2" size={20} /> : "Đăng Ký"}
                         </button>
                     </form>
-
-                    <div className="mt-6 text-center text-sm text-slate-500">
-                        Đã có tài khoản? <Link href="/login" className="text-emerald-700 font-bold hover:underline">Đăng nhập</Link>
-                    </div>
                 </div>
+
             </div>
         </div>
     );

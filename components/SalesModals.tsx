@@ -326,7 +326,7 @@ export default function SalesModals({ isOpen, type, selectedId, onClose, onApply
         if (itemList.length === 0) return "Giỏ hàng đang trống.";
         if (formData.hinhThucThanhToan === 2) {
             if (!formData.hanTra) return "Vui lòng chọn hạn trả nợ.";
-            else return "Khách hàng vượt quá hạn mức công nợ!"; // Logic check hạn mức ở dưới
+            else return null; // Logic check hạn mức ở dưới
         }
         return null;
     };
@@ -348,6 +348,12 @@ export default function SalesModals({ isOpen, type, selectedId, onClose, onApply
         // Validate hạn mức công nợ
         const currentDebt = totals.finalAmount - submitTienCoc;
         const newTotalDebt = (selectedCustomer?.congNoHienTai || 0) + currentDebt;
+
+        if (selectedCustomer?.hanMucCongNo && newTotalDebt > selectedCustomer.hanMucCongNo) {
+            toast.error("Khách hàng vượt quá hạn mức công nợ!");
+            setFormError(`Hạn mức: ${money(selectedCustomer.hanMucCongNo)}, Nợ hiện tại: ${money(selectedCustomer.congNoHienTai)}, Nợ thêm: ${money(currentDebt)}`);
+            return;
+        }
 
         setIsSubmitting(true);
         try {
@@ -620,7 +626,6 @@ export default function SalesModals({ isOpen, type, selectedId, onClose, onApply
                                                                                 SĐT: {c.soDienThoai || "—"} • Nợ: {money(c.congNoHienTai || 0)}đ
                                                                             </div>
                                                                         </div>
-                                                                        <div className="text-xs text-slate-600 font-mono whitespace-nowrap">{c.maKH}</div>
                                                                     </div>
                                                                 </button>
                                                             ))

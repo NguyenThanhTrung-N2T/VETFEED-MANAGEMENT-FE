@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Search, Plus, Filter, Edit, Trash2,
-    DollarSign, Loader2, Eye, XCircle, FileText, CreditCard, Wallet
+    DollarSign, Loader2, Eye, XCircle, FileText, CreditCard, Wallet, CheckCircle, Clock
 } from 'lucide-react';
 import SalesModals, { SalesFilterParams } from '@/components/SalesModals';
 import { salesService, PhieuBan } from '@/services/sales.service';
@@ -214,6 +214,7 @@ export default function SalesPage() {
                                 <th className="p-5">Khách hàng</th>
                                 <th className="p-5 text-right">Tổng tiền</th>
                                 <th className="p-5 text-center">Hình thức</th>
+                                <th className="p-5 text-center">Trạng thái</th>
                                 <th className="p-5 text-center">Hành đông</th>
                             </tr>
                         </thead>
@@ -281,6 +282,27 @@ export default function SalesPage() {
                                         </td>
                                         <td className="p-5 text-center">
                                             <PaymentBadge method={item.hinhThucThanhToan} />
+                                        </td>
+                                        <td className="p-5 text-center">
+                                            <span
+                                                className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-semibold border ${item.trangThaiThanhToan === 'DA_THANH_TOAN'
+                                                    ? 'bg-emerald-100 text-emerald-700 border-emerald-200' // Style cho Đã thanh toán (Xanh)
+                                                    : 'bg-orange-100 text-orange-700 border-orange-200'    // Style cho Chưa thanh toán (Cam)
+                                                    }`}
+                                            >
+                                                {/* Logic hiển thị text */}
+                                                {item.trangThaiThanhToan === 'DA_THANH_TOAN' ? (
+                                                    <>
+                                                        <CheckCircle size={12} className="mr-1" /> {/* Icon (tùy chọn) */}
+                                                        Đã thanh toán
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Clock size={12} className="mr-1" /> {/* Icon (tùy chọn) */}
+                                                        Chưa thanh toán
+                                                    </>
+                                                )}
+                                            </span>
                                         </td>
                                         <td className="p-5 text-center">
                                             <div className="flex items-center justify-center gap-2 transition-opacity" onClick={(e) => e.stopPropagation()}>
