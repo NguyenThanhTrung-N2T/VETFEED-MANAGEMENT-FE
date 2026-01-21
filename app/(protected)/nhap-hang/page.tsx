@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Search, Filter, Edit, Trash2, ShoppingCart,
-    Loader2, XCircle, Package, Calendar, MapPin, CheckCircle2, AlertCircle, Clock
+    Loader2, XCircle, Package, Calendar, MapPin, CheckCircle2, AlertCircle, Clock, Eye
 } from 'lucide-react';
 import ImportModals, { ImportFilterParams } from '@/components/ImportModals';
 import { importService, PhieuNhap } from '@/services/import.service';
@@ -12,6 +12,7 @@ import AddButton from "@/components/ui/AddButton";
 import { motion, Variants } from 'framer-motion'; // Import Variants để fix lỗi TS
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { useAuth } from '@/providers/auth-provider';
 
 // --- Utility: Merge Class ---
 function cn(...inputs: ClassValue[]) {
@@ -26,6 +27,7 @@ export default function ImportPage() {
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [modalType, setModalType] = useState<'filter' | 'add' | 'edit' | 'detail' | 'delete' | null>(null);
     const [filterParams, setFilterParams] = useState<ImportFilterParams>({});
+    const { user } = useAuth();
 
     // --- Animation Variants (Fix lỗi Type: thêm ": Variants") ---
     const containerVariants: Variants = {
@@ -308,19 +310,31 @@ export default function ImportPage() {
                                         <td className="p-5 text-center">
                                             <div className="flex items-center justify-center gap-2 transition-opacity" onClick={(e) => e.stopPropagation()}>
                                                 <button
-                                                    onClick={() => handleOpenModal('edit', item.maPN)}
-                                                    className="p-2 rounded-md text-slate-600 hover:bg-slate-200 cursor-pointer transition-colors"
-                                                    title="Chỉnh sửa"
+                                                    onClick={() => handleOpenModal('detail', item.maPN)}
+                                                    className="p-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+                                                    title="Xem chi tiết"
                                                 >
-                                                    <Edit size={18} />
+                                                    <Eye size={18} />
                                                 </button>
-                                                <button
-                                                    onClick={() => handleOpenModal('delete', item.maPN)}
-                                                    className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
-                                                    title="Xóa"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
+                                                {user?.role === "QUAN_LY" && (
+                                                    <button
+                                                        onClick={() => handleOpenModal('edit', item.maPN)}
+                                                        className="p-2 rounded-md text-slate-600 hover:bg-slate-200 cursor-pointer transition-colors"
+                                                        title="Chỉnh sửa"
+                                                    >
+                                                        <Edit size={18} />
+                                                    </button>
+                                                )}
+                                                {user?.role === "QUAN_LY" && (
+                                                    <button
+                                                        onClick={() => handleOpenModal('delete', item.maPN)}
+                                                        className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                                                        title="Xóa"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                )}
+
                                             </div>
                                         </td>
                                     </motion.tr>

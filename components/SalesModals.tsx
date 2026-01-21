@@ -404,7 +404,7 @@ export default function SalesModals({ isOpen, type, selectedId, onClose, onApply
     // --- RENDER 1: FILTER MODAL ---
     if (type === 'filter') {
         return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-slate-800">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 text-slate-800">
                 <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[600px] animate-in fade-in zoom-in duration-200">
                     <div className="p-8 flex flex-col items-center">
                         <Filter size={48} strokeWidth={1} className="text-slate-800 mb-2" />
@@ -481,7 +481,7 @@ export default function SalesModals({ isOpen, type, selectedId, onClose, onApply
     // --- RENDER 2: DELETE MODAL ---
     if (type === "delete") {
         return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-slate-800">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 text-slate-800">
                 <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[460px] p-8 animate-in fade-in zoom-in duration-200 text-center text-slate-800">
                     <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
                         <AlertTriangle size={30} />
@@ -521,7 +521,7 @@ export default function SalesModals({ isOpen, type, selectedId, onClose, onApply
 
     // --- RENDER 3: MAIN FORM MODAL ---
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 text-slate-800">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200 text-slate-800">
                 {/* Header */}
                 <div className="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-white text-slate-800">

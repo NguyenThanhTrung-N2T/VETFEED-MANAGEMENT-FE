@@ -12,6 +12,7 @@ import AddButton from "@/components/ui/AddButton";
 import { motion, Variants } from 'framer-motion'; // Import Variants fix lỗi TS
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { useAuth } from '@/providers/auth-provider';
 
 // --- Utility: Merge Class ---
 function cn(...inputs: ClassValue[]) {
@@ -26,6 +27,7 @@ export default function ReturnPage() {
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [modalType, setModalType] = useState<'filter' | 'add' | 'detail' | 'delete' | null>(null);
     const [filterParams, setFilterParams] = useState<ReturnFilterParams>({});
+    const { user } = useAuth();
 
     // --- Animation Variants (FIX LỖI TS: Thêm ": Variants") ---
     const containerVariants: Variants = {
@@ -287,13 +289,15 @@ export default function ReturnPage() {
                                                 >
                                                     <Eye size={18} />
                                                 </button>
-                                                <button
-                                                    onClick={() => handleOpenModal('delete', item.maPT)}
-                                                    className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
-                                                    title="Xóa"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
+                                                {!loading && user?.role === "QUAN_LY" && (
+                                                    <button
+                                                        onClick={() => handleOpenModal('delete', item.maPT)}
+                                                        className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                                                        title="Xóa"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </motion.tr>
