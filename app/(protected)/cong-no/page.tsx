@@ -15,6 +15,7 @@ import { motion, Variants, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import FilterCongNoModal, { CongNoFilterValues } from "@/components/cong-no/FilterCongNoModal";
+import { useAuth } from "@/providers/auth-provider";
 // --- Utility: Merge Class ---
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -159,7 +160,8 @@ export default function CongNoPage() {
             </span>
         );
     };
-
+    const { user, loading } = useAuth();
+    const userRole = user ? user.role : 'NHAN_VIEN';
     return (
         <div className="bg-[#eef2f6] min-h-screen font-sans relative">
             {/* --- SEARCH BAR --- */}

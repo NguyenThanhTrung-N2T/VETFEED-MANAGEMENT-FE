@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { SanPhamCreateRequest, SanPhamResponse, DonViQuyDoiItem } from "@/client/types.gen";
-import { Plus, Trash2, ArrowRight, Image as ImageIcon, X, UploadCloud } from "lucide-react";
+import { Plus, Trash2, ArrowRight, Image as ImageIcon, X, UploadCloud, Loader2, Save } from "lucide-react";
 import { CldUploadWidget } from "next-cloudinary";
 import Image from "next/image";
 
@@ -299,27 +299,25 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
             </div>
 
             {/* Actions */}
-            <div className="col-span-2 mt-6 flex items-center justify-end gap-3">
+            <div className="col-span-2 px-4 py-2 border-t bg-white border-gray-100 flex justify-end gap-3 sticky bottom-0 text-slate-800 z-10">
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className="flex h-11 flex-1 items-center justify-center rounded-lg bg-[#3f861e] text-white font-semibold hover:bg-[#529E29] transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                 >
                     {isLoading ? (
-                        <div className="flex items-center gap-2">
-                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
-                            <span>Đang lưu...</span>
-                        </div>
+                        <Loader2 className="animate-spin" size={18} />
                     ) : (
-                        submitText
+                        <Save size={18} />
                     )}
+                    {isLoading ? "Đang lưu..." : submitText}
                 </button>
 
                 <button
                     type="button"
                     onClick={onCancel}
                     disabled={isLoading}
-                    className="h-11 flex-1 rounded-lg border-2 border-red-500 text-red-500 font-semibold hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="px-6 py-2.5 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                     Hủy
                 </button>

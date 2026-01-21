@@ -15,7 +15,7 @@ import { motion } from "framer-motion";
 import { tableContainerVariants, tableRowVariants } from "@/lib/animation-variants";
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-
+import { useAuth } from "@/providers/auth-provider";
 // Helper for classes
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -159,7 +159,8 @@ export default function KhoPage() {
         );
     };
 
-    const userRole: "manager" | "staff" = "manager";
+    const { user, loading } = useAuth();
+    const userRole = user ? user.role : 'NHAN_VIEN';
 
     return (
         <>
@@ -182,7 +183,7 @@ export default function KhoPage() {
                         className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white shadow-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
                     />
                 </div>
-                <AddButton onClick={openAdd} className="ml-auto" />
+                {userRole === 'QUAN_LY' && (<AddButton onClick={openAdd} className="ml-auto" />)}
             </motion.div>
 
             {/* Content Card */}
@@ -268,12 +269,12 @@ export default function KhoPage() {
                                         <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 font-medium text-slate-700">{k.ghiChu ?? "-"}</td>
                                         <td className="py-3 px-4 text-right border-y border-r border-slate-100 rounded-r-lg group-hover:border-slate-200 whitespace-nowrap">
                                             <div className="inline-flex items-center gap-2 justify-end">
-                                                {(userRole === "manager") && (
+                                                {(userRole === "QUAN_LY") && (
                                                     <button onClick={() => openEdit(k)} className="p-2 rounded-md text-slate-600 hover:bg-slate-200 cursor-pointer">
                                                         <Edit size={18} />
                                                     </button>
                                                 )}
-                                                {userRole === "manager" && (
+                                                {userRole === "QUAN_LY" && (
                                                     <button onClick={() => openDelete(k)} className="p-2 rounded-md text-red-600 hover:bg-red-50 cursor-pointer">
                                                         <Trash2 size={18} />
                                                     </button>

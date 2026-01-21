@@ -44,7 +44,7 @@ export default function AddSanPhamModal({ onClose, onAdd }: Props) {
         <Modal size="lg">
             {/* Header Title */}
             <div className="flex items-center justify-center gap-3 mb-8">
-                <Tag size={28} className="text-[#3f861e]" />
+                <Tag size={28} />
                 <h2 className="text-2xl font-bold text-slate-900">Thêm sản phẩm</h2>
             </div>
 

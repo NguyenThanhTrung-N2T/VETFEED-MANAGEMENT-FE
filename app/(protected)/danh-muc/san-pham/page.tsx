@@ -20,6 +20,7 @@ import FilterSanPhamModal, { SanPhamFilterValues } from "@/components/san-pham/F
 import { ProductSearchParams } from "@/types/product-search";
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { useAuth } from "@/providers/auth-provider";
 // --- Utility: Merge Class ---
 const ITEMS_PER_PAGE = 10; // Show N items per page
 function cn(...inputs: ClassValue[]) {
@@ -249,7 +250,8 @@ export default function SanPhamPage() {
         pages.push(totalPages);
         return pages;
     };
-    const userRole = "manager";
+    const { user, loading } = useAuth();
+    const userRole = user ? user.role : 'NHAN_VIEN';
 
     return (
         <>
@@ -274,7 +276,7 @@ export default function SanPhamPage() {
                     />
                 </div>
 
-                <AddButton onClick={openAdd} className="ml-auto" />
+                {userRole === 'QUAN_LY' && (<AddButton onClick={openAdd} className="ml-auto" />)}
             </motion.div>
 
             {/* Table Card */}
@@ -396,12 +398,12 @@ export default function SanPhamPage() {
                                     </td>
                                     <td className="py-3 px-4 text-right border-y border-r border-slate-100 rounded-r-lg group-hover:border-slate-200 whitespace-nowrap">
                                         <div className="inline-flex items-center gap-1 justify-end">
-                                            {userRole === "manager" && (
+                                            {userRole === "QUAN_LY" && (
                                                 <button onClick={() => openEdit(s)} className="p-2 rounded-md text-slate-600 hover:bg-slate-200 cursor-pointer transition-colors">
                                                     <Edit size={18} />
                                                 </button>
                                             )}
-                                            {userRole === "manager" && (
+                                            {userRole === "QUAN_LY" && (
                                                 <button onClick={() => openDelete(s)} className="p-2 rounded-md text-red-600 hover:bg-red-50 cursor-pointer transition-colors">
                                                     <Trash2 size={18} />
                                                 </button>

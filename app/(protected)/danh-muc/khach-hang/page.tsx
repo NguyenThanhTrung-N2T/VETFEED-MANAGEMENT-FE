@@ -14,7 +14,7 @@ import { pageVariants, tableContainerVariants, tableRowVariants } from "@/lib/an
 import FilterKhachHangModal, { KhachHangFilterValues } from "@/components/khach-hang/FilterKhachHangModal";
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-
+import { useAuth } from "@/providers/auth-provider";
 // Helper for classes
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -255,7 +255,8 @@ export default function KhachHangPage() {
             className: "bg-orange-50 text-orange-700 border border-orange-200",
         },
     };
-    const userRole: "manager" | "staff" = "manager";
+    const { user, loading } = useAuth();
+    const userRole = user ? user.role : 'NHAN_VIEN';
     return (
         <>
             {/* Search Bar */}
@@ -400,7 +401,7 @@ export default function KhachHangPage() {
                                                 className="p-2 rounded-md text-blue-600 hover:bg-blue-100 cursor-pointer">
                                                 <Eye size={18} />
                                             </button>
-                                            {userRole === "manager" && (
+                                            {userRole === "QUAN_LY" && (
                                                 <button
                                                     onClick={() => openDelete(c)}
                                                     className="p-2 rounded-md text-red-600 hover:bg-red-50 cursor-pointer">

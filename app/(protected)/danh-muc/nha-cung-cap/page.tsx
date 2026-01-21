@@ -14,6 +14,7 @@ import { pageVariants, tableContainerVariants, tableRowVariants } from "@/lib/an
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import FilterNCCModal, { NhaCungCapFilterValues } from "@/components/nha-cung-cap/FitlerNCCModal";
+import { useAuth } from "@/providers/auth-provider";
 // --- Utility: Merge Class ---
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -144,7 +145,8 @@ export default function NhaCungCapPage() {
         });
         // query is optional to reset, usually keep it separate
     };
-    const userRole = "manager";
+    const { user, loading } = useAuth();
+    const userRole = user ? user.role : 'NHAN_VIEN';
 
     return (
         <>
@@ -169,7 +171,7 @@ export default function NhaCungCapPage() {
                     />
                 </div>
 
-                <AddButton onClick={openAdd} className="ml-auto" />
+                {userRole === 'QUAN_LY' && (<AddButton onClick={openAdd} className="ml-auto" />)}
             </motion.div>
 
             {/* Content Card */}
@@ -276,7 +278,7 @@ export default function NhaCungCapPage() {
 
                                         <td className="py-3 px-4 text-right border-y border-r border-slate-100 rounded-r-lg group-hover:border-slate-200 whitespace-nowrap">
                                             <div className="inline-flex items-center gap-2 justify-end">
-                                                {userRole === "manager" && (
+                                                {userRole === "QUAN_LY" && (
                                                     <button
                                                         onClick={() => openEdit(n)}
                                                         className="p-2 rounded-md text-slate-600 hover:bg-slate-200 cursor-pointer transition-colors"
@@ -285,7 +287,7 @@ export default function NhaCungCapPage() {
                                                         <Edit size={18} />
                                                     </button>
                                                 )}
-                                                {userRole === "manager" && (
+                                                {userRole === "QUAN_LY" && (
                                                     <button
                                                         onClick={() => openDelete(n)}
                                                         className="p-2 rounded-md text-red-600 hover:bg-red-50 cursor-pointer transition-colors">

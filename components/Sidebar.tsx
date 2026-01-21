@@ -86,7 +86,7 @@ export default function Sidebar() {
                         {user.hoTen}
                     </p>
                     <p className="text-[11px] text-[#d4af37] font-bold uppercase tracking-wider">
-                        {user.role === 'NHAN_VIEN' ? 'Nhân viên' : user.role}
+                        {user.role === 'QUAN_LY' ? 'Quản lý' : 'Nhân viên'}
                     </p>
                 </div>
             </div>

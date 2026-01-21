@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { User, Phone, MapPin, CreditCard, FileText, Activity, Users } from "lucide-react";
-// Assuming these are your generated types. Adjust path if necessary.
+import { User, Phone, MapPin, CreditCard, FileText, Activity, Users, Loader2, Save } from "lucide-react";
 import { KhachHangCreateRequest, LoaiKhachHangEnum, TrangThaiKhachHangEnum } from "@/client/types.gen";
 
 interface Props {
@@ -232,30 +231,27 @@ export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoadi
             </div>
 
             {/* Actions */}
-            <div className="col-span-2 mt-6 flex items-center justify-end gap-3">
+            <div className="px-4 py-2 border-t border-gray-100 bg-white flex justify-end gap-3 sticky bottom-0 text-slate-800 z-10">
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className="flex h-11 flex-1 items-center justify-center rounded-lg bg-[#3f861e] text-white font-semibold hover:bg-[#529E29] transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                 >
                     {isLoading ? (
-                        <div className="flex items-center gap-2">
-                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
-                            <span>Đang lưu...</span>
-                        </div>
+                        <Loader2 className="animate-spin" size={18} />
                     ) : (
-                        submitText
+                        <Save size={18} />
                     )}
+                    {isLoading ? "Đang lưu..." : submitText}
                 </button>
 
                 <button
                     type="button"
                     onClick={onCancel}
                     disabled={isLoading}
-                    className="h-11 flex-1 rounded-lg border-2 border-red-500 text-red-500 font-semibold hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+                    className="px-6 py-2.5 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                 >
                     Hủy
-                    {isLoading && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
                 </button>
             </div>
         </form>

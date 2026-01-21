@@ -50,7 +50,7 @@ export default function EditSanPhamModal({ sanPham, onClose, onUpdate }: Props) 
             {/* Header Title */}
             <div className="flex items-center justify-center gap-3 mb-8">
                 {/* Blue color typically indicates 'Edit' state */}
-                <Tag size={28} className="text-blue-600" />
+                <Tag size={28} />
                 <h2 className="text-2xl font-bold text-slate-900">Cập nhật sản phẩm</h2>
             </div>
 
