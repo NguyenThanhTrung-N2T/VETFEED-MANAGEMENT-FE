@@ -108,7 +108,7 @@ export default function KhachHangPage() {
 
                 // Optional: Update total count if you filtered items out
                 // (This is a visual fix; real pagination total comes from DB)
-                data.total = data.items.length;
+                //data.total = data.items.length;
             }
 
             setKhachHangData(data);

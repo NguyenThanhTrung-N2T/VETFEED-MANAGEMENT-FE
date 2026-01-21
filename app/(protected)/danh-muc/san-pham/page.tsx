@@ -96,7 +96,7 @@ export default function SanPhamPage() {
                     return item.tenSP?.toLowerCase().includes(nameFilter);
                 });
                 // (This is a visual fix; real pagination total comes from DB)
-                data.total = data.items.length;
+                // data.total = data.items.length;
             }
 
             setSanPhamData(data);

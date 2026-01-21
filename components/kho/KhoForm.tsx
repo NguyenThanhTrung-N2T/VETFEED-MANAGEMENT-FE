@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { CreateKhoHangRequest, TrangThaiKhoEnum } from "@/client/types.gen";
+import { CreateKhoHangRequest } from "@/client/types.gen"; // Removed unused import
 import { ChevronDown, Save, Loader2 } from "lucide-react";
+
 type FormDataType = CreateKhoHangRequest;
 
 type Props = {
-    // Partial allows us to pass empty object or just some fields when adding
     defaultValues?: Partial<FormDataType>;
     onSubmit: (data: FormDataType) => void;
     onCancel: () => void;
@@ -27,8 +27,8 @@ export default function KhoForm({
         trangThai: defaultValues?.trangThai ?? 0,
         ghiChu: defaultValues?.ghiChu || null,
     }));
+
     const isChanged = useMemo(() => {
-        // Normalize values for comparison (treat null as empty string if needed, or strict compare)
         const initialTenKho = defaultValues?.tenKho || "";
         const currentTenKho = formData.tenKho || "";
 
@@ -44,16 +44,18 @@ export default function KhoForm({
         return (
             initialTenKho !== currentTenKho ||
             initialDiaChi !== currentDiaChi ||
-            initialTrangThai !== currentTrangThai ||
+            initialTrangThai != currentTrangThai || // Loose equality for select string/number issues
             initialGhiChu !== currentGhiChu
         );
     }, [formData, defaultValues]);
+
     const handleChange = (field: keyof FormDataType, value: any) => {
         setFormData((prev) => ({
             ...prev,
             [field]: value,
         }));
     };
+
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         onSubmit(formData);
@@ -72,7 +74,9 @@ export default function KhoForm({
                 <input
                     name="tenKho"
                     placeholder="Nhập tên kho..."
-                    defaultValue={defaultValues?.tenKho}
+                    // FIX: Use 'value' and 'onChange'
+                    value={formData.tenKho}
+                    onChange={(e) => handleChange("tenKho", e.target.value)}
                     required
                     disabled={isLoading}
                     className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
@@ -87,7 +91,9 @@ export default function KhoForm({
                 <input
                     name="diaChi"
                     placeholder="Nhập địa chỉ..."
-                    defaultValue={defaultValues?.diaChi}
+                    // FIX: Use 'value' and 'onChange'
+                    value={formData.diaChi || ""}
+                    onChange={(e) => handleChange("diaChi", e.target.value)}
                     disabled={isLoading}
                     className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
@@ -101,7 +107,9 @@ export default function KhoForm({
                 <div className="relative">
                     <select
                         name="trangThai"
-                        defaultValue={defaultValues?.trangThai ?? 0}
+                        // FIX: Use 'value' and 'onChange'
+                        value={formData.trangThai}
+                        onChange={(e) => handleChange("trangThai", Number(e.target.value))}
                         disabled={isLoading}
                         className="h-10 w-full appearance-none rounded-md border border-slate-300 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
@@ -123,16 +131,19 @@ export default function KhoForm({
                 <input
                     name="ghiChu"
                     placeholder="Ghi chú thêm..."
-                    defaultValue={defaultValues?.ghiChu ?? ""}
+                    // FIX: Use 'value' and 'onChange'
+                    value={formData.ghiChu || ""}
+                    onChange={(e) => handleChange("ghiChu", e.target.value)}
                     disabled={isLoading}
                     className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
             </div>
 
             {/* Actions */}
-            <div className="col-span-1 sm:col-span-2 px-4 py-2 border-t border-gray-100 bg-white flex justify-end gap-3  sticky bottom-0 text-slate-800 z-10">
+            <div className="col-span-1 sm:col-span-2 px-4 py-2 border-t border-gray-100 bg-white flex justify-end gap-3 sticky bottom-0 text-slate-800 z-10">
                 <button
                     type="submit"
+                    // Now this will correctly unlock when typing
                     disabled={isLoading || !isChanged}
                     className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold disabled:opacity-50 disabled:hover:bg-emerald-600 disabled:bg-emerald-600 disabled:hover:cursor-default transition-colors cursor-pointer"
                 >
