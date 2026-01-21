@@ -136,7 +136,7 @@ export default function ImportPage() {
     };
 
     return (
-        <div className="p-6 bg-[#eef2f6] min-h-screen font-sans relative">
+        <div className="p-6 bg-[#eef2f6] min-h-screen relative">
             {/* Background Decoration */}
 
             {/* --- HEADER --- */}

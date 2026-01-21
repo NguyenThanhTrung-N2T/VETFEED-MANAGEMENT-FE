@@ -46,7 +46,7 @@ export default function RegisterPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1a237e] via-[#25396f] to-[#3949ab] p-4 font-sans relative overflow-hidden">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1a237e] via-[#25396f] to-[#3949ab] p-4  relative overflow-hidden">
 
             {/* Background Decoration Circles (Trang trí nền giống hình) */}
             <div className="absolute top-[-10%] left-[-10%] w-96 h-96 rounded-full border-[40px] border-white/5 opacity-30 pointer-events-none"></div>

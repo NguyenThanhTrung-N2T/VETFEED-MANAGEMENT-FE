@@ -34,7 +34,7 @@ export default function DeleteNCCModal({ nhaCungCap, onClose, onDelete }: Props)
             <div className="bg-white rounded-xl shadow-2xl w-120 p-8 animate-in fade-in zoom-in duration-200 text-center relative">
 
                 {/* Title / Question */}
-                <h3 className="text-xl font-bold text-slate-800 mb-8 font-sans leading-relaxed">
+                <h3 className="text-xl font-bold text-slate-800 mb-8 leading-relaxed">
                     Bạn có chắc là muốn xóa nhà cung cấp <br />
                     <span className="text-red-600">"{nhaCungCap.tenNCC}"</span> không?
                 </h3>

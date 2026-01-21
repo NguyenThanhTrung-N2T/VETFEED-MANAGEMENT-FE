@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-[#fdfbf7] overflow-x-hidden font-sans">
+    <main className="min-h-screen bg-[#fdfbf7] overflow-x-hidden">
       <Navbar />
 
       {/* --- HERO SECTION --- */}

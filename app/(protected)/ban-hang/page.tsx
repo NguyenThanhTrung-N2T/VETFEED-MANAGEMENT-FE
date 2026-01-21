@@ -120,7 +120,7 @@ export default function SalesPage() {
     };
 
     return (
-        <div className="p-6 bg-[#eef2f6] min-h-screen font-sans relative">
+        <div className="p-6 bg-[#eef2f6] min-h-screen relative">
             {/* Background Decoration
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-100/40 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div> */}
 

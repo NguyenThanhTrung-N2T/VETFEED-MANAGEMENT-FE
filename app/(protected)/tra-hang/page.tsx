@@ -113,7 +113,7 @@ export default function ReturnPage() {
     }
 
     return (
-        <div className="p-6 bg-[#eef2f6] min-h-screen font-sans relative">
+        <div className="p-6 bg-[#eef2f6] min-h-screen relative">
 
             {/* --- HEADER --- */}
             <motion.div

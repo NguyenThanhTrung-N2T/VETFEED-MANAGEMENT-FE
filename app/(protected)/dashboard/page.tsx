@@ -186,7 +186,7 @@ export default function DashboardPage() {
     return (
         <motion.div
             // Nền tổng thể với gradient nhẹ và họa tiết trừu tượng mờ
-            className="p-6 p-6 bg-[#eef2f6] min-h-screen font-sans relative space-y-8 overflow-hidden"
+            className="p-6 p-6 bg-[#eef2f6] min-h-screen relative space-y-8 overflow-hidden"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
