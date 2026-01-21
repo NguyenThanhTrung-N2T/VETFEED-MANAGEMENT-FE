@@ -192,7 +192,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                     onChange={(e) => handleInfoChange("tenSP", e.target.value)}
                     required
                     disabled={isLoading}
-                    className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
             </div>
 
@@ -205,7 +205,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                     value={info.loaiSanPham}
                     onChange={(e) => handleInfoChange("loaiSanPham", e.target.value)}
                     disabled={isLoading}
-                    className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                     <option value="THUOC_THU_Y">Thuốc thú y</option>
                     <option value="THUC_AN_CHAN_NUOI">Thức ăn chăn nuôi</option>
@@ -225,7 +225,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                     onChange={(e) => setBaseUnit(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
             </div>
 
@@ -237,12 +237,18 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                 <div className="relative">
                     <input
                         name="priceInput"
-                        type="number"
+                        type="text" // Change to text to remove arrows naturally
+                        inputMode="numeric" // Opens numeric keyboard on mobile
                         placeholder="0"
-                        value={price ?? ""}
-                        onChange={(e) => setPrice(e.target.value ? Number(e.target.value) : undefined)}
+                        // Format the display value (e.g., 1000 -> 1.000)
+                        value={price ? new Intl.NumberFormat("vi-VN").format(price) : ""}
+                        onChange={(e) => {
+                            // Remove non-numeric characters (dots, commas)
+                            const rawValue = e.target.value.replace(/\D/g, "");
+                            setPrice(rawValue ? Number(rawValue) : undefined);
+                        }}
                         disabled={isLoading}
-                        className="h-11 w-full rounded-xl bg-[#E9F1FB] px-4 text-sm outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-slate-400 disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="h-11 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-slate-400 disabled:opacity-60 disabled:cursor-not-allowed"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-medium">
                         VNĐ / {baseUnit || "..."}
@@ -334,7 +340,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                     value={info.ghiChu}
                     onChange={(e) => handleInfoChange("ghiChu", e.target.value)}
                     disabled={isLoading}
-                    className="w-full rounded-md bg-[#E9F1FB] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:opacity-60 disabled:cursor-not-allowed"
                 />
             </div>
 

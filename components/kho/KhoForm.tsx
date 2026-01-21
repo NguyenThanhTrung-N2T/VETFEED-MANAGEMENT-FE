@@ -75,7 +75,7 @@ export default function KhoForm({
                     defaultValue={defaultValues?.tenKho}
                     required
                     disabled={isLoading}
-                    className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
             </div>
 
@@ -89,7 +89,7 @@ export default function KhoForm({
                     placeholder="Nhập địa chỉ..."
                     defaultValue={defaultValues?.diaChi}
                     disabled={isLoading}
-                    className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
             </div>
 
@@ -103,7 +103,7 @@ export default function KhoForm({
                         name="trangThai"
                         defaultValue={defaultValues?.trangThai ?? 0}
                         disabled={isLoading}
-                        className="h-10 w-full appearance-none rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="h-10 w-full appearance-none rounded-md border border-slate-300 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         <option value="0">Hoạt động</option>
                         <option value="1">Ngưng hoạt động</option>
@@ -125,7 +125,7 @@ export default function KhoForm({
                     placeholder="Ghi chú thêm..."
                     defaultValue={defaultValues?.ghiChu ?? ""}
                     disabled={isLoading}
-                    className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
             </div>
 
