@@ -34,15 +34,39 @@ export default function Navbar() {
 
                 {/* Desktop Menu */}
                 <div className="hidden md:flex items-center gap-8">
-                    <Link href="#" className="text-slate-600 hover:text-[#25396f] font-medium transition-colors">Giới thiệu</Link>
-                    <Link href="#" className="text-slate-600 hover:text-[#25396f] font-medium transition-colors">Sản phẩm</Link>
-                    <Link href="#" className="text-slate-600 hover:text-[#25396f] font-medium transition-colors">Đối tác</Link>
-                    <Link href="#" className="text-slate-600 hover:text-[#25396f] font-medium transition-colors">Liên hệ</Link>
+                    <Link
+                        href="/"
+                        className="text-black hover:text-[#F2C94C] font-medium transition-colors"
+                    >
+                        Giới thiệu
+                    </Link>
+
+                    <Link
+                        href="/san-pham"
+                        className="text-black hover:text-[#F2C94C] font-medium transition-colors"
+                    >
+                        Sản phẩm
+                    </Link>
+
+                    <Link
+                        href="/doi-tac"
+                        className="text-black hover:text-[#F2C94C] font-medium transition-colors"
+                    >
+                        Đối tác
+                    </Link>
+
+                    <Link
+                        href="#"
+                        className="text-black hover:text-[#F2C94C] font-medium transition-colors"
+                    >
+                        Liên hệ
+                    </Link>
                 </div>
+
 
                 {/* Auth Buttons */}
                 <div className="hidden md:flex items-center gap-4">
-                    <Link href="/login" className="px-5 py-2 text-[#25396f] font-bold hover:bg-blue-50 rounded-full transition-colors">
+                    <Link href="/login" className="text-black px-5 py-2 text-[#25396f] font-bold hover:bg-blue-50 rounded-full transition-colors">
                         Đăng nhập
                     </Link>
                     {/* Nút Đăng ký màu Vàng đồng giống màn Login */}

@@ -42,7 +42,7 @@ export default function LandingPage() {
                 Dùng ngay
                 <ArrowRight size={20} />
               </Link>
-              <Link href="#" className="flex items-center justify-center px-8 py-4 bg-white text-[#25396f] border border-[#25396f]/20 rounded-full font-bold text-lg hover:bg-blue-50 transition-all">
+              <Link href="san-pham" className="flex items-center justify-center px-8 py-4 bg-white text-[#25396f] border border-[#25396f]/20 rounded-full font-bold text-lg hover:bg-blue-50 transition-all">
                 Xem sản phẩm
               </Link>
             </div>
