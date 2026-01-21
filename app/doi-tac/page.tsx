@@ -34,7 +34,7 @@ export default function PartnerPage() {
     );
 
     return (
-        <main className="min-h-screen bg-[#fdfbf7] font-sans">
+        <main className="min-h-screen bg-[#fdfbf7]">
             <Navbar />
 
             {/* --- HERO SECTION --- */}

@@ -61,7 +61,7 @@ export default function ProductPage() {
     };
 
     return (
-        <main className="min-h-screen bg-[#fdfbf7] font-sans">
+        <main className="min-h-screen bg-[#fdfbf7]">
             <Navbar />
 
             {/* --- HERO SECTION --- */}
@@ -77,7 +77,7 @@ export default function ProductPage() {
                         <Package size={16} /> Kho hàng chính hãng
                     </span>
 
-                    <h1 className="text-4xl lg:text-5xl font-bold text-white font-serif leading-tight animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <h1 className="text-4xl lg:text-5xl font-bold text-white leading-tight animate-in fade-in slide-in-from-bottom-4 duration-700">
                         Danh Mục Sản Phẩm
                     </h1>
 
