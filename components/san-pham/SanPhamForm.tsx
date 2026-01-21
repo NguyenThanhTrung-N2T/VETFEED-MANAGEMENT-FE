@@ -1,24 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { SanPhamCreateRequest, SanPhamResponse, DonViQuyDoiItem } from "@/client/types.gen";
-import { Plus, Trash2, ArrowRight, Image as ImageIcon, X, UploadCloud, Loader2, Save } from "lucide-react";
+import { useState, useMemo } from "react";
+import { SanPhamResponse, DonViQuyDoiItem } from "@/client/types.gen";
+import { Plus, Trash2, ArrowRight, X, UploadCloud, Loader2, Save } from "lucide-react";
 import { CldUploadWidget } from "next-cloudinary";
 import Image from "next/image";
 
-// This matches what the User sees on screen, not exactly the API request
+// This matches what the User sees on screen
 export type SanPhamFormData = {
     tenSP: string;
     loaiSanPham: string;
-    donViTinh: string; // Base unit
+    donViTinh: string;
     ghiChu?: string | null;
-    price?: number | null; // Generic price (maps to giaBanDau OR giaMoi)
+    price?: number | null;
     donViQuyDoi: DonViQuyDoiItem[];
     anhSanPham?: string | null;
 };
 
 type Props = {
-    // We accept a partial Response (for editing) or Partial CreateRequest
     defaultValues?: Partial<SanPhamResponse> | null;
     onSubmit: (data: SanPhamFormData) => void;
     onCancel: () => void;
@@ -27,37 +26,79 @@ type Props = {
 };
 
 export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitText, isLoading = false }: Props) {
-    // --- STATE MANAGEMENT ---
-    console.log(defaultValues?.anhSanPham);
-    // Map default units. We assume the backend returns an array matching the Item shape.
-    // We explicitly cast to LocalDonViQuyDoiItem[] if types.gen doesn't fully match the inferred shape.
+
+    // 1. CONTROLLED STATE
+    // We group standard text fields for easier management
+    const [info, setInfo] = useState({
+        tenSP: defaultValues?.tenSP || "",
+        loaiSanPham: defaultValues?.loaiSanPham || "THUOC_THU_Y",
+        ghiChu: defaultValues?.ghiChu || "",
+    });
+
+    // Special fields state (kept separate as per your original logic)
+    const [baseUnit, setBaseUnit] = useState(defaultValues?.donViCoSo || "");
+    const [price, setPrice] = useState<number | undefined>(defaultValues?.donGia ?? undefined);
+    const [imageUrl, setImageUrl] = useState<string | null>(defaultValues?.anhSanPham || null);
+
+    // Unit List State
     const [units, setUnits] = useState<DonViQuyDoiItem[]>(
         (defaultValues?.donViQuyDoi as DonViQuyDoiItem[]) || []
     );
 
-    // Form states
-    const [baseUnit, setBaseUnit] = useState(defaultValues?.donViCoSo || "");
-    const [price, setPrice] = useState<number | undefined>(
-        defaultValues?.donGia ?? undefined
-    );
-
-    // Temporary state for the "Add Unit" inputs
+    // Temp state for adding new units
     const [newUnitName, setNewUnitName] = useState("");
     const [newUnitRatio, setNewUnitRatio] = useState<number | "">("");
-    const [imageUrl, setImageUrl] = useState<string | null>(
-        defaultValues?.anhSanPham || null
-    );
+
+    // 2. DETECT CHANGES
+    const isChanged = useMemo(() => {
+        // A. Helper to normalize values (treat null/undefined as "")
+        const norm = (val: any) => (val ?? "").toString().trim();
+
+        // B. Check Simple Fields
+        const isInfoChanged =
+            norm(info.tenSP) !== norm(defaultValues?.tenSP) ||
+            norm(info.loaiSanPham) !== norm(defaultValues?.loaiSanPham || "THUOC_THU_Y") ||
+            norm(info.ghiChu) !== norm(defaultValues?.ghiChu) ||
+            norm(baseUnit) !== norm(defaultValues?.donViCoSo) ||
+            norm(imageUrl) !== norm(defaultValues?.anhSanPham);
+
+        // C. Check Price (Handle 0 vs undefined/null nuances)
+        const initialPrice = defaultValues?.donGia ?? undefined;
+        // Compare as numbers, treating null/undefined as distinct from 0 if needed, 
+        // or just strict equality if your API treats null same as 0. 
+        // Here we assume strict equality on the value.
+        const isPriceChanged = price !== initialPrice;
+
+        if (isInfoChanged || isPriceChanged) return true;
+
+        // D. Check Units (Deep Compare)
+        const initialUnits = (defaultValues?.donViQuyDoi as DonViQuyDoiItem[]) || [];
+
+        if (units.length !== initialUnits.length) return true;
+
+        // Compare content (assuming order matters in UI list)
+        // We create a string signature for the list "UnitName-Ratio|UnitName-Ratio"
+        const createSig = (list: DonViQuyDoiItem[]) =>
+            list.map(u => `${u.donViNhap}-${u.tyLe}`).join("|");
+
+        return createSig(units) !== createSig(initialUnits);
+
+    }, [info, baseUnit, price, imageUrl, units, defaultValues]);
+
+
     // --- HANDLERS ---
+    const handleInfoChange = (field: string, value: string) => {
+        setInfo(prev => ({ ...prev, [field]: value }));
+    };
 
     const handleAddUnit = () => {
         if (!newUnitName || !newUnitRatio || Number(newUnitRatio) <= 1) return;
 
-        // Prevent duplicate names (check against list AND base unit)
         const isDuplicateInList = units.some(u => u.donViNhap && u.donViNhap.toLowerCase() === newUnitName.toLowerCase());
         const isDuplicateBase = baseUnit.toLowerCase() === newUnitName.toLowerCase();
 
         if (isDuplicateInList || isDuplicateBase) {
-            alert("Tên đơn vị này đã tồn tại (trùng với danh sách hoặc đơn vị cơ sở)!");
+            alert("Tên đơn vị này đã tồn tại!");
             return;
         }
 
@@ -72,20 +113,19 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
 
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        const form = new FormData(e.currentTarget);
 
-        // Construct the neutral data object
-        const formData: SanPhamFormData = {
-            tenSP: form.get("tenSP") as string,
-            loaiSanPham: form.get("loaiSanPham") as string,
+        // Use State directly (Cleaner than FormData since we are controlled now)
+        const submitData: SanPhamFormData = {
+            tenSP: info.tenSP,
+            loaiSanPham: info.loaiSanPham,
             donViTinh: baseUnit,
-            ghiChu: (form.get("ghiChu") as string) || null,
-            price: price || null, // Pass the state value
+            ghiChu: info.ghiChu || null,
+            price: price || null,
             anhSanPham: imageUrl,
-            donViQuyDoi: units as unknown as DonViQuyDoiItem[],
+            donViQuyDoi: units,
         };
 
-        onSubmit(formData);
+        onSubmit(submitData);
     }
 
     return (
@@ -93,7 +133,6 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
             {/* --- SECTION 0: IMAGE UPLOAD --- */}
             <div className="col-span-2 flex justify-center mb-4">
                 {imageUrl ? (
-                    // Display uploaded image
                     <div className="relative h-40 w-40 rounded-xl border-2 border-slate-200 overflow-hidden group bg-white">
                         <Image
                             src={imageUrl}
@@ -104,18 +143,15 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                         <button
                             type="button"
                             onClick={() => setImageUrl(null)}
-                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                         >
                             <X size={14} />
                         </button>
                     </div>
                 ) : (
-                    // Display Upload Button
                     <CldUploadWidget
-                        // REPLACE THIS with your specific Upload Preset from Cloudinary Settings
-                        uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "YOUR_UPLOAD_PRESET_HERE"}
+                        uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "YOUR_UPLOAD_PRESET"}
                         onSuccess={(result) => {
-                            // Validating result structure from Cloudinary
                             if (typeof result.info === 'object' && 'secure_url' in result.info) {
                                 setImageUrl(result.info.secure_url);
                             }
@@ -140,6 +176,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                     </CldUploadWidget>
                 )}
             </div>
+
             {/* --- SECTION 1: BASIC INFO --- */}
 
             {/* Tên sản phẩm */}
@@ -150,7 +187,9 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                 <input
                     name="tenSP"
                     placeholder="VD: Amoxicillin 15%"
-                    defaultValue={defaultValues?.tenSP || ""}
+                    // Changed to Controlled
+                    value={info.tenSP}
+                    onChange={(e) => handleInfoChange("tenSP", e.target.value)}
                     required
                     disabled={isLoading}
                     className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
@@ -162,7 +201,9 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                 <label className="text-sm font-medium text-slate-700">Loại sản phẩm</label>
                 <select
                     name="loaiSanPham"
-                    defaultValue={defaultValues?.loaiSanPham ?? "THUOC_THU_Y"}
+                    // Changed to Controlled
+                    value={info.loaiSanPham}
+                    onChange={(e) => handleInfoChange("loaiSanPham", e.target.value)}
                     disabled={isLoading}
                     className="h-10 rounded-md bg-[#E9F1FB] px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
@@ -172,7 +213,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                 </select>
             </div>
 
-            {/* Đơn vị tính (formerly DonViCoSo) */}
+            {/* Đơn vị tính */}
             <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-slate-700">
                     Đơn vị cơ sở (Nhỏ nhất) <span className="text-red-500">*</span>
@@ -195,7 +236,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                 </label>
                 <div className="relative">
                     <input
-                        name="priceInput" // Logic handled via state, not direct form data submit for safety
+                        name="priceInput"
                         type="number"
                         placeholder="0"
                         value={price ?? ""}
@@ -216,13 +257,11 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                 </label>
 
                 <div className="mb-3 border border-slate-200 rounded-lg overflow-hidden">
-                    {/* Header */}
                     <div className="bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-500 flex justify-between">
                         <span>Danh sách đơn vị</span>
                         <span>{units.length} đơn vị</span>
                     </div>
 
-                    {/* List of added units */}
                     <div className="max-h-50 overflow-y-auto p-2 space-y-2 bg-slate-50/50">
                         {units.map((unit, index) => (
                             <div key={index} className="flex items-center gap-3 bg-slate-50 p-2 rounded border border-slate-200">
@@ -236,7 +275,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                                 <button
                                     type="button"
                                     onClick={() => handleRemoveUnit(index)}
-                                    className="ml-auto text-red-500 hover:bg-red-100 p-1 rounded transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                    className="ml-auto text-red-500 hover:bg-red-100 p-1 rounded transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                                 >
                                     <Trash2 size={16} />
                                 </button>
@@ -250,7 +289,6 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                     </div>
                 </div>
 
-                {/* Add new unit input row */}
                 <div className="flex items-end gap-2 bg-[#F1F5F9] p-3 rounded-lg">
                     <div className="flex-1">
                         <label className="text-xs text-slate-500 mb-1 block">Tên đơn vị (VD: Hộp)</label>
@@ -278,7 +316,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                         type="button"
                         onClick={handleAddUnit}
                         disabled={!newUnitName || !newUnitRatio}
-                        className="h-9 px-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        className="h-9 px-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 cursor-pointer"
                     >
                         <Plus size={16} />
                     </button>
@@ -292,7 +330,9 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                     name="ghiChu"
                     rows={2}
                     placeholder="Ghi chú thêm..."
-                    defaultValue={defaultValues?.ghiChu ?? ""}
+                    // Changed to Controlled
+                    value={info.ghiChu}
+                    onChange={(e) => handleInfoChange("ghiChu", e.target.value)}
                     disabled={isLoading}
                     className="w-full rounded-md bg-[#E9F1FB] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:opacity-60 disabled:cursor-not-allowed"
                 />
@@ -302,8 +342,9 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
             <div className="col-span-2 px-4 py-2 border-t bg-white border-gray-100 flex justify-end gap-3 sticky bottom-0 text-slate-800 z-10">
                 <button
                     type="submit"
-                    disabled={isLoading}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    // DISABLED IF: Loading OR Not Changed
+                    disabled={isLoading || !isChanged}
+                    className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold disabled:opacity-50 disabled:hover:bg-emerald-600 disabled:bg-emerald-600 disabled:hover:cursor-default transition-colors cursor-pointer"
                 >
                     {isLoading ? (
                         <Loader2 className="animate-spin" size={18} />

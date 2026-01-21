@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Plus, Trash2, Package, AlertCircle, Loader2, Save } from "lucide-react";
 import ProductSearch from "@/components/ProductSearch";
 import { ProductSearchResult } from "@/types/product-search"
@@ -12,7 +12,6 @@ import {
 } from "@/client/types.gen";
 
 type Props = {
-    // When editing, we pass the full Detailed Response
     defaultValues?: Partial<NhaCungCapDetailedResponse>;
     onSubmit: (data: NhaCungCapCreateRequest) => void;
     onCancel: () => void;
@@ -28,22 +27,34 @@ export default function NhaCungCapForm({
     isLoading = false
 }: Props) {
 
-    // 1. MAIN PRODUCT LIST STATE
+    // 1. GENERAL INFO STATE (Controlled)
+    const [formData, setFormData] = useState({
+        tenNCC: defaultValues?.tenNCC || "",
+        soDienThoai: defaultValues?.soDienThoai || "",
+        diaChi: defaultValues?.diaChi || "",
+        trangThai: defaultValues?.trangThai || "HOAT_DONG",
+        ghiChu: defaultValues?.ghiChu || ""
+    });
+
+    // 2. PRODUCT LIST STATE
     const [rows, setRows] = useState<NhaCungCapSanPhamResponse[]>([]);
 
-    // 2. INPUT AREA STATE
+    // 3. INPUT AREA STATE (Search & Add)
     const [selectedSearch, setSelectedSearch] = useState<ProductSearchResult | null>(null);
     const [inputPrice, setInputPrice] = useState<number | "">("");
     const [inputNote, setInputNote] = useState("");
     const [duplicateError, setDuplicateError] = useState<string | null>(null);
 
+    // 4. UNDO STATE
     const [deletedRow, setDeletedRow] = useState<NhaCungCapSanPhamResponse | null>(null);
     const undoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    // 3. INITIALIZATION (Mapping Response -> UI State)
+
+    // 5. INITIALIZATION
     useEffect(() => {
+        // Initialize Rows
         if (defaultValues?.sanPhams && Array.isArray(defaultValues.sanPhams)) {
-            const mappedRows: NhaCungCapSanPhamResponse[] = defaultValues.sanPhams.map((p, idx) => ({
-                maNCSP: p.maNCSP, // Keep the link ID if editing
+            const mappedRows: NhaCungCapSanPhamResponse[] = defaultValues.sanPhams.map((p) => ({
+                maNCSP: p.maNCSP,
                 maSP: p.maSP,
                 tenSanPham: p.tenSanPham,
                 maSanPhamCode: p.maSanPhamCode,
@@ -54,20 +65,70 @@ export default function NhaCungCapForm({
             }));
             setRows(mappedRows);
         }
+
+        // Initialize Form Data (in case defaultValues loads async/late)
+        setFormData({
+            tenNCC: defaultValues?.tenNCC || "",
+            soDienThoai: defaultValues?.soDienThoai || "",
+            diaChi: defaultValues?.diaChi || "",
+            trangThai: defaultValues?.trangThai || "HOAT_DONG",
+            ghiChu: defaultValues?.ghiChu || ""
+        });
     }, [defaultValues]);
 
-    // 4. ADD HANDLER
+    // 6. DETECT CHANGES
+    const isChanged = useMemo(() => {
+        // A. Compare General Info
+        // Helper to treat null/undefined as empty string for comparison
+        const normalize = (val: any) => (val === null || val === undefined) ? "" : String(val);
+
+        const infoChanged =
+            normalize(formData.tenNCC) !== normalize(defaultValues?.tenNCC) ||
+            normalize(formData.soDienThoai) !== normalize(defaultValues?.soDienThoai) ||
+            normalize(formData.diaChi) !== normalize(defaultValues?.diaChi) ||
+            normalize(formData.trangThai) !== normalize(defaultValues?.trangThai || "HOAT_DONG") ||
+            normalize(formData.ghiChu) !== normalize(defaultValues?.ghiChu);
+
+        if (infoChanged) return true;
+
+        // B. Compare Product List (Deep Compare)
+        const initialRows = defaultValues?.sanPhams || [];
+
+        // 1. Check Length
+        if (rows.length !== initialRows.length) return true;
+
+        // 2. Check Content (We create a simple signature for every row to compare)
+        // We assume order might change (if you support sorting), so we sort by ID before comparing.
+        // If order strictly doesn't matter, this is safe.
+        const createSignature = (list: NhaCungCapSanPhamResponse[]) => {
+            return list
+                .map(r => `${r.maSP}|${r.giaNhapMacDinh}|${r.ghiChu || ""}`)
+                .sort() // Sort ensures order doesn't affect comparison
+                .join(";;");
+        };
+
+        const currentSig = createSignature(rows);
+        // Note: Map initialRows to match the structure if needed, but assuming structure is similar
+        const initialSig = createSignature(initialRows as NhaCungCapSanPhamResponse[]);
+
+        return currentSig !== initialSig;
+
+    }, [formData, rows, defaultValues]);
+
+    // 7. HANDLERS
+    const handleInputChange = (field: string, value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
     const handleAddRow = () => {
         if (!selectedSearch) return;
 
-        // Duplicate Check
         const isDuplicate = rows.some(r => r.maSP === selectedSearch.maSP);
         if (isDuplicate) {
             setDuplicateError(`Sản phẩm "${selectedSearch.tenSP}" đã có trong danh sách.`);
             return;
         }
 
-        // Create UI Row
         const newRow: NhaCungCapSanPhamResponse = {
             maNCSP: crypto.randomUUID(),
             maSP: selectedSearch.maSP,
@@ -78,48 +139,52 @@ export default function NhaCungCapForm({
             ghiChu: inputNote,
             trangThai: "HOAT_DONG"
         };
-        // Cancel undo if user performs a new action
         finalizeUndo();
         setRows(prev => [...prev, newRow]);
 
-        // Reset Inputs
         setDuplicateError(null);
         setSelectedSearch(null);
         setInputPrice("");
         setInputNote("");
     };
 
-    // 5. REMOVE HANDLER
     const handleRemoveRow = (uiId: string) => {
         const row = rows.find(r => r.maNCSP === uiId);
         if (!row) return;
 
-        // Remove immediately
         setRows(prev => prev.filter(r => r.maNCSP !== uiId));
-
-        // Save for undo
         setDeletedRow(row);
 
-        // Clear old timeout if exists
-        if (undoTimeoutRef.current) {
-            clearTimeout(undoTimeoutRef.current);
-        }
-
-        // Finalize delete after 5 seconds
+        if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
         undoTimeoutRef.current = setTimeout(() => {
             setDeletedRow(null);
             undoTimeoutRef.current = null;
-            // 👉 If you need API delete later, call it here
         }, 5000);
     };
 
-    // 6. SUBMIT HANDLER
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        finalizeUndo();
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
+    const finalizeUndo = () => {
+        if (undoTimeoutRef.current) {
+            clearTimeout(undoTimeoutRef.current);
+            undoTimeoutRef.current = null;
+        }
+        setDeletedRow(null);
+    };
 
-        // Map UI Rows -> Request DTO
+    const handleUndo = () => {
+        if (!deletedRow) return;
+        setRows(prev => [...prev, deletedRow]);
+        setDeletedRow(null);
+        if (undoTimeoutRef.current) {
+            clearTimeout(undoTimeoutRef.current);
+            undoTimeoutRef.current = null;
+        }
+    };
+
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        finalizeUndo();
+
+        // Prepare Submit Data from State (not FormData anymore, to be safe)
         const sanPhamsRequest: NhaCungCapSanPhamItemDto[] = rows.map(r => ({
             maSP: r.maSP,
             giaNhapMacDinh: r.giaNhapMacDinh,
@@ -128,37 +193,22 @@ export default function NhaCungCapForm({
         }));
 
         const submitData: NhaCungCapCreateRequest = {
-            tenNCC: formData.get("tenNCC") as string,
-            soDienThoai: (formData.get("soDienThoai") as string) || null,
-            diaChi: (formData.get("diaChi") as string) || null,
-            ghiChu: (formData.get("ghiChu") as string) || null,
-            trangThai: (formData.get("trangThai") as string) || "HOAT_DONG",
+            tenNCC: formData.tenNCC,
+            soDienThoai: formData.soDienThoai || null,
+            diaChi: formData.diaChi || null,
+            ghiChu: formData.ghiChu || null,
+            trangThai: formData.trangThai || "HOAT_DONG",
             sanPhams: sanPhamsRequest
         };
-        console.log(submitData);
+
         onSubmit(submitData);
     };
-    const finalizeUndo = () => {
-        if (undoTimeoutRef.current) {
-            clearTimeout(undoTimeoutRef.current);
-            undoTimeoutRef.current = null;
-        }
-        setDeletedRow(null);
-    };
-    const handleUndo = () => {
-        if (!deletedRow) return;
-        setRows(prev => [...prev, deletedRow]);
-        setDeletedRow(null);
 
-        if (undoTimeoutRef.current) {
-            clearTimeout(undoTimeoutRef.current);
-            undoTimeoutRef.current = null;
-        }
-    }
     const formatVND = (value?: number | null): string => {
         if (value == null) return "";
         return value.toLocaleString("vi-VN");
     };
+
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
             {/* --- SECTION 1: GENERAL INFO --- */}
@@ -171,7 +221,8 @@ export default function NhaCungCapForm({
                     <input
                         name="tenNCC"
                         required
-                        defaultValue={defaultValues?.tenNCC ?? ''}
+                        value={formData.tenNCC}
+                        onChange={(e) => handleInputChange("tenNCC", e.target.value)}
                         disabled={isLoading}
                         placeholder="VD: Công ty ABC"
                         className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
@@ -183,7 +234,8 @@ export default function NhaCungCapForm({
                     <label className="text-sm font-medium text-slate-700">Số điện thoại</label>
                     <input
                         name="soDienThoai"
-                        defaultValue={defaultValues?.soDienThoai ?? ""}
+                        value={formData.soDienThoai}
+                        onChange={(e) => handleInputChange("soDienThoai", e.target.value)}
                         disabled={isLoading}
                         placeholder="09xx..."
                         className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
@@ -195,12 +247,14 @@ export default function NhaCungCapForm({
                     <label className="text-sm font-medium text-slate-700">Địa chỉ</label>
                     <input
                         name="diaChi"
-                        defaultValue={defaultValues?.diaChi ?? ""}
+                        value={formData.diaChi}
+                        onChange={(e) => handleInputChange("diaChi", e.target.value)}
                         disabled={isLoading}
                         placeholder="Địa chỉ liên hệ..."
                         className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
                     />
                 </div>
+
                 {/* TrangThai */}
                 <div className="flex flex-col gap-1">
                     <label className="text-sm font-medium text-slate-700">Trạng thái</label>
@@ -208,7 +262,8 @@ export default function NhaCungCapForm({
                         <select
                             name="trangThai"
                             disabled={isLoading}
-                            defaultValue={defaultValues?.trangThai || 'HOAT_DONG'}
+                            value={formData.trangThai}
+                            onChange={(e) => handleInputChange("trangThai", e.target.value)}
                             className="w-full h-10 rounded-md border border-slate-300 bg-white px-3 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
                         >
                             <option value="HOAT_DONG">Hoạt động</option>
@@ -216,20 +271,22 @@ export default function NhaCungCapForm({
                         </select>
                     </div>
                 </div>
+
                 {/* GhiChu */}
                 <div className="flex flex-col gap-1 col-span-2">
                     <label className="text-sm font-medium text-slate-700">Ghi chú</label>
                     <textarea
                         name="ghiChu"
                         rows={1}
-                        defaultValue={defaultValues?.ghiChu ?? ""}
+                        value={formData.ghiChu}
+                        onChange={(e) => handleInputChange("ghiChu", e.target.value)}
                         disabled={isLoading}
                         className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all resize-none"
                     />
                 </div>
             </div>
 
-            {/* --- SECTION 2: PRODUCTS --- */}
+            {/* --- SECTION 2: PRODUCTS (Unchanged structure, just state logic updated) --- */}
             <div className="border-t border-slate-200 pt-6">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-base font-bold text-slate-800">Danh mục hàng hóa cung cấp</h3>
@@ -238,10 +295,9 @@ export default function NhaCungCapForm({
                     </span>
                 </div>
 
-                {/* A. INPUT AREA (Top) */}
+                {/* A. INPUT AREA */}
                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4 shadow-sm">
                     <div className="grid grid-cols-12 gap-3 items-end">
-                        {/* Search */}
                         <div className="col-span-12 md:col-span-5">
                             <label className="block text-xs font-semibold text-slate-500 mb-1">
                                 Tìm sản phẩm
@@ -257,10 +313,7 @@ export default function NhaCungCapForm({
                                     setDuplicateError(null);
                                 }}
                             />
-
                         </div>
-
-                        {/* Price */}
                         <div className="col-span-6 md:col-span-3">
                             <label className="block text-xs font-semibold text-slate-500 mb-1">
                                 Giá nhập
@@ -274,8 +327,6 @@ export default function NhaCungCapForm({
                                 className="w-full h-10 rounded-md border border-slate-300 px-3 text-right text-sm focus:border-blue-500 outline-none"
                             />
                         </div>
-
-                        {/* Note */}
                         <div className="col-span-6 md:col-span-3">
                             <label className="block text-xs font-semibold text-slate-500 mb-1">
                                 Ghi chú SP
@@ -287,15 +338,12 @@ export default function NhaCungCapForm({
                                 className="w-full h-10 rounded-md border border-slate-300 px-3 text-sm focus:border-blue-500 outline-none"
                             />
                         </div>
-
-                        {/* Button */}
                         <div className="col-span-12 md:col-span-1">
                             <button
                                 type="button"
                                 onClick={handleAddRow}
                                 disabled={!selectedSearch}
                                 className="w-full h-10 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-default cursor-pointer flex items-center justify-center transition-colors"
-                                title="Thêm vào danh sách"
                             >
                                 <Plus size={20} />
                             </button>
@@ -306,13 +354,15 @@ export default function NhaCungCapForm({
                             <AlertCircle size={14} />
                             <span>{duplicateError}</span>
                         </div>
-                    ) : (<div className="mt-2 flex items-center gap-1.5 text-[12px] text-slate-400">
-                        <AlertCircle size={12} />
-                        <span>Sử dụng ô tìm kiếm để chọn sản phẩm.</span>
-                    </div>)}
+                    ) : (
+                        <div className="mt-2 flex items-center gap-1.5 text-[12px] text-slate-400">
+                            <AlertCircle size={12} />
+                            <span>Sử dụng ô tìm kiếm để chọn sản phẩm.</span>
+                        </div>
+                    )}
                 </div>
 
-                {/* B. TABLE LIST (Bottom) */}
+                {/* B. TABLE LIST */}
                 <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
                     <table className="w-full text-sm text-left">
                         <thead className="bg-slate-100 text-slate-600 font-semibold border-b border-slate-200">
@@ -341,24 +391,24 @@ export default function NhaCungCapForm({
                                         <td className="px-4 py-2.5 font-mono text-xs text-slate-500">
                                             {row.maSanPhamCode || row.maSP?.substring(0, 6)}
                                         </td>
-
                                         <td className="px-4 py-2.5 font-medium text-slate-700">
                                             {row.tenSanPham}
                                         </td>
-
                                         <td className="px-4 py-2.5 text-center text-slate-500 text-xs">
                                             {row.donViCoSo}
                                         </td>
-
                                         <td className="px-4 py-2.5 text-right font-medium text-slate-700">
                                             {formatVND(row.giaNhapMacDinh)}
                                         </td>
-
                                         <td className="px-4 py-2.5 text-slate-500 truncate max-w-37.5">
                                             {row.ghiChu}
                                         </td>
                                         <td className="px-4 py-2.5 text-right">
-                                            <button type="button" onClick={() => handleRemoveRow(row.maNCSP!)} className="text-slate-300 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-all cursor-pointer">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveRow(row.maNCSP!)}
+                                                className="text-slate-300 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-all cursor-pointer"
+                                            >
                                                 <Trash2 size={16} />
                                             </button>
                                         </td>
@@ -374,8 +424,9 @@ export default function NhaCungCapForm({
             <div className="px-4 py-2 border-t border-gray-100 bg-white flex justify-end gap-3 sticky bottom-0 text-slate-800 z-10">
                 <button
                     type="submit"
-                    disabled={isLoading}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    // DISABLED Logic: Loading OR No Changes detected
+                    disabled={isLoading || !isChanged}
+                    className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold disabled:opacity-50 disabled:hover:bg-emerald-600 disabled:bg-emerald-600 disabled:hover:cursor-default transition-colors cursor-pointer"
                 >
                     {isLoading ? (
                         <Loader2 className="animate-spin" size={18} />
@@ -394,19 +445,15 @@ export default function NhaCungCapForm({
                     Hủy
                 </button>
             </div>
+
             {deletedRow && (
-                <div
-                    className="fixed bottom-6 right-6 z-50 flex items-center justify-between max-w-xs w-full gap-4 rounded-lg bg-[#0f172a] px-4 py-3 text-sm text-white shadow-lg border border-[#1d2d54] animate-toast-in"
-                >
-                    {/* Icon */}
+                <div className="fixed bottom-6 right-6 z-50 flex items-center justify-between max-w-xs w-full gap-4 rounded-lg bg-[#0f172a] px-4 py-3 text-sm text-white shadow-lg border border-[#1d2d54] animate-toast-in">
                     <div className="flex items-center gap-3">
                         <Trash2 className="h-5 w-5 text-white" />
                         <span className="truncate">
                             Đã xóa <b>{deletedRow.tenSanPham}</b>
                         </span>
                     </div>
-
-                    {/* Undo Button */}
                     <button
                         type="button"
                         onClick={handleUndo}
@@ -416,8 +463,6 @@ export default function NhaCungCapForm({
                     </button>
                 </div>
             )}
-
-
         </form>
     );
 }

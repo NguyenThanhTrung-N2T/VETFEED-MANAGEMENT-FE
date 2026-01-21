@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { CreateKhoHangRequest, TrangThaiKhoEnum } from "@/client/types.gen";
 import { ChevronDown, Save, Loader2 } from "lucide-react";
 type FormDataType = CreateKhoHangRequest;
@@ -21,22 +21,42 @@ export default function KhoForm({
     submitText,
     isLoading = false,
 }: Props) {
+    const [formData, setFormData] = useState<FormDataType>(() => ({
+        tenKho: defaultValues?.tenKho || "",
+        diaChi: defaultValues?.diaChi || "",
+        trangThai: defaultValues?.trangThai ?? 0,
+        ghiChu: defaultValues?.ghiChu || null,
+    }));
+    const isChanged = useMemo(() => {
+        // Normalize values for comparison (treat null as empty string if needed, or strict compare)
+        const initialTenKho = defaultValues?.tenKho || "";
+        const currentTenKho = formData.tenKho || "";
+
+        const initialDiaChi = defaultValues?.diaChi || "";
+        const currentDiaChi = formData.diaChi || "";
+
+        const initialTrangThai = defaultValues?.trangThai ?? 0;
+        const currentTrangThai = formData.trangThai;
+
+        const initialGhiChu = defaultValues?.ghiChu || "";
+        const currentGhiChu = formData.ghiChu || "";
+
+        return (
+            initialTenKho !== currentTenKho ||
+            initialDiaChi !== currentDiaChi ||
+            initialTrangThai !== currentTrangThai ||
+            initialGhiChu !== currentGhiChu
+        );
+    }, [formData, defaultValues]);
+    const handleChange = (field: keyof FormDataType, value: any) => {
+        setFormData((prev) => ({
+            ...prev,
+            [field]: value,
+        }));
+    };
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        const form = new FormData(e.currentTarget);
-
-        // HTML Select returns strings ("0", "1"), but API expects Numbers (0, 1)
-        const rawStatus = form.get("trangThai");
-        const statusEnum = Number(rawStatus) as TrangThaiKhoEnum;
-
-        const data: FormDataType = {
-            tenKho: form.get("tenKho") as string,
-            diaChi: form.get("diaChi") as string,
-            trangThai: statusEnum,
-            ghiChu: (form.get("ghiChu") as string) || null,
-        };
-
-        onSubmit(data);
+        onSubmit(formData);
     }
 
     return (
@@ -113,8 +133,8 @@ export default function KhoForm({
             <div className="col-span-1 sm:col-span-2 px-4 py-2 border-t border-gray-100 bg-white flex justify-end gap-3  sticky bottom-0 text-slate-800 z-10">
                 <button
                     type="submit"
-                    disabled={isLoading}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    disabled={isLoading || !isChanged}
+                    className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold disabled:opacity-50 disabled:hover:bg-emerald-600 disabled:bg-emerald-600 disabled:hover:cursor-default transition-colors cursor-pointer"
                 >
                     {isLoading ? (
                         <Loader2 className="animate-spin" size={18} />

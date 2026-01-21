@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { User, Phone, MapPin, CreditCard, FileText, Activity, Users, Loader2, Save } from "lucide-react";
 import { KhachHangCreateRequest, LoaiKhachHangEnum, TrangThaiKhachHangEnum } from "@/client/types.gen";
 
@@ -11,6 +11,7 @@ interface Props {
     isLoading?: boolean;
     submitText?: string;
 }
+
 const DEFAULT_VALUES: KhachHangCreateRequest = {
     tenKH: "",
     soDienThoai: "",
@@ -20,30 +21,59 @@ const DEFAULT_VALUES: KhachHangCreateRequest = {
     trangThai: 0,
     ghiChu: "",
 };
+
 const HAN_MUC_BY_LOAI: Record<number, number> = {
     0: 500_000,    // Cá nhân
     1: 10_000_000, // Trang trại
     2: 2_000_000,  // Đại lý
 };
+
 export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoading = false, submitText = "Lưu thông tin" }: Props) {
-    // Merge default values with any initial data (for edit mode)
-    const [formData, setFormData] = useState<KhachHangCreateRequest>({
+
+    // 1. Capture Original Data for comparison
+    const originalData = useMemo(() => ({
         ...DEFAULT_VALUES,
         ...initialData,
-    });
+    }), [initialData]);
+
+    // 2. Initialize State
+    const [formData, setFormData] = useState<KhachHangCreateRequest>(originalData);
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    // 3. Detect Changes
+    const isChanged = useMemo(() => {
+        // Helper to handle null vs "" or "0" vs 0 differences
+        const normalizeStr = (val: any) => (val || "").toString().trim();
+        const normalizeNum = (val: any) => Number(val ?? 0);
+
+        return (
+            normalizeStr(formData.tenKH) !== normalizeStr(originalData.tenKH) ||
+            normalizeStr(formData.soDienThoai) !== normalizeStr(originalData.soDienThoai) ||
+            normalizeStr(formData.diaChi) !== normalizeStr(originalData.diaChi) ||
+            normalizeStr(formData.ghiChu) !== normalizeStr(originalData.ghiChu) ||
+            normalizeNum(formData.loaiKhachHang) !== normalizeNum(originalData.loaiKhachHang) ||
+            normalizeNum(formData.trangThai) !== normalizeNum(originalData.trangThai)
+            // Note: We don't check hanMucCongNo here because it auto-updates based on loaiKhachHang
+        );
+    }, [formData, originalData]);
+
+    // Auto-calculate Limit when Type changes
     useEffect(() => {
         const hanMuc = HAN_MUC_BY_LOAI[Number(formData.loaiKhachHang)] ?? 0;
 
-        setFormData(prev => ({
-            ...prev,
-            hanMucCongNo: hanMuc,
-        }));
-    }, [formData.loaiKhachHang]);
+        // Only update if it's actually different to avoid infinite loops/unnecessary renders
+        if (formData.hanMucCongNo !== hanMuc) {
+            setFormData(prev => ({
+                ...prev,
+                hanMucCongNo: hanMuc,
+            }));
+        }
+    }, [formData.loaiKhachHang, formData.hanMucCongNo]);
+
     // Handle Input Changes
     const handleChange = (field: keyof KhachHangCreateRequest, value: any) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
-        // Clear error when user types
+
         if (errors[field]) {
             setErrors((prev) => {
                 const newErrors = { ...prev };
@@ -75,11 +105,12 @@ export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoadi
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (validate()) {
-            const typeEnum = Number(formData.loaiKhachHang) as LoaiKhachHangEnum;
-            const statusEnum = Number(formData.trangThai) as TrangThaiKhachHangEnum;
-            formData.loaiKhachHang = typeEnum;
-            formData.trangThai = statusEnum;
-            onSubmit(formData);
+            // Ensure Enums are numbers before sending
+            const submitData = { ...formData };
+            submitData.loaiKhachHang = Number(formData.loaiKhachHang) as LoaiKhachHangEnum;
+            submitData.trangThai = Number(formData.trangThai) as TrangThaiKhachHangEnum;
+
+            onSubmit(submitData);
         }
     };
 
@@ -92,6 +123,7 @@ export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoadi
 
     const formatVND = (value: number) =>
         new Intl.NumberFormat("vi-VN").format(value);
+
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
             {/* 1. Tên Khách Hàng */}
@@ -234,8 +266,9 @@ export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoadi
             <div className="px-4 py-2 border-t border-gray-100 bg-white flex justify-end gap-3 sticky bottom-0 text-slate-800 z-10">
                 <button
                     type="submit"
-                    disabled={isLoading}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    // DISABLED if: Loading OR Not Changed
+                    disabled={isLoading || !isChanged}
+                    className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold disabled:opacity-50 disabled:hover:bg-emerald-600 disabled:bg-emerald-600 disabled:hover:cursor-default transition-colors cursor-pointer"
                 >
                     {isLoading ? (
                         <Loader2 className="animate-spin" size={18} />
