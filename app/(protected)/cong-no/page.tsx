@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
     Search, Plus, Edit, Trash2, ChevronDown, Eye, Filter,
     Wallet, Briefcase, ArrowUpDown, XCircle
@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-
+import FilterCongNoModal, { CongNoFilterValues } from "@/components/cong-no/FilterCongNoModal";
 // --- Utility: Merge Class ---
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -27,7 +27,18 @@ export default function CongNoPage() {
     const [congNoData, setCongNoData] = useState<CongNoTongHopResponse[]>([]);
     const [modalType, setModalType] = useState<'filter' | 'add' | 'view' | null>(null);
     const [selectedItem, setSelectedItem] = useState<CongNoTongHopResponse | null>(null);
-
+    const [filterValues, setFilterValues] = useState<CongNoFilterValues>({
+        tenDoiTuong: "",
+        loaiDoiTuong: "ALL",
+        trangThaiNo: "ALL"
+    });
+    const isFiltering = useMemo(() => {
+        return (
+            !!filterValues.tenDoiTuong ||
+            filterValues.loaiDoiTuong !== "ALL" ||
+            filterValues.trangThaiNo !== "ALL"
+        );
+    }, [filterValues]);
     // --- Animation Variants ---
     const containerVariants: Variants = {
         hidden: { opacity: 0 },
@@ -64,12 +75,35 @@ export default function CongNoPage() {
     }, []);
 
     // --- Logic Filter ---
-    const filteredData = congNoData.filter((d) => {
-        const matchesQuery = `${d.tenDoiTuong}`.toLowerCase().includes(query.toLowerCase()) ||
-            `${d.maDoiTuongCode}`.toLowerCase().includes(query.toLowerCase());
-        return matchesQuery;
-    });
+    const filteredData = useMemo(() => {
+        return congNoData.filter((d) => {
+            // A. Global Search Bar
+            const matchesQuery = query
+                ? (d.tenDoiTuong?.toLowerCase().includes(query.toLowerCase()) ||
+                    d.maDoiTuongCode?.toLowerCase().includes(query.toLowerCase()))
+                : true;
 
+            // B. Filter Modal: Name
+            const matchesName = filterValues.tenDoiTuong
+                ? d.tenDoiTuong?.toLowerCase().includes(filterValues.tenDoiTuong.toLowerCase())
+                : true;
+
+            // C. Filter Modal: Type
+            const matchesType = filterValues.loaiDoiTuong !== "ALL"
+                ? d.loaiDoiTuong === filterValues.loaiDoiTuong
+                : true;
+
+            // D. Filter Modal: Debt Status
+            let matchesDebt = true;
+            if (filterValues.trangThaiNo === "CON_NO") {
+                matchesDebt = (d.duNo ?? 0) > 0;
+            } else if (filterValues.trangThaiNo === "HET_NO") {
+                matchesDebt = (d.duNo ?? 0) <= 0;
+            }
+
+            return matchesQuery && matchesName && matchesType && matchesDebt;
+        });
+    }, [congNoData, query, filterValues]);
     // --- Formatters ---
     const formatCurrency = (value: number) =>
         new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value);
@@ -86,7 +120,18 @@ export default function CongNoPage() {
         setModalType(null);
         setSelectedItem(null);
     };
+    const openFilter = () => setModalType('filter');
+    const handleApplyFilter = (newFilters: CongNoFilterValues) => {
+        setFilterValues(newFilters);
+    };
 
+    const handleResetFilter = () => {
+        setFilterValues({
+            tenDoiTuong: "",
+            loaiDoiTuong: "ALL",
+            trangThaiNo: "ALL"
+        });
+    };
     const handleCreate = async (newData: CreateCongNoRequest) => {
         try {
             await congNoService.create(newData);
@@ -150,27 +195,40 @@ export default function CongNoPage() {
             >
                 {/* Header Table Info */}
                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-linear-to-r from-white to-slate-50/50">
-                    <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                        <ArrowUpDown size={18} className="text-slate-400" />
+                    <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        {/* <ArrowUpDown size={18} className="text-slate-400" /> */}
                         Danh sách công nợ
-                        <span className="text-xs font-normal text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full ml-2">
+                        <span className="text-sm font-normal text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full ml-2">
                             {filteredData.length}
                         </span>
                     </h2>
+                    <button
+                        onClick={() => openFilter()}
+                        className={cn(
+                            "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
+                            isFiltering
+                                ? "text-blue-600 bg-blue-50 border-blue-100 shadow-inner"
+                                : "text-slate-600 bg-white border-slate-200 hover:border-blue-300 hover:text-blue-600 hover:shadow-sm"
+                        )}
+                    >
+                        <Filter size={16} className={isFiltering ? "fill-current" : ""} />
+                        Bộ lọc
+                        {isFiltering && <span className="w-2 h-2 rounded-full bg-blue-600"></span>}
+                    </button>
                 </div>
 
                 <div className="overflow-x-auto px-6 pb-6">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full text-sm border-separate border-spacing-y-1 table-fixed min-w-250">
                         <thead>
-                            <tr className="bg-slate-50/80 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-100">
-                                <th className="p-5 pl-6">Mã</th>
-                                <th className="p-5">Tên đối tượng</th>
-                                <th className="p-5">Loại</th>
-                                <th className="p-5 text-right">Tổng phát sinh</th>
-                                <th className="p-5 text-right">Đã thanh toán</th>
-                                <th className="p-5 text-right">Dư nợ</th>
-                                <th className="p-5 text-center">Hạn thanh toán</th>
-                                <th className="p-5 text-right">Hành động</th>
+                            <tr className="text-left text-xs font-semibold bg-[#e9eff6] text-slate-800 uppercase tracking-wider">
+                                <th className="py-3 pl-3 rounded-l-lg w-[10%]">Mã</th>
+                                <th className="py-3 w-[22%]">Tên đối tượng</th>
+                                <th className="py-3 text-center w-[9%]">Loại</th>
+                                <th className="py-3 text-right w-[12%]">Tổng phát sinh</th>
+                                <th className="py-3 text-right w-[12%]">Đã thanh toán</th>
+                                <th className="py-3 text-right w-[12%]">Dư nợ</th>
+                                <th className="py-3 text-center w-[12%]">Hạn thanh toán</th>
+                                <th className="py-3 px-4 text-right rounded-r-lg w-[11%] whitespace-nowrap">Hành động</th>
                             </tr>
                         </thead>
 
@@ -211,25 +269,25 @@ export default function CongNoPage() {
                                         key={item.maDoiTuong}
                                         variants={itemVariants}
                                         whileHover={{ backgroundColor: "rgba(241, 245, 249, 0.6)" }}
-                                        className="group transition-colors"
+                                        className="group transition-colors hover:bg-slate-50 odd:bg-white even:bg-[#f1f5f9]"
                                         onClick={() => openView(item)}
                                     >
-                                        <td className="p-5 pl-6 font-mono font-semibold text-slate-600">
+                                        <td className="py-3 pl-3 font-medium text-slate-700 border-y border-l border-slate-100 rounded-l-lg group-hover:border-slate-200">
                                             {item.maDoiTuongCode}
                                         </td>
-                                        <td className="p-5 font-medium text-slate-800">
+                                        <td className="py-3 border-y border-slate-100 group-hover:border-slate-200">
                                             {item.tenDoiTuong}
                                         </td>
-                                        <td className="p-5">
+                                        <td className="py-3 text-center border-y border-slate-100 group-hover:border-slate-200">
                                             {renderTypeBadge(item.loaiDoiTuong)}
                                         </td>
-                                        <td className="p-5 text-right text-slate-500">
+                                        <td className="py-3 text-right border-y border-slate-100 group-hover:border-slate-200">
                                             {formatCurrency(item.tongPhatSinh ?? 0)}
                                         </td>
-                                        <td className="p-5 text-right text-green-600 font-medium">
+                                        <td className="py-3 text-right text-green-600 border-y border-slate-100 group-hover:border-slate-200">
                                             {formatCurrency(item.daThanhToan ?? 0)}
                                         </td>
-                                        <td className="p-5 text-right">
+                                        <td className="py-3 text-right border-y border-slate-100 group-hover:border-slate-200">
                                             <span className={cn(
                                                 "font-bold px-2 py-1 rounded",
                                                 (item.duNo ?? 0) > 0
@@ -239,10 +297,10 @@ export default function CongNoPage() {
                                                 {formatCurrency(item.duNo ?? 0)}
                                             </span>
                                         </td>
-                                        <td className="p-5 text-center text-slate-500">
+                                        <td className="py-3 border-y text-center border-slate-100 group-hover:border-slate-200">
                                             {formatDate(item.hanThanhToanGanNhat)}
                                         </td>
-                                        <td className="p-5 text-right">
+                                        <td className="py-3 px-4 text-right border-y border-r border-slate-100 rounded-r-lg group-hover:border-slate-200 whitespace-nowrap">
                                             <div className="flex justify-end">
                                                 <button
                                                     onClick={(e) => {
@@ -262,23 +320,34 @@ export default function CongNoPage() {
                         </motion.tbody>
                     </table>
                 </div>
-            </motion.div>
+            </motion.div >
 
             {/* --- MODALS --- */}
-            {modalType === 'view' && selectedItem && (
-                <ViewCongNoModal
-                    onClose={closeModal}
-                    onAdd={handleCreate}
-                    congNoSummary={selectedItem}
-                />
-            )}
+            <FilterCongNoModal
+                isOpen={modalType === 'filter'}
+                onClose={closeModal}
+                onApply={handleApplyFilter}
+                onReset={handleResetFilter}
+                initialFilters={filterValues}
+            />
+            {
+                modalType === 'view' && selectedItem && (
+                    <ViewCongNoModal
+                        onClose={closeModal}
+                        onAdd={handleCreate}
+                        congNoSummary={selectedItem}
+                    />
+                )
+            }
 
-            {modalType === 'add' && (
-                <AddCongNoModal
-                    onClose={closeModal}
-                    onAdd={handleCreate}
-                />
-            )}
-        </div>
+            {
+                modalType === 'add' && (
+                    <AddCongNoModal
+                        onClose={closeModal}
+                        onAdd={handleCreate}
+                    />
+                )
+            }
+        </div >
     );
 }
