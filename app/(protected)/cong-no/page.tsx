@@ -163,7 +163,7 @@ export default function CongNoPage() {
     const { user, loading } = useAuth();
     const userRole = user ? user.role : 'NHAN_VIEN';
     return (
-        <div className="bg-[#eef2f6] min-h-screen font-sans relative">
+        <div className="bg-[#eef2f6] min-h-screen relative">
             {/* --- SEARCH BAR --- */}
             <motion.div
                 initial={{ opacity: 0, y: 10 }}
