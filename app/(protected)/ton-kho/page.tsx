@@ -224,7 +224,7 @@ export default function InventoryPage() {
                                         >
                                             {warehouse.danhSachTonKho.length === 0 ? (
                                                 <div className="p-8 text-center text-slate-400 italic text-sm">
-                                                    Kho này hiện trống rỗng.
+                                                    Kho này hiện không có hàng.
                                                 </div>
                                             ) : (
                                                 <div className="divide-y divide-slate-100">

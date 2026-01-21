@@ -74,6 +74,7 @@ export interface NhaCungCap {
 
 export interface SanPhamNCC {
   maSP: string;
+  maSanPhamCode: string;
   tenSanPham: string;
   giaNhapMacDinh?: number;
 }

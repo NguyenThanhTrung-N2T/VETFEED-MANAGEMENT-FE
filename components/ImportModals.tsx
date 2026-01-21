@@ -264,8 +264,22 @@ export default function ImportModals({ isOpen, type, selectedId, onClose, onAppl
     const validateNewItem = () => {
         if (!newItem.maSP) return "Vui lòng chọn sản phẩm.";
         if (!newItem.donViNhap) return "Vui lòng chọn đơn vị tính.";
+        if (!newItem.ngaySanXuat) return "Ngày sản xuất là bắt buộc.";
         if (!newItem.hanSuDung) return "Hạn sử dụng là bắt buộc.";
         if (newItem.soLuong <= 0) return "Số lượng phải lớn hơn 0.";
+
+        // Check: ngày sản xuất phải trước hạn sử dụng
+        const nsx = new Date(newItem.ngaySanXuat);
+        const hsd = new Date(newItem.hanSuDung);
+
+        // nếu input ngày bị lỗi/không parse được
+        if (Number.isNaN(nsx.getTime())) return "Ngày sản xuất không hợp lệ.";
+        if (Number.isNaN(hsd.getTime())) return "Hạn sử dụng không hợp lệ.";
+
+        if (nsx.getTime() >= hsd.getTime()) {
+            return "Ngày sản xuất phải trước hạn sử dụng.";
+        }
+
         return null;
     };
 
@@ -402,7 +416,7 @@ export default function ImportModals({ isOpen, type, selectedId, onClose, onAppl
     // --- RENDER 1: FILTER MODAL ---
     if (type === 'filter') {
         return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-slate-800">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 text-slate-800">
                 <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[600px] animate-in fade-in zoom-in duration-200">
                     <div className="p-8 flex flex-col items-center">
                         <Filter size={48} strokeWidth={1} className="text-slate-800 mb-2" />
@@ -479,7 +493,7 @@ export default function ImportModals({ isOpen, type, selectedId, onClose, onAppl
     // --- RENDER 2: DELETE MODAL ---
     if (type === "delete") {
         return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-slate-800">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 text-slate-800">
                 <div className="bg-white rounded-xl shadow-2xl w-full max-w-[420px] p-6 animate-in fade-in zoom-in duration-200 text-center text-slate-800">
                     <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
                         <AlertTriangle size={32} />
@@ -514,7 +528,7 @@ export default function ImportModals({ isOpen, type, selectedId, onClose, onAppl
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 text-slate-800">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200 text-slate-800">
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
@@ -700,7 +714,7 @@ export default function ImportModals({ isOpen, type, selectedId, onClose, onAppl
                                                                         <div className="min-w-0">
                                                                             <div className="font-medium text-slate-800 truncate">{p.tenSanPham}</div>
                                                                             <div className="text-xs text-slate-500">
-                                                                                Mã: <span className="font-mono">{p.maSP}</span>
+                                                                                Mã: <span className="font-mono">{p.maSanPhamCode}</span>
                                                                             </div>
                                                                         </div>
                                                                         <div className="text-xs text-slate-600 whitespace-nowrap">
