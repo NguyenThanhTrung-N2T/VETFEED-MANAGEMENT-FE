@@ -21,7 +21,11 @@ const DEFAULT_VALUES: KhachHangCreateRequest = {
     trangThai: 0,
     ghiChu: "",
 };
-const mapHanMucCongNo: Record<string, number> = { 'CA_NHAN': 500000, 'DAI_LY': 2000000, 'TRANG_TRAI': 10000000 };
+const HAN_MUC_BY_LOAI: Record<number, number> = {
+    0: 500_000,    // Cá nhân
+    1: 10_000_000, // Trang trại
+    2: 2_000_000,  // Đại lý
+};
 export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoading = false, submitText = "Lưu thông tin" }: Props) {
     // Merge default values with any initial data (for edit mode)
     const [formData, setFormData] = useState<KhachHangCreateRequest>({
@@ -29,7 +33,14 @@ export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoadi
         ...initialData,
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
+    useEffect(() => {
+        const hanMuc = HAN_MUC_BY_LOAI[Number(formData.loaiKhachHang)] ?? 0;
 
+        setFormData(prev => ({
+            ...prev,
+            hanMucCongNo: hanMuc,
+        }));
+    }, [formData.loaiKhachHang]);
     // Handle Input Changes
     const handleChange = (field: keyof KhachHangCreateRequest, value: any) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
@@ -80,6 +91,8 @@ export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoadi
             : "border-slate-300 focus:ring-blue-500 focus:border-blue-500"
         }`;
 
+    const formatVND = (value: number) =>
+        new Intl.NumberFormat("vi-VN").format(value);
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
             {/* 1. Tên Khách Hàng */}
@@ -132,12 +145,12 @@ export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoadi
                         <select
                             disabled={isLoading}
                             value={formData.loaiKhachHang || 0}
-                            onChange={(e) => handleChange("loaiKhachHang", e.target.value)}
+                            onChange={(e) => handleChange("loaiKhachHang", Number(e.target.value))}
                             className={inputClass(false)}
                         >
                             <option value="0">Cá nhân</option>
-                            <option value="1">Trang trại</option>
                             <option value="2">Đại lý</option>
+                            <option value="1">Trang trại</option>
                         </select>
                     </div>
                 </div>
@@ -170,13 +183,10 @@ export default function KhachHangForm({ initialData, onSubmit, onCancel, isLoadi
                     <div className="relative">
                         <CreditCard className="absolute left-3 top-2.5 text-slate-400" size={18} />
                         <input
-                            type="number"
-                            disabled={isLoading}
-                            value={mapHanMucCongNo(formData.hanMucCongNo)}
-                            onChange={(e) =>
-                                handleChange("hanMucCongNo", parseFloat(e.target.value) || 0)
-                            }
-                            className={inputClass(!!errors.HanMucCongNo)}
+                            type="text"
+                            disabled
+                            value={formatVND(formData.hanMucCongNo ?? 0)}
+                            className={inputClass(false)}
                         />
                     </div>
                     {errors.HanMucCongNo && (

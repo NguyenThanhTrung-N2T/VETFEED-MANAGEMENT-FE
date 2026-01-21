@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Edit, Trash2, Search, ChevronDown, Filter, Tag } from "lucide-react";
 import { NhaCungCapCreateRequest, NhaCungCapDetailedResponse, NhaCungCapResponse, NhaCungCapSanPhamItemDto, NhaCungCapSanPhamResponse, NhaCungCapUpdateRequest } from "@/client/types.gen";
 import { nhaCungCapService } from "@/services/nha-cung-cap.service";
@@ -11,7 +11,13 @@ import AddButton from "@/components/ui/AddButton";
 import { toast } from 'sonner';
 import { motion } from "framer-motion";
 import { pageVariants, tableContainerVariants, tableRowVariants } from "@/lib/animation-variants";
-
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+import FilterNCCModal, { NhaCungCapFilterValues } from "@/components/nha-cung-cap/FitlerNCCModal";
+// --- Utility: Merge Class ---
+function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs));
+}
 export default function NhaCungCapPage() {
     const [query, setQuery] = useState("");
     const [nhaCungCapData, setNhaCungCapData] = useState<NhaCungCapResponse[]>([]);
@@ -19,7 +25,49 @@ export default function NhaCungCapPage() {
 
     const [modalType, setModalType] = useState<'filter' | 'delete' | 'add' | 'edit' | null>(null);
     const [selectedItem, setSelectedItem] = useState<NhaCungCapResponse | null>(null);
+    const [filterValues, setFilterValues] = useState<NhaCungCapFilterValues>({
+        tenNCC: "",
+        soDienThoai: "",
+        diaChi: "",
+        trangThai: "ALL"
+    });
+    const isFiltering = useMemo(() => {
+        return (
+            !!filterValues.tenNCC ||
+            !!filterValues.soDienThoai ||
+            !!filterValues.diaChi ||
+            filterValues.trangThai !== "ALL"
+        );
+    }, [filterValues]);
 
+    const filteredData = useMemo(() => {
+        return nhaCungCapData.filter((n) => {
+            // A. Global Search Bar Logic
+            const matchesSearch = `${n.tenNCC} ${n.diaChi ?? ""} ${n.soDienThoai}`
+                .toLowerCase()
+                .includes(query.toLowerCase());
+
+            // B. Advanced Modal Filter Logic
+            const matchesName = !filterValues.tenNCC ||
+                n.tenNCC?.toLowerCase().includes(filterValues.tenNCC.toLowerCase());
+
+            const matchesPhone = !filterValues.soDienThoai ||
+                n.soDienThoai?.includes(filterValues.soDienThoai);
+
+            const matchesAddress = !filterValues.diaChi ||
+                n.diaChi?.toLowerCase().includes(filterValues.diaChi.toLowerCase());
+
+            const matchesStatus = filterValues.trangThai === "ALL" ||
+                n.trangThai === filterValues.trangThai;
+
+            return matchesSearch && matchesName && matchesPhone && matchesAddress && matchesStatus;
+        });
+    }, [nhaCungCapData, query, filterValues]);
+    const handleApplyFilter = (newFilters: NhaCungCapFilterValues) => {
+        setFilterValues(newFilters);
+        // Modal closes automatically via its own logic, or we can close it here if needed
+        closeModal();
+    };
     const fetchData = async () => {
         try {
             setIsLoading(true);
@@ -34,11 +82,6 @@ export default function NhaCungCapPage() {
     useEffect(() => {
         fetchData();
     }, []);
-    const filteredData = nhaCungCapData.filter((n) =>
-        `${n.tenNCC} ${n.diaChi ?? ""} ${n.soDienThoai}`
-            .toLowerCase()
-            .includes(query.toLowerCase())
-    );
 
     // --- Modal Handlers ---
     const openAdd = () => setModalType('add');
@@ -92,7 +135,15 @@ export default function NhaCungCapPage() {
             toast.error(error?.message ?? "Xóa nhà cung cấp thất bại!");
         }
     };
-
+    const handleResetFilter = () => {
+        setFilterValues({
+            tenNCC: "",
+            soDienThoai: "",
+            diaChi: "",
+            trangThai: "ALL"
+        });
+        // query is optional to reset, usually keep it separate
+    };
     const userRole = "manager";
 
     return (
@@ -127,21 +178,26 @@ export default function NhaCungCapPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
                 className="bg-white rounded-xl shadow-sm overflow-hidden min-h-125 border border-slate-100">
-                <div className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                            Danh sách nhà cung cấp
-                            <span className="text-sm font-normal text-slate-500 ml-2 bg-slate-100 px-2 py-0.5 rounded-full">
-                                {nhaCungCapData.length ?? 0}
-                            </span>
-                            <Filter
-                                onClick={() => openFilter()}
-                                className="cursor-pointer hover:text-green-600 transition-colors ml-1"
-                                size={20}
-                                strokeWidth={1.5}
-                            />
-                        </h2>
-                    </div>
+                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-linear-to-r from-white to-slate-50/50">
+                    <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        Danh sách nhà cung cấp
+                        <span className="text-sm font-normal text-slate-500 ml-2 bg-slate-100 px-2 py-0.5 rounded-full">
+                            {filteredData.length ?? 0}
+                        </span>
+                    </h2>
+                    <button
+                        onClick={() => openFilter()}
+                        className={cn(
+                            "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
+                            isFiltering
+                                ? "text-blue-600 bg-blue-50 border-blue-100 shadow-inner"
+                                : "text-slate-600 bg-white border-slate-200 hover:border-blue-300 hover:text-blue-600 hover:shadow-sm"
+                        )}
+                    >
+                        <Filter size={16} />
+                        Bộ lọc
+                        {isFiltering && <span className="w-2 h-2 rounded-full bg-blue-600"></span>}
+                    </button>
                 </div>
 
                 <div className="overflow-x-auto px-6 pb-6">
@@ -250,7 +306,14 @@ export default function NhaCungCapPage() {
                     )}
                 </div>
             </motion.div>
-
+            {/* 6. Render the Filter Modal */}
+            <FilterNCCModal
+                isOpen={modalType === 'filter'}
+                onClose={closeModal}
+                onApply={handleApplyFilter}
+                onReset={handleResetFilter}
+                initialFilters={filterValues}
+            />
             {modalType === 'add' && (
                 <AddNCCModal onClose={closeModal} onAdd={handleCreate} />
             )}

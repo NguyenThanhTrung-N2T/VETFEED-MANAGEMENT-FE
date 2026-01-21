@@ -1,24 +1,49 @@
 "use client";
 
 import React, { useMemo, useState, useEffect } from "react";
-import { Edit, Trash2, Search, ChevronDown, Plus, Filter, Loader2 } from "lucide-react";
+import { Edit, Trash2, Search, Filter } from "lucide-react";
 import { KhoHangResponse, CreateKhoHangRequest, UpdateKhoHangRequest } from "@/client/types.gen";
 import AddKhoModal from "@/components/kho/AddKhoModal";
 import EditKhoModal from "@/components/kho/EditKhoModal";
 import DeleteKhoModal from "@/components/kho/DeleteKhoModal";
+// 1. Import Filter Modal
+import FilterKhoModal, { KhoFilterValues } from "@/components/kho/FilterKhoModal";
 import { khoHangService } from "@/services/kho-hang.service";
 import AddButton from "@/components/ui/AddButton";
 import { toast } from 'sonner';
 import { motion } from "framer-motion";
-import { pageVariants, tableContainerVariants, tableRowVariants } from "@/lib/animation-variants";
+import { tableContainerVariants, tableRowVariants } from "@/lib/animation-variants";
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+// Helper for classes
+function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs));
+}
 
 export default function KhoPage() {
     const [query, setQuery] = useState("");
     const [khoData, setKhoData] = useState<KhoHangResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
+    // 2. Add Filter State
+    const [filterValues, setFilterValues] = useState<KhoFilterValues>({
+        tenKho: "",
+        diaChi: "",
+        trangThai: "ALL"
+    });
+
     const [modalType, setModalType] = useState<'filter' | 'delete' | 'add' | 'edit' | null>(null);
     const [selectedItem, setSelectedItem] = useState<KhoHangResponse | null>(null);
+
+    // 3. Helper to check if filtering is active (for UI styling)
+    const isFiltering = useMemo(() => {
+        return (
+            !!filterValues.tenKho ||
+            !!filterValues.diaChi ||
+            filterValues.trangThai !== "ALL"
+        );
+    }, [filterValues]);
 
     const fetchData = async () => {
         try {
@@ -31,18 +56,35 @@ export default function KhoPage() {
             setIsLoading(false);
         }
     };
+
     useEffect(() => {
         fetchData();
     }, []);
-    const filteredData = khoData.filter((k) =>
-        `${k.tenKho} ${k.diaChi} ${k.ghiChu ?? ""}`
-            .toLowerCase()
-            .includes(query.toLowerCase())
-    );
+
+    // 4. Update Filter Logic (Search Bar + Advanced Filters)
+    const filteredData = useMemo(() => {
+        return khoData.filter((k) => {
+            // A. Search Bar Logic
+            const matchesSearch = `${k.tenKho} ${k.diaChi} ${k.ghiChu ?? ""}`
+                .toLowerCase()
+                .includes(query.toLowerCase());
+
+            // B. Modal Filter Logic
+            const matchesName = !filterValues.tenKho ||
+                k.tenKho?.toLowerCase().includes(filterValues.tenKho.toLowerCase());
+
+            const matchesAddress = !filterValues.diaChi ||
+                k.diaChi?.toLowerCase().includes(filterValues.diaChi.toLowerCase());
+
+            const matchesStatus = filterValues.trangThai === "ALL" ||
+                k.trangThai === filterValues.trangThai;
+
+            return matchesSearch && matchesName && matchesAddress && matchesStatus;
+        });
+    }, [khoData, query, filterValues]);
+
     // --- Modal Handlers ---
-    const openAdd = () => {
-        setModalType('add');
-    };
+    const openAdd = () => setModalType('add');
     const openEdit = (kho: KhoHangResponse) => {
         setSelectedItem(kho);
         setModalType('edit');
@@ -51,13 +93,28 @@ export default function KhoPage() {
         setSelectedItem(kho);
         setModalType('delete');
     };
-    const openFilter = () => {
-        setModalType('filter');
-    };
+    const openFilter = () => setModalType('filter');
+
     const closeModal = () => {
         setModalType(null);
         setSelectedItem(null);
     };
+
+    // 5. Filter Actions
+    const handleApplyFilter = (newFilters: KhoFilterValues) => {
+        setFilterValues(newFilters);
+        // closeModal is called inside the modal component on apply, 
+        // but we can ensure it here if needed.
+    };
+
+    const handleResetFilter = () => {
+        setFilterValues({
+            tenKho: "",
+            diaChi: "",
+            trangThai: "ALL"
+        });
+    };
+
     // --- CRUD Handlers ---
     const handleCreate = async (newData: CreateKhoHangRequest) => {
         try {
@@ -91,6 +148,7 @@ export default function KhoPage() {
             toast.error(error as string);
         }
     };
+
     const renderStatus = (status: string | null | undefined) => {
         const isActive = status === "HOAT_DONG";
         return (
@@ -100,7 +158,7 @@ export default function KhoPage() {
             </span>
         );
     };
-    // TODO: Get real role from auth/session
+
     const userRole: "manager" | "staff" = "manager";
 
     return (
@@ -112,7 +170,6 @@ export default function KhoPage() {
                 transition={{ delay: 0.1 }}
                 className="flex flex-col md:flex-row gap-4 mb-6 text-slate-800 relative z-20"
             >
-                {/* Search Input */}
                 <div className="relative flex-1 max-w-lg group">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <Search className="text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
@@ -125,7 +182,6 @@ export default function KhoPage() {
                         className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white shadow-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
                     />
                 </div>
-
                 <AddButton onClick={openAdd} className="ml-auto" />
             </motion.div>
 
@@ -135,22 +191,29 @@ export default function KhoPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
                 className="bg-white rounded-xl shadow-sm overflow-hidden min-h-125 border border-slate-100">
-                {/* Card Header */}
-                <div className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                            Danh sách kho
-                            <span className="text-sm font-normal text-slate-500 ml-2 bg-slate-100 px-2 py-0.5 rounded-full">
-                                {khoData.length ?? 0}
-                            </span>
-                            <Filter
-                                onClick={() => openFilter()}
-                                className="cursor-pointer hover:text-green-600 transition-colors ml-1"
-                                size={20}
-                                strokeWidth={1.5}
-                            />
-                        </h2>
-                    </div>
+
+                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-linear-to-r from-white to-slate-50/50">
+                    <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        Danh sách kho
+                        <span className="text-sm font-normal text-slate-500 ml-2 bg-slate-100 px-2 py-0.5 rounded-full">
+                            {filteredData.length}
+                        </span>
+                    </h2>
+
+                    {/* 7. Added Filter Button (Optional but consistent with prev design) */}
+                    <button
+                        onClick={() => openFilter()}
+                        className={cn(
+                            "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
+                            isFiltering
+                                ? "text-blue-600 bg-blue-50 border-blue-100 shadow-inner"
+                                : "text-slate-600 bg-white border-slate-200 hover:border-blue-300 hover:text-blue-600 hover:shadow-sm"
+                        )}
+                    >
+                        <Filter size={16} />
+                        Bộ lọc
+                        {isFiltering && <span className="w-2 h-2 rounded-full bg-blue-600"></span>}
+                    </button>
                 </div>
 
                 <div className="overflow-x-auto px-6 pb-6">
@@ -167,47 +230,30 @@ export default function KhoPage() {
                         </thead>
                         <motion.tbody
                             className="text-sm"
-                            variants={tableContainerVariants} // Apply stagger effect
+                            variants={tableContainerVariants}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                         >
                             {isLoading ? (
                                 [...Array(5)].map((_, index) => (
                                     <tr key={index} className="animate-pulse bg-white border-b border-slate-100">
-                                        {/* Column 1: Ma Kho */}
-                                        <td className="py-4 pl-3 border-y border-l border-slate-50 rounded-l-lg">
-                                            <div className="h-4 bg-slate-200 rounded w-12"></div>
-                                        </td>
-                                        {/* Column 2: Ten Kho */}
+                                        <td className="py-4 pl-3 border-y border-l border-slate-50 rounded-l-lg"><div className="h-4 bg-slate-200 rounded w-12"></div></td>
                                         <td className="py-4 border-y border-slate-50">
                                             <div className="h-4 bg-slate-200 rounded w-32 mb-1"></div>
                                             <div className="h-3 bg-slate-100 rounded w-20"></div>
                                         </td>
-                                        {/* Column 3: Dia Chi */}
-                                        <td className="py-4 border-y border-slate-50">
-                                            <div className="h-4 bg-slate-200 rounded w-48"></div>
-                                        </td>
-                                        {/* Column 4: Trang Thai */}
-                                        <td className="py-4 border-y border-slate-50 text-center flex justify-center">
-                                            <div className="h-6 bg-slate-200 rounded-full w-24"></div>
-                                        </td>
-                                        {/* Column 5: Ghi Chu */}
-                                        <td className="py-4 border-y border-slate-50">
-                                            <div className="h-4 bg-slate-200 rounded w-24"></div>
-                                        </td>
-                                        {/* Column 6: Actions */}
+                                        <td className="py-4 border-y border-slate-50"><div className="h-4 bg-slate-200 rounded w-48"></div></td>
+                                        <td className="py-4 border-y border-slate-50 text-center flex justify-center"><div className="h-6 bg-slate-200 rounded-full w-24"></div></td>
+                                        <td className="py-4 border-y border-slate-50"><div className="h-4 bg-slate-200 rounded w-24"></div></td>
                                         <td className="py-4 px-4 text-right border-y border-r border-slate-50 rounded-r-lg">
-                                            <div className="flex justify-end gap-2">
-                                                <div className="h-8 w-8 bg-slate-200 rounded-md"></div>
-                                                <div className="h-8 w-8 bg-slate-200 rounded-md"></div>
-                                            </div>
+                                            <div className="flex justify-end gap-2"><div className="h-8 w-8 bg-slate-200 rounded-md"></div><div className="h-8 w-8 bg-slate-200 rounded-md"></div></div>
                                         </td>
                                     </tr>
                                 ))
                             ) : (
                                 filteredData.map((k) => (
                                     <motion.tr
-                                        variants={tableRowVariants} // Apply fade up item
+                                        variants={tableRowVariants}
                                         key={k.maKho}
                                         className="group hover:bg-slate-50 transition-colors odd:bg-white even:bg-[#f1f5f9] text-left">
 
@@ -216,23 +262,19 @@ export default function KhoPage() {
                                         </td>
                                         <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 text-slate-700 font-medium">{k.tenKho}</td>
                                         <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 text-slate-500">{k.diaChi}</td>
-                                        <td className="py-3 text-center">
+                                        <td className="py-3 text-center border-y border-slate-100 group-hover:border-slate-200">
                                             {renderStatus(k.trangThai)}
                                         </td>
                                         <td className="py-3 border-y border-slate-100 group-hover:border-slate-200 font-medium text-slate-700">{k.ghiChu ?? "-"}</td>
                                         <td className="py-3 px-4 text-right border-y border-r border-slate-100 rounded-r-lg group-hover:border-slate-200 whitespace-nowrap">
                                             <div className="inline-flex items-center gap-2 justify-end">
                                                 {(userRole === "manager") && (
-                                                    <button
-                                                        onClick={() => openEdit(k)}
-                                                        className="p-2 rounded-md text-slate-600 hover:bg-slate-200 cursor-pointer">
+                                                    <button onClick={() => openEdit(k)} className="p-2 rounded-md text-slate-600 hover:bg-slate-200 cursor-pointer">
                                                         <Edit size={18} />
                                                     </button>
                                                 )}
                                                 {userRole === "manager" && (
-                                                    <button
-                                                        onClick={() => openDelete(k)}
-                                                        className="p-2 rounded-md text-red-600 hover:bg-red-50 cursor-pointer">
+                                                    <button onClick={() => openDelete(k)} className="p-2 rounded-md text-red-600 hover:bg-red-50 cursor-pointer">
                                                         <Trash2 size={18} />
                                                     </button>
                                                 )}
@@ -250,25 +292,25 @@ export default function KhoPage() {
                     )}
                 </div>
             </motion.div>
+
+            {/* --- Modals --- */}
+            {/* 8. Render the Filter Modal */}
+            <FilterKhoModal
+                isOpen={modalType === 'filter'}
+                onClose={closeModal}
+                onApply={handleApplyFilter}
+                onReset={handleResetFilter}
+                initialFilters={filterValues}
+            />
+
             {modalType === 'add' && (
-                <AddKhoModal
-                    onClose={() => closeModal()}
-                    onAdd={handleCreate}
-                />
+                <AddKhoModal onClose={closeModal} onAdd={handleCreate} />
             )}
             {modalType === 'edit' && selectedItem && (
-                <EditKhoModal
-                    kho={selectedItem}
-                    onClose={closeModal}
-                    onUpdate={handleUpdate}
-                />
+                <EditKhoModal kho={selectedItem} onClose={closeModal} onUpdate={handleUpdate} />
             )}
             {modalType === 'delete' && selectedItem && (
-                <DeleteKhoModal
-                    kho={selectedItem}
-                    onClose={closeModal}
-                    onDelete={handleDelete}
-                />
+                <DeleteKhoModal kho={selectedItem} onClose={closeModal} onDelete={handleDelete} />
             )}
         </>
     );

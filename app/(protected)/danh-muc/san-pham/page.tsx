@@ -16,9 +16,15 @@ import AddButton from "@/components/ui/AddButton";
 import { toast } from 'sonner';
 import { motion } from "framer-motion";
 import { pageVariants, tableContainerVariants, tableRowVariants } from "@/lib/animation-variants";
-
-const ITEMS_PER_PAGE = 8; // Show N items per page
-
+import FilterSanPhamModal, { SanPhamFilterValues } from "@/components/san-pham/FilterSanPhamModal";
+import { ProductSearchParams } from "@/types/product-search";
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+// --- Utility: Merge Class ---
+const ITEMS_PER_PAGE = 10; // Show N items per page
+function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs));
+}
 export default function SanPhamPage() {
     const [query, setQuery] = useState("");
     const [sanPhamData, setSanPhamData] = useState<SanPhamResponsePagedResult | null>(null);
@@ -29,17 +35,69 @@ export default function SanPhamPage() {
 
     const [modalType, setModalType] = useState<'filter' | 'delete' | 'add' | 'edit' | null>(null);
     const [selectedItem, setSelectedItem] = useState<SanPhamResponse | null>(null);
-
-    const fetchData = async (page: number = 1, search: string = "") => {
+    const [filterValues, setFilterValues] = useState<SanPhamFilterValues>({
+        tenSP: "",
+        loaiSanPham: "ALL",
+    });
+    const isFiltering = useMemo(() => {
+        return (
+            !!filterValues.tenSP ||
+            filterValues.loaiSanPham !== "ALL"
+        );
+    }, [filterValues]);
+    const fetchData = async (page: number = 1, search: string = "", filters: SanPhamFilterValues) => {
         try {
             setIsLoading(true);
-            const data = await sanPhamService.getAll(
-                {
-                    Page: page,
-                    PageSize: pageSize,
-                    Keyword: search,
-                }
-            );
+
+            // 1. Prepare Backend Params
+            // Use 'any' or strict 'ProductSearchParams' based on your preference
+            const params: ProductSearchParams = {
+                Page: page,
+                PageSize: pageSize,
+            };
+
+            // A. Map Category (Strict Backend Filter)
+            if (filters.loaiSanPham && filters.loaiSanPham !== 'ALL') {
+                params.LoaiSanPham = filters.loaiSanPham;
+            }
+
+            // B. Determine Keyword for Server (Priority: Global > Modal Name)
+            let serverKeyword = "";
+
+            // Priority 1: Global Search Bar
+            if (search.trim()) {
+                serverKeyword = search.trim();
+            }
+            // Priority 2: Modal Name Filter
+            else if (filters.tenSP?.trim()) {
+                serverKeyword = filters.tenSP.trim();
+            }
+
+            if (serverKeyword) {
+                params.Keyword = serverKeyword;
+            }
+
+            // 2. Call API
+            const data = await sanPhamService.getAll(params);
+
+            // ---------------------------------------------------------
+            // 3. CLIENT-SIDE VERIFICATION
+            // ---------------------------------------------------------
+            // If using the Modal Filter (and NOT the global search),
+            // strictly enforce that the returned Product Name contains the filter text.
+            // This prevents the backend from returning items where the Keyword matched
+            // the "Product Code" or "Description" but NOT the "Name".
+            if (!search.trim() && data && data.items && filters.tenSP?.trim()) {
+                const nameFilter = filters.tenSP.trim().toLowerCase();
+
+                data.items = data.items.filter(item => {
+                    // Strictly check if the Product Name contains the filter string
+                    return item.tenSP?.toLowerCase().includes(nameFilter);
+                });
+                // (This is a visual fix; real pagination total comes from DB)
+                data.total = data.items.length;
+            }
+
             setSanPhamData(data);
         } catch (error) {
             toast.error("Đã xảy ra lỗi khi tải dữ liệu!");
@@ -48,9 +106,15 @@ export default function SanPhamPage() {
         }
     };
     useEffect(() => {
-        fetchData(currentPage, query);
-    }, [currentPage, query]);
-
+        fetchData(currentPage, query, filterValues);
+    }, [currentPage, query, filterValues]);
+    const handleResetFilter = () => {
+        setFilterValues({
+            tenSP: "",
+            loaiSanPham: "ALL",
+        });
+        setCurrentPage(1);
+    };
     const paginatedData = sanPhamData?.items ?? [];
     const totalItems = sanPhamData?.total ?? 0;
     const totalPages = Math.ceil(totalItems / pageSize);
@@ -84,7 +148,7 @@ export default function SanPhamPage() {
             await sanPhamService.create(newData);
             setCurrentPage(1);
             toast.success("Thêm sản phẩm mới thành công!");
-            fetchData();
+            fetchData(currentPage, query, filterValues);
             closeModal();
         } catch (error) {
             toast.error(error as string);
@@ -99,7 +163,7 @@ export default function SanPhamPage() {
             setIsLoading(true);
             await sanPhamService.update(id, updatedData);
             toast.success("Cập nhật sản phẩm thành công!");
-            await fetchData(currentPage);
+            await fetchData(currentPage, query, filterValues);
             closeModal();
         } catch (error) {
             toast.error(error as string);
@@ -118,7 +182,7 @@ export default function SanPhamPage() {
                 ? currentPage - 1
                 : currentPage;
             toast.success("Xóa sản phẩm thành công!");
-            await fetchData(newPage, query);
+            await fetchData(newPage, query, filterValues);
             closeModal();
         } catch (error) {
             toast.error(error as string);
@@ -126,6 +190,11 @@ export default function SanPhamPage() {
         finally {
             setIsLoading(false);
         }
+    };
+    const handleApplyFilter = (newFilters: SanPhamFilterValues) => {
+        setFilterValues(newFilters);
+        setCurrentPage(1); // Reset to page 1 on filter apply
+        // Modal closes automatically via internal logic, or call closeModal() here
     };
     // --- Helper: Optimized Unit Display ---
     // Only shows the first 2 units, then "+N" to keep row height stable
@@ -213,22 +282,27 @@ export default function SanPhamPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-white rounded-xl shadow-sm overflow-hidden min-h-125 border border-slate-100">
-                <div className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                            Danh sách sản phẩm
-                            <span className="text-sm font-normal text-slate-500 ml-2 bg-slate-100 px-2 py-0.5 rounded-full">
-                                {totalItems}
-                            </span>
-                            <Filter
-                                onClick={() => openFilter()}
-                                className="cursor-pointer hover:text-green-600 transition-colors ml-1"
-                                size={20}
-                                strokeWidth={1.5}
-                            />
-                        </h2>
-                    </div>
+                className="flex flex-col bg-white rounded-xl shadow-sm overflow-hidden min-h-125 border border-slate-100">
+                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-linear-to-r from-white to-slate-50/50">
+                    <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        Danh sách sản phẩm
+                        <span className="text-sm font-normal text-slate-500 ml-2 bg-slate-100 px-2 py-0.5 rounded-full">
+                            {totalItems}
+                        </span>
+                    </h2>
+                    <button
+                        onClick={() => openFilter()}
+                        className={cn(
+                            "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
+                            isFiltering
+                                ? "text-blue-600 bg-blue-50 border-blue-100 shadow-inner"
+                                : "text-slate-600 bg-white border-slate-200 hover:border-blue-300 hover:text-blue-600 hover:shadow-sm"
+                        )}
+                    >
+                        <Filter size={16} />
+                        Bộ lọc
+                        {isFiltering && <span className="w-2 h-2 rounded-full bg-blue-600"></span>}
+                    </button>
                 </div>
 
                 <div className="overflow-x-auto px-6 pb-4 flex-1">
@@ -348,7 +422,7 @@ export default function SanPhamPage() {
 
                 {/* --- Pagination Controls --- */}
                 {totalItems > 0 && (
-                    <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+                    <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between sticky bottom-0">
                         <span className="text-sm text-slate-500">
                             Hiển thị {((currentPage - 1) * ITEMS_PER_PAGE) + 1} đến {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)} của {totalItems} sản phẩm
                         </span>
@@ -427,6 +501,13 @@ export default function SanPhamPage() {
             </motion.div>
 
             {/* Modals */}
+            <FilterSanPhamModal
+                isOpen={modalType === 'filter'}
+                onClose={closeModal}
+                onApply={handleApplyFilter}
+                onReset={handleResetFilter}
+                initialFilters={filterValues}
+            />
             {modalType === 'add' && <AddSanPhamModal onClose={closeModal} onAdd={handleCreate} />}
             {modalType === 'edit' && selectedItem && <EditSanPhamModal sanPham={selectedItem} onClose={closeModal} onUpdate={handleUpdate} />}
             {modalType === 'delete' && selectedItem && <DeleteSanPhamModal sanPham={selectedItem} onClose={closeModal} onDelete={handleDelete} />}
