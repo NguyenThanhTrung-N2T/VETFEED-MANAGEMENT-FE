@@ -89,7 +89,7 @@ export default function SettingsPage() {
         e.preventDefault();
 
         if (passwords.newPassword.length < 6) {
-            return toast.error("Mật khẩu phải có ít nhất 6 ký tự");
+            return toast.error("Mật khẩu phải có ít nhất 8 ký tự");
         }
         if (passwords.newPassword !== passwords.confirmPassword) {
             return toast.error("Mật khẩu xác nhận không khớp");
@@ -104,7 +104,7 @@ export default function SettingsPage() {
             toast.success("Đổi mật khẩu thành công!");
             setPasswords({ newPassword: '', confirmPassword: '' });
         } catch (error: any) {
-            toast.error("Lỗi: " + (error.response?.data?.detail || "Không thể đổi mật khẩu"));
+            toast.error("Lỗi: " + (error.response?.data?.errors?.Password || "Không thể đổi mật khẩu"));
         } finally {
             setIsPassLoading(false);
         }
@@ -230,7 +230,7 @@ export default function SettingsPage() {
                                 <div className="mt-0.5 shrink-0 text-emerald-500">
                                     <CheckCircle2 size={16} />
                                 </div>
-                                <p>Để bảo mật tài khoản, vui lòng sử dụng mật khẩu mạnh (ít nhất 6 ký tự, bao gồm chữ hoa, chữ thường và số).</p>
+                                <p>Để bảo mật tài khoản, vui lòng sử dụng mật khẩu mạnh (Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt !).</p>
                             </div>
 
                             <div>
@@ -264,7 +264,7 @@ export default function SettingsPage() {
                             <button
                                 type="submit"
                                 disabled={isPassLoading}
-                                className="w-full mt-22 py-3.5 border border-slate-200 text-slate-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 rounded-xl font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-70 active:scale-[0.98]"
+                                className="w-full mt-18 py-3.5 border border-slate-200 text-slate-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 rounded-xl font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-70 active:scale-[0.98]"
                             >
                                 {isPassLoading ? <Loader2 className="animate-spin" size={18} /> : <Lock size={18} />}
                                 Đổi mật khẩu
