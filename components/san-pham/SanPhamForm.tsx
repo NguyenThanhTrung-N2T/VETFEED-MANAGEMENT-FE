@@ -209,7 +209,6 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                 >
                     <option value="THUOC_THU_Y">Thuốc thú y</option>
                     <option value="THUC_AN_CHAN_NUOI">Thức ăn chăn nuôi</option>
-                    <option value="KHAC">Khác</option>
                 </select>
             </div>
 
