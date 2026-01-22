@@ -88,7 +88,7 @@ export default function SettingsPage() {
     const handleChangePassword = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (passwords.newPassword.length < 6) {
+        if (passwords.newPassword.length < 8) {
             return toast.error("Mật khẩu phải có ít nhất 8 ký tự");
         }
         if (passwords.newPassword !== passwords.confirmPassword) {
