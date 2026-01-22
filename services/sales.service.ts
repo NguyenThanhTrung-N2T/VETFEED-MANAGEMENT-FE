@@ -123,7 +123,7 @@ export const salesService = {
   // Lấy giá bán hiện tại
   getCurrentPrice: async (maSP: string) => {
     const res = await apiClient.get<PriceResponse>('/api/GiaBans/current', {
-      params: { maSP, date: new Date().toISOString() }
+      params: { maSP }
     });
     return res.data;
   },
@@ -132,5 +132,11 @@ export const salesService = {
   checkStock: async (maLo: string, soLuongCan: number) => {
     // API trả về 200 OK nếu đủ, lỗi nếu thiếu
     return await apiClient.post('/api/TonKhos/checkallkho', { maLo, soLuongCan });
-  }
+  },
+
+  // Lấy tồn kho
+  getInventory: async () => {
+    const res = await apiClient.get<any[]>('/api/TonKhos');
+    return res.data;
+  },
 };

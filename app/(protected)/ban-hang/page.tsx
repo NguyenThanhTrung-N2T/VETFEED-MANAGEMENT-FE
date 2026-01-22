@@ -105,16 +105,46 @@ export default function SalesPage() {
 
     // Helper: Badge thanh toán
     const PaymentBadge = ({ method }: { method: string }) => {
-        const isTransfer = method.toLowerCase().includes('chuyển khoản') || method.toLowerCase().includes('bank');
+        const config: Record<
+            string,
+            {
+                label: string;
+                className: string;
+                icon: React.ReactNode;
+            }
+        > = {
+            TIEN_MAT: {
+                label: "Tiền mặt",
+                className: "bg-emerald-50 text-emerald-700 border-emerald-100",
+                icon: <Wallet size={12} />,
+            },
+            CHUYEN_KHOAN: {
+                label: "Chuyển khoản",
+                className: "bg-blue-50 text-blue-700 border-blue-100",
+                icon: <CreditCard size={12} />,
+            },
+            CONG_NO: {
+                label: "Công nợ",
+                className: "bg-amber-50 text-amber-800 border-amber-100",
+                icon: <FileText size={12} />,
+            },
+        };
+
+        const item = config[method] ?? {
+            label: method,
+            className: "bg-slate-50 text-slate-700 border-slate-200",
+            icon: <Wallet size={12} />,
+        };
+
         return (
-            <span className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border shadow-sm",
-                isTransfer
-                    ? "bg-blue-50 text-blue-700 border-blue-100"
-                    : "bg-emerald-50 text-emerald-700 border-emerald-100"
-            )}>
-                {isTransfer ? <CreditCard size={12} /> : <Wallet size={12} />}
-                {method}
+            <span
+                className={cn(
+                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border shadow-sm",
+                    item.className
+                )}
+            >
+                {item.icon}
+                {item.label}
             </span>
         );
     };

@@ -118,5 +118,11 @@ export const transferService = {
       maLo,
       soLuongChuyen
     });
-  }
+  },
+
+  // Lấy tồn kho
+  getInventory: async () => {
+    const res = await apiClient.get<any[]>('/api/TonKhos');
+    return res.data;
+  },
 };

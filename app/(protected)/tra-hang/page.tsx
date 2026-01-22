@@ -98,19 +98,36 @@ export default function ReturnPage() {
 
     // --- Helper Component: Refund Badge ---
     const RefundBadge = ({ method }: { method: string }) => {
-        const isCash = method.toLowerCase().includes('tiền mặt');
-        const isTransfer = method.toLowerCase().includes('chuyển khoản') || method.toLowerCase().includes('bank');
+        const config: Record<
+            string,
+            { label: string; className: string }
+        > = {
+            TIEN_MAT: {
+                label: "Tiền mặt",
+                className: "bg-emerald-50 text-emerald-700 border-emerald-100",
+            },
+            CHUYEN_KHOAN: {
+                label: "Chuyển khoản",
+                className: "bg-blue-50 text-blue-700 border-blue-100",
+            },
+        };
 
-        let style = "bg-slate-100 text-slate-600 border-slate-200";
-        if (isCash) style = "bg-emerald-50 text-emerald-700 border-emerald-100";
-        if (isTransfer) style = "bg-blue-50 text-blue-700 border-blue-100";
+        const item = config[method] ?? {
+            label: method,
+            className: "bg-slate-100 text-slate-600 border-slate-200",
+        };
 
         return (
-            <span className={cn("inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border shadow-sm", style)}>
-                {method}
+            <span
+                className={cn(
+                    "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border shadow-sm",
+                    item.className
+                )}
+            >
+                {item.label}
             </span>
         );
-    }
+    };
 
     return (
         <div className="p-6 bg-[#eef2f6] min-h-screen relative">
