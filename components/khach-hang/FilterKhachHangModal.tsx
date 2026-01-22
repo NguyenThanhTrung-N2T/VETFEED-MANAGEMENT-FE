@@ -5,10 +5,8 @@ import { Filter, RotateCcw } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 
 export type KhachHangFilterValues = {
-    tenKH?: string;
-    soDienThoai?: string;
     loaiKhachHang?: string; // "ALL" | "CA_NHAN" | "TRANG_TRAI" | "DAI_LY"
-    trangThai?: string;     // "ALL" | "HOAT_DONG" | "NGUNG_HOAT_DONG"
+    trangThai?: string;     // "ALL" | "HOAT_DONG" | "KHOA"
 };
 
 type Props = {
@@ -28,8 +26,6 @@ export default function FilterKhachHangModal({
 }: Props) {
     // 1. Local state
     const [filters, setFilters] = useState<KhachHangFilterValues>({
-        tenKH: "",
-        soDienThoai: "",
         loaiKhachHang: "ALL",
         trangThai: "ALL"
     });
@@ -38,8 +34,6 @@ export default function FilterKhachHangModal({
     useEffect(() => {
         if (isOpen) {
             setFilters(initialFilters || {
-                tenKH: "",
-                soDienThoai: "",
                 loaiKhachHang: "ALL",
                 trangThai: "ALL"
             });
@@ -59,8 +53,6 @@ export default function FilterKhachHangModal({
 
     const handleReset = () => {
         setFilters({
-            tenKH: "",
-            soDienThoai: "",
             loaiKhachHang: "ALL",
             trangThai: "ALL"
         });
@@ -81,34 +73,6 @@ export default function FilterKhachHangModal({
                 {/* --- BODY --- */}
                 <div className="mb-8">
                     <div className="grid grid-cols-1 gap-4">
-
-                        {/* 1. Tên khách hàng */}
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-semibold text-slate-500">
-                                Tên khách hàng
-                            </label>
-                            <input
-                                name="tenKH"
-                                value={filters.tenKH || ""}
-                                onChange={handleChange}
-                                placeholder="Nhập tên khách hàng..."
-                                className="h-10 rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none transition-all"
-                            />
-                        </div>
-
-                        {/* 2. Số điện thoại */}
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-semibold text-slate-500">
-                                Số điện thoại
-                            </label>
-                            <input
-                                name="soDienThoai"
-                                value={filters.soDienThoai || ""}
-                                onChange={handleChange}
-                                placeholder="Nhập số điện thoại..."
-                                className="h-10 rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none transition-all"
-                            />
-                        </div>
 
                         {/* 3. Loại khách hàng */}
                         <div className="flex flex-col gap-1.5">
@@ -149,7 +113,7 @@ export default function FilterKhachHangModal({
                                 >
                                     <option value="ALL">Tất cả</option>
                                     <option value="HOAT_DONG">Hoạt động</option>
-                                    <option value="NGUNG_HOAT_DONG">Ngưng hoạt động</option>
+                                    <option value="KHOA">Đang khóa</option>
                                 </select>
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
                                     <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">

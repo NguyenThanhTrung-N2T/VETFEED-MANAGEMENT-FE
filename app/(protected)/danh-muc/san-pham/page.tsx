@@ -37,12 +37,10 @@ export default function SanPhamPage() {
     const [modalType, setModalType] = useState<'filter' | 'delete' | 'add' | 'edit' | null>(null);
     const [selectedItem, setSelectedItem] = useState<SanPhamResponse | null>(null);
     const [filterValues, setFilterValues] = useState<SanPhamFilterValues>({
-        tenSP: "",
         loaiSanPham: "ALL",
     });
     const isFiltering = useMemo(() => {
         return (
-            !!filterValues.tenSP ||
             filterValues.loaiSanPham !== "ALL"
         );
     }, [filterValues]);
@@ -69,36 +67,12 @@ export default function SanPhamPage() {
             if (search.trim()) {
                 serverKeyword = search.trim();
             }
-            // Priority 2: Modal Name Filter
-            else if (filters.tenSP?.trim()) {
-                serverKeyword = filters.tenSP.trim();
-            }
-
             if (serverKeyword) {
                 params.Keyword = serverKeyword;
             }
 
             // 2. Call API
             const data = await sanPhamService.getAll(params);
-
-            // ---------------------------------------------------------
-            // 3. CLIENT-SIDE VERIFICATION
-            // ---------------------------------------------------------
-            // If using the Modal Filter (and NOT the global search),
-            // strictly enforce that the returned Product Name contains the filter text.
-            // This prevents the backend from returning items where the Keyword matched
-            // the "Product Code" or "Description" but NOT the "Name".
-            if (!search.trim() && data && data.items && filters.tenSP?.trim()) {
-                const nameFilter = filters.tenSP.trim().toLowerCase();
-
-                data.items = data.items.filter(item => {
-                    // Strictly check if the Product Name contains the filter string
-                    return item.tenSP?.toLowerCase().includes(nameFilter);
-                });
-                // (This is a visual fix; real pagination total comes from DB)
-                // data.total = data.items.length;
-            }
-
             setSanPhamData(data);
         } catch (error) {
             toast.error("Đã xảy ra lỗi khi tải dữ liệu!");
@@ -111,7 +85,6 @@ export default function SanPhamPage() {
     }, [currentPage, query, filterValues]);
     const handleResetFilter = () => {
         setFilterValues({
-            tenSP: "",
             loaiSanPham: "ALL",
         });
         setCurrentPage(1);

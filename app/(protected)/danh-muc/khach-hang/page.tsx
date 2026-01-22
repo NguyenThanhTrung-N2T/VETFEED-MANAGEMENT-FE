@@ -33,15 +33,11 @@ export default function KhachHangPage() {
     const [modalType, setModalType] = useState<'filter' | 'delete' | 'add' | 'view' | null>(null);
     const [selectedItem, setSelectedItem] = useState<KhachHangResponse | null>(null);
     const [filterValues, setFilterValues] = useState<KhachHangFilterValues>({
-        tenKH: "",
-        soDienThoai: "",
         loaiKhachHang: "ALL",
         trangThai: "ALL"
     });
     const isFiltering = useMemo(() => {
         return (
-            !!filterValues.tenKH ||
-            !!filterValues.soDienThoai ||
             filterValues.loaiKhachHang !== "ALL" ||
             filterValues.trangThai !== "ALL"
         );
@@ -69,10 +65,6 @@ export default function KhachHangPage() {
             let serverKeyword = "";
             if (search.trim()) {
                 serverKeyword = search.trim();
-            } else if (filters.soDienThoai?.trim()) {
-                serverKeyword = filters.soDienThoai.trim();
-            } else if (filters.tenKH?.trim()) {
-                serverKeyword = filters.tenKH.trim();
             }
 
             if (serverKeyword) {
@@ -81,36 +73,6 @@ export default function KhachHangPage() {
 
             // 3. Call API
             const data = await khachHangService.getAll(params);
-
-            // ---------------------------------------------------------
-            // 4. CLIENT-SIDE "AND" LOGIC VERIFICATION
-            // ---------------------------------------------------------
-            // If we are using the Advanced Filter (not Global Search), we strictly enforce matches.
-            // This fixes the issue where searching Phone gets a result, but the Name is wrong.
-            if (!search.trim() && data && data.items) {
-                const nameFilter = filters.tenKH?.toLowerCase().trim();
-                const phoneFilter = filters.soDienThoai?.trim();
-
-                data.items = data.items.filter(item => {
-                    // Check Name (if filter exists)
-                    const matchName = nameFilter
-                        ? item.tenKH?.toLowerCase().includes(nameFilter)
-                        : true;
-
-                    // Check Phone (if filter exists)
-                    const matchPhone = phoneFilter
-                        ? item.soDienThoai?.includes(phoneFilter)
-                        : true;
-
-                    // Both must be true
-                    return matchName && matchPhone;
-                });
-
-                // Optional: Update total count if you filtered items out
-                // (This is a visual fix; real pagination total comes from DB)
-                //data.total = data.items.length;
-            }
-
             setKhachHangData(data);
         } catch (error) {
             toast.error("Đã xảy ra lỗi khi tải dữ liệu!");
@@ -156,8 +118,6 @@ export default function KhachHangPage() {
 
     const handleResetFilter = () => {
         setFilterValues({
-            tenKH: "",
-            soDienThoai: "",
             loaiKhachHang: "ALL",
             trangThai: "ALL"
         });

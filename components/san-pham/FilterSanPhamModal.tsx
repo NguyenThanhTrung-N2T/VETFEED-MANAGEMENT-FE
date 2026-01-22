@@ -5,7 +5,6 @@ import { Filter, RotateCcw } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 
 export type SanPhamFilterValues = {
-    tenSP?: string;
     loaiSanPham?: string; // "ALL" | "THUOC_THU_Y" | "THUC_AN_CHAN_NUOI"
 };
 
@@ -26,7 +25,6 @@ export default function FilterSanPhamModal({
 }: Props) {
     // 1. Local state
     const [filters, setFilters] = useState<SanPhamFilterValues>({
-        tenSP: "",
         loaiSanPham: "ALL",
     });
 
@@ -34,7 +32,6 @@ export default function FilterSanPhamModal({
     useEffect(() => {
         if (isOpen) {
             setFilters(initialFilters || {
-                tenSP: "",
                 loaiSanPham: "ALL",
             });
         }
@@ -53,7 +50,6 @@ export default function FilterSanPhamModal({
 
     const handleReset = () => {
         setFilters({
-            tenSP: "",
             loaiSanPham: "ALL",
         });
         onReset();
@@ -74,21 +70,7 @@ export default function FilterSanPhamModal({
                 <div className="mb-8">
                     <div className="flex flex-col gap-4">
 
-                        {/* 1. Tên sản phẩm */}
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-semibold text-slate-500">
-                                Tên sản phẩm
-                            </label>
-                            <input
-                                name="tenSP"
-                                value={filters.tenSP || ""}
-                                onChange={handleChange}
-                                placeholder="Nhập tên sản phẩm..."
-                                className="h-10 rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none transition-all"
-                            />
-                        </div>
-
-                        {/* 2. Loại sản phẩm (Limited Options) */}
+                        {/* 1. Loại sản phẩm (Limited Options) */}
                         <div className="flex flex-col gap-1.5">
                             <label className="text-xs font-semibold text-slate-500">
                                 Loại sản phẩm
