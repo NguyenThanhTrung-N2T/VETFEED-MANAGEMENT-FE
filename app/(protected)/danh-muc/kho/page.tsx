@@ -122,8 +122,8 @@ export default function KhoPage() {
             toast.success("Thêm kho hàng mới thành công!");
             await fetchData();
             closeModal();
-        } catch (error) {
-            toast.error(error as string);
+        } catch (error: any) {
+            toast.error(error.error as string);
             throw error;
         }
     };
@@ -133,8 +133,8 @@ export default function KhoPage() {
             toast.success("Cập nhật kho hàng thành công!");
             await fetchData();
             closeModal();
-        } catch (error) {
-            toast.error(error as string);
+        } catch (error: any) {
+            toast.error(error.error as string);
             throw error;
         }
     };
@@ -144,8 +144,8 @@ export default function KhoPage() {
             toast.success("Xóa kho hàng thành công!");
             await fetchData();
             closeModal();
-        } catch (error) {
-            toast.error(error as string);
+        } catch (error: any) {
+            toast.error(error.error as string);
         }
     };
 
