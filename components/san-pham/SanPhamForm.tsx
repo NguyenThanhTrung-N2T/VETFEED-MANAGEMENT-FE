@@ -236,15 +236,21 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                 <div className="relative">
                     <input
                         name="priceInput"
-                        type="text" // Change to text to remove arrows naturally
-                        inputMode="numeric" // Opens numeric keyboard on mobile
+                        type="text"
+                        inputMode="numeric"
                         placeholder="0"
-                        // Format the display value (e.g., 1000 -> 1.000)
+                        // If price is 0 or undefined, show empty string
                         value={price ? new Intl.NumberFormat("vi-VN").format(price) : ""}
                         onChange={(e) => {
-                            // Remove non-numeric characters (dots, commas)
+                            // 1. Remove non-numeric characters
                             const rawValue = e.target.value.replace(/\D/g, "");
-                            setPrice(rawValue ? Number(rawValue) : undefined);
+
+                            // 2. Convert to number
+                            const numValue = Number(rawValue);
+
+                            // 3. LOGIC FIX: Only set price if it is GREATER than 0. 
+                            // If 0, empty string, or NaN, set to undefined.
+                            setPrice(numValue > 0 ? numValue : undefined);
                         }}
                         disabled={isLoading}
                         className="h-11 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-slate-400 disabled:opacity-60 disabled:cursor-not-allowed"
@@ -348,7 +354,7 @@ export default function SanPhamForm({ defaultValues, onSubmit, onCancel, submitT
                 <button
                     type="submit"
                     // DISABLED IF: Loading OR Not Changed
-                    disabled={isLoading || !isChanged}
+                    disabled={isLoading || !isChanged || !price}
                     className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold disabled:opacity-50 disabled:hover:bg-emerald-600 disabled:bg-emerald-600 disabled:hover:cursor-default transition-colors cursor-pointer"
                 >
                     {isLoading ? (
