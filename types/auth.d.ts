@@ -12,6 +12,7 @@ export interface AuthResponse {
 export interface UserInfo {
   maTK: string;
   email: string;
+  soDienThoai?: string | null;
   hoTen: string;
   role: string;
   avatar?: string | null;

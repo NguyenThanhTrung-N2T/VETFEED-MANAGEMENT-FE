@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import { authService } from '@/services/auth.service';
+import { accountService } from '@/services/account.service'; // [MỚI] Import account service
 import { LoginPayload, SignupPayload, UserInfo } from '@/types/auth';
 
 interface AuthContextType {
@@ -11,6 +12,7 @@ interface AuthContextType {
     login: (data: LoginPayload) => Promise<void>;
     signup: (data: SignupPayload) => Promise<void>;
     logout: () => void;
+    refreshUser: () => Promise<void>; // Hàm refresh
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,15 +32,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
     }, []);
 
+    // Hàm làm mới thông tin user từ API
+    const refreshUser = async () => {
+        if (!user?.maTK) return;
+        try {
+            // Gọi API lấy thông tin mới nhất
+            const updatedData = await accountService.getProfile(user.maTK);
+
+            // Giữ nguyên các trường cũ, chỉ cập nhật trường thay đổi
+            const newUserInfo: UserInfo = {
+                ...user,
+                hoTen: updatedData.hoTen,
+                email: updatedData.email,
+                avatar: updatedData.anhDaiDien,
+            };
+
+            setUser(newUserInfo);
+            localStorage.setItem('userInfo', JSON.stringify(newUserInfo));
+        } catch (error) {
+            console.error("Failed to refresh user info:", error);
+        }
+    };
+
     const login = async (data: LoginPayload) => {
         try {
             const res = await authService.login(data);
 
-            // 1. Lưu Token vào Cookie (để Middleware và Axios dùng)
-            // Expires trong 7 ngày (hoặc lấy từ exp của JWT decoded)
             Cookies.set('accessToken', res.accessToken, { expires: 7 });
 
-            // 2. Lưu User Info vào State & LocalStorage
             const userInfo: UserInfo = {
                 maTK: res.maTK,
                 email: res.email,
@@ -50,18 +71,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(userInfo);
             localStorage.setItem('userInfo', JSON.stringify(userInfo));
 
-            // 3. Chuyển hướng
             router.push('/dashboard');
         } catch (error: any) {
             console.error("Login failed:", error);
-            throw error; // Ném lỗi để UI hiển thị thông báo
+            throw error;
         }
     };
 
     const signup = async (data: SignupPayload) => {
         try {
             await authService.signup(data);
-            // Đăng ký thành công -> Chuyển sang login để đăng nhập
             router.push('/login?registered=true');
         } catch (error: any) {
             throw error;
@@ -78,17 +97,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (error: any) {
             console.error("Logout failed:", error);
         }
-        // Gọi thêm authService.logout() nếu cần
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, signup, logout, refreshUser }}>
             {children}
         </AuthContext.Provider>
     );
 }
 
-// Hook custom để dùng context
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) throw new Error('useAuth must be used within an AuthProvider');

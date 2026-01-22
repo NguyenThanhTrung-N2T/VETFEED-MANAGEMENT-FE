@@ -6,7 +6,7 @@ import { useAuth } from '@/providers/auth-provider'; // Import hook UseAuth
 import {
     LayoutDashboard, DollarSign, ShoppingCart,
     ArrowRightLeft, CornerUpLeft, Package,
-    Folder, CalendarDays, BarChart3, LogOut, Loader2
+    Folder, CalendarDays, BarChart3, LogOut, Loader2, Settings
 } from 'lucide-react';
 
 const MENU_ITEMS = [
@@ -20,6 +20,7 @@ const MENU_ITEMS = [
     { name: "Công nợ", icon: <CalendarDays size={20} />, href: "/cong-no" },
     // Chỉ Admin mới thấy Báo cáo
     { name: 'Báo cáo', icon: <BarChart3 size={20} />, href: '/bao-cao', role: 'QUAN_LY' },
+    { name: 'Cài đặt', icon: <Settings size={20} />, href: '/cai-dat' },
 ];
 
 export default function Sidebar() {
