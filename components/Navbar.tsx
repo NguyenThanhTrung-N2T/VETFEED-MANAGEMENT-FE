@@ -54,13 +54,6 @@ export default function Navbar() {
                     >
                         Đối tác
                     </Link>
-
-                    <Link
-                        href="#"
-                        className="text-black hover:text-[#F2C94C] font-medium transition-colors"
-                    >
-                        Liên hệ
-                    </Link>
                 </div>
 
 
