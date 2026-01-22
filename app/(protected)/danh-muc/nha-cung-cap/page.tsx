@@ -15,6 +15,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import FilterNCCModal, { NhaCungCapFilterValues } from "@/components/nha-cung-cap/FitlerNCCModal";
 import { useAuth } from "@/providers/auth-provider";
+import { useRouter } from "next/navigation";
 // --- Utility: Merge Class ---
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -26,6 +27,8 @@ export default function NhaCungCapPage() {
 
     const [modalType, setModalType] = useState<'filter' | 'delete' | 'add' | 'edit' | null>(null);
     const [selectedItem, setSelectedItem] = useState<NhaCungCapResponse | null>(null);
+    const { user, loading } = useAuth();
+    const router = useRouter();
     const [filterValues, setFilterValues] = useState<NhaCungCapFilterValues>({
         tenNCC: "",
         soDienThoai: "",
@@ -64,6 +67,11 @@ export default function NhaCungCapPage() {
             return matchesSearch && matchesName && matchesPhone && matchesAddress && matchesStatus;
         });
     }, [nhaCungCapData, query, filterValues]);
+    useEffect(() => {
+        if (!loading && !user) {
+            router.replace("/login");
+        }
+    }, [loading, user, router]);
     const handleApplyFilter = (newFilters: NhaCungCapFilterValues) => {
         setFilterValues(newFilters);
         // Modal closes automatically via its own logic, or we can close it here if needed
@@ -145,9 +153,10 @@ export default function NhaCungCapPage() {
         });
         // query is optional to reset, usually keep it separate
     };
-    const { user, loading } = useAuth();
     const userRole = user ? user.role : 'NHAN_VIEN';
-
+    if (loading || !user) {
+        return null;
+    }
     return (
         <>
             {/* Search Bar */}

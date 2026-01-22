@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, User, Lock, Save, Loader2, Camera, Shield, Mail, Phone, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/providers/auth-provider';
+import { useRouter } from "next/navigation";
 import { accountService } from '@/services/account.service';
 import { toast } from 'sonner';
 import { motion, Variants } from 'framer-motion'; // Import Variants để fix lỗi TS
@@ -15,10 +16,16 @@ function cn(...inputs: ClassValue[]) {
 }
 
 export default function SettingsPage() {
-    const { user, refreshUser } = useAuth();
+    const { user, loading, refreshUser } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [isPassLoading, setIsPassLoading] = useState(false);
 
+    const router = useRouter();
+    useEffect(() => {
+        if (!loading && !user) {
+            router.replace("/login");
+        }
+    }, [loading, user, router]);
     // --- State Form Thông tin ---
     const [profile, setProfile] = useState({
         hoTen: '',
@@ -109,7 +116,9 @@ export default function SettingsPage() {
             setIsPassLoading(false);
         }
     };
-
+    if (loading || !user) {
+        return null;
+    }
     return (
         <motion.div
             className="p-6 bg-[#eef2f6] min-h-screen relative"

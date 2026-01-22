@@ -22,7 +22,8 @@ import {
     LoiNhuanPhanTichResponse, LoiNhuanTongQuanResponse, TopSanPhamLoiNhuanResponse, LoiNhuanSanPhamResponse, LoiNhuanSanPhamItemResponse,
     TonKhoPhanTichResponse, TonKhoTongQuanResponse, SoLuongChartItemResponse, TonKhoSanPhamResponse, TonKhoSanPhamItemResponse, PaginationMeta
 } from "@/client/types.gen";
-
+import { useAuth } from "@/providers/auth-provider";
+import { useRouter } from "next/navigation";
 type ReportType = "sales" | "profit" | "inventory";
 
 export default function BaoCaoPage() {
@@ -56,9 +57,15 @@ export default function BaoCaoPage() {
     const [invAnalytics, setInvAnalytics] = useState<TonKhoPhanTichResponse | null>(null);
     const [invItems, setInvItems] = useState<TonKhoSanPhamResponse | null>(null);
 
-    const [loading, setLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
     const [tableLoading, setTableLoading] = useState(true);
-
+    const { user, loading } = useAuth();
+    const router = useRouter();
+    useEffect(() => {
+        if (!loading && !user) {
+            router.replace("/login");
+        }
+    }, [loading, user, router]);
     // --- Formatters ---
     const formatCurrency = (
         v?: number | null,
@@ -103,7 +110,7 @@ export default function BaoCaoPage() {
     // Triggers when Report Type or Date/Warehouse Filters change
     useEffect(() => {
         const fetchAnalytics = async () => {
-            setLoading(true);
+            setIsLoading(true);
             setCurrentPage(1); // Reset page on filter change
             try {
                 if (reportType === "sales") {
@@ -120,7 +127,7 @@ export default function BaoCaoPage() {
                 console.error("Error fetching analytics:", error);
                 toast.error("Đã xảy ra lỗi khi tải dữ liệu!");
             } finally {
-                setLoading(false);
+                setIsLoading(false);
             }
         };
 
@@ -253,6 +260,9 @@ export default function BaoCaoPage() {
         }
         return num.toString(); // 500
     };
+    if (loading || !user) {
+        return null; // or spinner
+    }
     return (
         <div className="mx-auto space-y-6">
             {/* --- CONTROLS SECTION --- */}
@@ -319,7 +329,7 @@ export default function BaoCaoPage() {
             {reportType === "sales" && (
                 <div className="space-y-6">
                     {/* 1. OVERVIEW & CHART SECTION */}
-                    {loading ? (
+                    {isLoading ? (
                         <OverviewLoading
                             summaryCards={[
                                 { label: "TỔNG DOANH THU", color: "blue", maxNumber: 85600000 },
@@ -375,7 +385,7 @@ export default function BaoCaoPage() {
                                 exportToCSV={exportToCSV}
                                 data={prepareRevenueData(revOrders?.data ?? [])} // the data to export
                                 filename={`Doanh_thu_${new Date().toISOString().split('T')[0]}.csv`} // file name
-                                loading={tableLoading} // shows spinner while table loading
+                                loading={tableLoading} // shows spinner while table isLoading
                                 disabled={!revOrders?.data?.length} // Disable if no data
                             />
                         </div>
@@ -435,7 +445,7 @@ export default function BaoCaoPage() {
             {reportType === "profit" && (
                 <div className="space-y-6">
                     {/* 1. OVERVIEW & CHART SECTION */}
-                    {loading ? (<OverviewLoading
+                    {isLoading ? (<OverviewLoading
                         summaryCards={[
                             { label: "DOANH THU", color: "indigo", maxNumber: 85600000 },
                             { label: "CHI PHÍ", color: "orange", maxNumber: 6700000 },
@@ -500,7 +510,7 @@ export default function BaoCaoPage() {
                                 exportToCSV={exportToCSV}
                                 data={prepareProfitData(profProducts?.data ?? [])} // the data to export
                                 filename={`Loi_nhuan_${new Date().toISOString().split('T')[0]}.csv`} // file name
-                                loading={tableLoading} // shows spinner while table loading
+                                loading={tableLoading} // shows spinner while table isLoading
                                 disabled={!profProducts?.data?.length} // Disable if no data
                             />
                         </div>
@@ -558,7 +568,7 @@ export default function BaoCaoPage() {
             {reportType === "inventory" && (
                 <div className="space-y-6">
                     {/* 1. OVERVIEW & CHART SECTION */}
-                    {loading ? (<OverviewLoading
+                    {isLoading ? (<OverviewLoading
                         summaryCards={[
                             { label: "TỔNG SẢN PHẨM", color: "blue", maxNumber: 100 },
                             { label: "TỔNG SỐ LƯỢNG", color: "green", maxNumber: 989 },
@@ -617,7 +627,7 @@ export default function BaoCaoPage() {
                                 exportToCSV={exportToCSV}
                                 data={prepareInventoryData(invItems?.data ?? [])} // the data to export
                                 filename={`Ton_kho_${new Date().toISOString().split('T')[0]}.csv`} // file name
-                                loading={tableLoading} // shows spinner while table loading
+                                loading={tableLoading} // shows spinner while table isLoading
                                 disabled={!invItems?.data?.length} // Disable if no data
                             />
                         </div>

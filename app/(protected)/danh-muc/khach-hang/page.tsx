@@ -15,6 +15,7 @@ import FilterKhachHangModal, { KhachHangFilterValues } from "@/components/khach-
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from "@/providers/auth-provider";
+import { useRouter } from "next/navigation";
 // Helper for classes
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -36,12 +37,19 @@ export default function KhachHangPage() {
         loaiKhachHang: "ALL",
         trangThai: "ALL"
     });
+    const { user, loading } = useAuth();
+    const router = useRouter();
     const isFiltering = useMemo(() => {
         return (
             filterValues.loaiKhachHang !== "ALL" ||
             filterValues.trangThai !== "ALL"
         );
     }, [filterValues]);
+    useEffect(() => {
+        if (!loading && !user) {
+            router.replace("/login");
+        }
+    }, [loading, user, router]);
     const fetchData = async (page: number = 1, search: string = "", filters: KhachHangFilterValues) => {
         try {
             setIsLoading(true);
@@ -215,8 +223,11 @@ export default function KhachHangPage() {
             className: "bg-orange-50 text-orange-700 border border-orange-200",
         },
     };
-    const { user, loading } = useAuth();
+
     const userRole = user ? user.role : 'NHAN_VIEN';
+    if (loading || !user) {
+        return null;
+    }
     return (
         <>
             {/* Search Bar */}

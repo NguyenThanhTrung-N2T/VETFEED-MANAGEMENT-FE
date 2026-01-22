@@ -13,6 +13,7 @@ import { motion, AnimatePresence, Variants } from 'framer-motion'; // Import Var
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from '@/providers/auth-provider';
+import { useRouter } from 'next/navigation';
 
 // --- Utility: Merge Class ---
 function cn(...inputs: ClassValue[]) {
@@ -23,11 +24,17 @@ export default function SalesPage() {
     // --- State ---
     const [searchTerm, setSearchTerm] = useState('');
     const [data, setData] = useState<PhieuBan[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [modalType, setModalType] = useState<'filter' | 'add' | 'edit' | 'detail' | 'delete' | null>(null);
     const [filterParams, setFilterParams] = useState<SalesFilterParams>({});
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
+    const router = useRouter();
+    useEffect(() => {
+        if (!loading && !user) {
+            router.replace("/login");
+        }
+    }, [loading, user, router]);
 
     // --- Animation Variants (Fix lỗi Type ở đây) ---
     const containerVariants: Variants = {
@@ -48,8 +55,9 @@ export default function SalesPage() {
 
     // --- Fetch Data ---
     const fetchData = async () => {
+        if (!user) return;
         try {
-            setLoading(true);
+            setIsLoading(true);
             const res = await salesService.getAll();
             // Giả lập delay một chút để thấy animation nếu mạng quá nhanh
             // await new Promise(resolve => setTimeout(resolve, 300)); 
@@ -57,7 +65,7 @@ export default function SalesPage() {
         } catch (error) {
             console.error("Fetch sales failed:", error);
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
@@ -148,7 +156,9 @@ export default function SalesPage() {
             </span>
         );
     };
-
+    if (loading || !user) {
+        return null; // or spinner
+    }
     return (
         <div className="p-6 bg-[#eef2f6] min-h-screen relative">
             {/* Background Decoration
@@ -257,7 +267,7 @@ export default function SalesPage() {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                         >
-                            {loading ? (
+                            {isLoading ? (
                                 // --- SKELETON LOADER ---
                                 [...Array(5)].map((_, index) => (
                                     <tr key={index} className="animate-pulse">

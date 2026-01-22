@@ -21,6 +21,7 @@ import { ProductSearchParams } from "@/types/product-search";
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from "@/providers/auth-provider";
+import { useRouter } from "next/navigation";
 // --- Utility: Merge Class ---
 const ITEMS_PER_PAGE = 10; // Show N items per page
 function cn(...inputs: ClassValue[]) {
@@ -44,6 +45,13 @@ export default function SanPhamPage() {
             filterValues.loaiSanPham !== "ALL"
         );
     }, [filterValues]);
+    const { user, loading } = useAuth();
+    const router = useRouter();
+    useEffect(() => {
+        if (!loading && !user) {
+            router.replace("/login");
+        }
+    }, [loading, user, router]);
     const fetchData = async (page: number = 1, search: string = "", filters: SanPhamFilterValues) => {
         try {
             setIsLoading(true);
@@ -223,9 +231,11 @@ export default function SanPhamPage() {
         pages.push(totalPages);
         return pages;
     };
-    const { user, loading } = useAuth();
-    const userRole = user ? user.role : 'NHAN_VIEN';
 
+    const userRole = user ? user.role : 'NHAN_VIEN';
+    if (loading || !user) {
+        return null;
+    }
     return (
         <>
             {/* Search Bar */}

@@ -16,6 +16,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import FilterCongNoModal, { CongNoFilterValues } from "@/components/cong-no/FilterCongNoModal";
 import { useAuth } from "@/providers/auth-provider";
+import { useRouter } from "next/navigation";
 // --- Utility: Merge Class ---
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -33,6 +34,10 @@ export default function CongNoPage() {
         loaiDoiTuong: "ALL",
         trangThaiNo: "ALL"
     });
+    const { user, loading } = useAuth();
+    const userRole = user ? user.role : 'NHAN_VIEN';
+    const router = useRouter();
+
     const isFiltering = useMemo(() => {
         return (
             !!filterValues.tenDoiTuong ||
@@ -56,7 +61,11 @@ export default function CongNoPage() {
             transition: { type: "spring", stiffness: 120, damping: 12 }
         }
     };
-
+    useEffect(() => {
+        if (!loading && !user) {
+            router.replace("/login");
+        }
+    }, [loading, user, router]);
     // --- Fetch Data ---
     const fetchData = async () => {
         try {
@@ -160,8 +169,9 @@ export default function CongNoPage() {
             </span>
         );
     };
-    const { user, loading } = useAuth();
-    const userRole = user ? user.role : 'NHAN_VIEN';
+    if (loading || !user) {
+        return null;
+    }
     return (
         <div className="bg-[#eef2f6] min-h-screen relative">
             {/* --- SEARCH BAR --- */}

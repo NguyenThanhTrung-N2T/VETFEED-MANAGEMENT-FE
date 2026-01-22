@@ -13,6 +13,7 @@ import { motion, Variants } from 'framer-motion'; // Import Variants để fix l
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from '@/providers/auth-provider';
+import { useRouter } from 'next/navigation';
 
 // --- Utility: Merge Class ---
 function cn(...inputs: ClassValue[]) {
@@ -23,11 +24,17 @@ export default function TransferPage() {
     // --- State ---
     const [searchTerm, setSearchTerm] = useState('');
     const [data, setData] = useState<PhieuChuyenKho[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [modalType, setModalType] = useState<'filter' | 'add' | 'edit' | 'detail' | 'delete' | null>(null);
     const [filterParams, setFilterParams] = useState<TransferFilterParams>({});
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
+    const router = useRouter();
+    useEffect(() => {
+        if (!loading && !user) {
+            router.replace("/login");
+        }
+    }, [loading, user, router]);
 
     // --- Animation Variants (Fix lỗi Type: thêm ": Variants") ---
     const containerVariants: Variants = {
@@ -41,7 +48,7 @@ export default function TransferPage() {
     // --- Fetch Data ---
     const fetchData = async () => {
         try {
-            setLoading(true);
+            setIsLoading(true);
             const res = await transferService.getAll();
             // Giả lập delay
             // await new Promise(r => setTimeout(r, 300));
@@ -49,7 +56,7 @@ export default function TransferPage() {
         } catch (error) {
             console.error("Failed to fetch transfers:", error);
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
@@ -114,7 +121,9 @@ export default function TransferPage() {
             </div>
         </div>
     );
-
+    if (loading || !user) {
+        return null;
+    }
     return (
         <div className="p-6 bg-[#eef2f6] min-h-screen relative">
 
@@ -214,7 +223,7 @@ export default function TransferPage() {
                         </thead>
 
                         <tbody className="text-sm text-slate-700 divide-y divide-slate-50">
-                            {loading ? (
+                            {isLoading ? (
                                 // --- SKELETON ---
                                 [...Array(5)].map((_, index) => (
                                     <tr key={index} className="animate-pulse">
@@ -272,7 +281,7 @@ export default function TransferPage() {
                                                 >
                                                     <Eye size={18} />
                                                 </button>
-                                                {!loading && user?.role === "QUAN_LY" && (
+                                                {!isLoading && user?.role === "QUAN_LY" && (
                                                     <button
                                                         onClick={() => handleOpenModal('edit', item.maCK)}
                                                         className="p-2 rounded-md text-slate-600 hover:bg-slate-200 cursor-pointer transition-colors"
@@ -281,7 +290,7 @@ export default function TransferPage() {
                                                         <Edit size={18} />
                                                     </button>
                                                 )}
-                                                {!loading && user?.role === "QUAN_LY" && (
+                                                {!isLoading && user?.role === "QUAN_LY" && (
                                                     <button
                                                         onClick={() => handleOpenModal('delete', item.maCK)}
                                                         className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"

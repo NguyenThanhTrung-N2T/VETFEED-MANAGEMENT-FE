@@ -13,7 +13,7 @@ import { motion, Variants } from 'framer-motion'; // Import Variants để fix l
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from '@/providers/auth-provider';
-
+import { useRouter } from 'next/navigation';
 // --- Utility: Merge Class ---
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -23,12 +23,12 @@ export default function ImportPage() {
     // --- State ---
     const [searchTerm, setSearchTerm] = useState('');
     const [data, setData] = useState<PhieuNhap[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [modalType, setModalType] = useState<'filter' | 'add' | 'edit' | 'detail' | 'delete' | null>(null);
     const [filterParams, setFilterParams] = useState<ImportFilterParams>({});
-    const { user } = useAuth();
-
+    const { user, loading } = useAuth();
+    const router = useRouter();
     // --- Animation Variants (Fix lỗi Type: thêm ": Variants") ---
     const containerVariants: Variants = {
         hidden: { opacity: 0 },
@@ -45,11 +45,15 @@ export default function ImportPage() {
             transition: { type: "spring", stiffness: 120, damping: 12 }
         }
     };
-
+    useEffect(() => {
+        if (!loading && !user) {
+            router.replace("/login");
+        }
+    }, [loading, user, router]);
     // --- Fetch Data ---
     const fetchData = async () => {
         try {
-            setLoading(true);
+            setIsLoading(true);
             const res = await importService.getAll();
             // Giả lập delay một chút nếu mạng quá nhanh để thấy hiệu ứng
             // await new Promise(r => setTimeout(r, 300));
@@ -57,7 +61,7 @@ export default function ImportPage() {
         } catch (error) {
             console.error("Fetch import receipts failed:", error);
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
@@ -134,7 +138,7 @@ export default function ImportPage() {
             </span>
         );
     };
-
+    if (loading || !user) return null;
     return (
         <div className="p-6 bg-[#eef2f6] min-h-screen relative">
             {/* Background Decoration */}
@@ -242,7 +246,7 @@ export default function ImportPage() {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                         >
-                            {loading ? (
+                            {isLoading ? (
                                 // --- SKELETON ---
                                 [...Array(5)].map((_, index) => (
                                     <tr key={index} className="animate-pulse">

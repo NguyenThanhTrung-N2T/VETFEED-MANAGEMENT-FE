@@ -13,7 +13,7 @@ import { motion, Variants } from 'framer-motion'; // Import Variants fix lỗi T
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from '@/providers/auth-provider';
-
+import { useRouter } from "next/navigation";
 // --- Utility: Merge Class ---
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -23,11 +23,12 @@ export default function ReturnPage() {
     // --- State ---
     const [searchTerm, setSearchTerm] = useState('');
     const [data, setData] = useState<PhieuTra[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [modalType, setModalType] = useState<'filter' | 'add' | 'detail' | 'delete' | null>(null);
     const [filterParams, setFilterParams] = useState<ReturnFilterParams>({});
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
+    const router = useRouter();
 
     // --- Animation Variants (FIX LỖI TS: Thêm ": Variants") ---
     const containerVariants: Variants = {
@@ -37,17 +38,21 @@ export default function ReturnPage() {
             transition: { staggerChildren: 0.05, delayChildren: 0.1 }
         }
     };
-
+    useEffect(() => {
+        if (!loading && !user) {
+            router.replace("/login");
+        }
+    }, [loading, user, router]);
     // --- Fetch Data ---
     const fetchData = async () => {
         try {
-            setLoading(true);
+            setIsLoading(true);
             const res = await returnService.getAll();
             setData(res);
         } catch (error) {
             console.error("Fetch returns failed:", error);
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
@@ -128,7 +133,7 @@ export default function ReturnPage() {
             </span>
         );
     };
-
+    if (loading || !user) return null;
     return (
         <div className="p-6 bg-[#eef2f6] min-h-screen relative">
 
@@ -230,7 +235,7 @@ export default function ReturnPage() {
                             </tr>
                         </thead>
                         <tbody className="text-sm text-slate-700 divide-y divide-slate-50">
-                            {loading ? (
+                            {isLoading ? (
                                 // --- SKELETON LOADER ---
                                 [...Array(5)].map((_, index) => (
                                     <tr key={index} className="animate-pulse">
@@ -306,7 +311,7 @@ export default function ReturnPage() {
                                                 >
                                                     <Eye size={18} />
                                                 </button>
-                                                {!loading && user?.role === "QUAN_LY" && (
+                                                {!isLoading && user?.role === "QUAN_LY" && (
                                                     <button
                                                         onClick={() => handleOpenModal('delete', item.maPT)}
                                                         className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"

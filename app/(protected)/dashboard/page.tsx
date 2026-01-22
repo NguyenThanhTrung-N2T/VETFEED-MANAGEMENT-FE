@@ -10,7 +10,8 @@ import { motion, useMotionValue, useSpring, useTransform, Variants } from 'frame
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { dashboardService, DashboardSummary, ExpiringProduct } from '@/services/dashboard.service';
-
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/providers/auth-provider';
 // --- Utility: Merge Class ---
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -103,6 +104,14 @@ export default function DashboardPage() {
     const [expiringProducts, setExpiringProducts] = useState<ExpiringProduct[]>([]);
     const currentYear = new Date().getFullYear();
     const [selectedYear, setSelectedYear] = useState(currentYear);
+    const { user, loading } = useAuth();
+    const router = useRouter();
+    useEffect(() => {
+        if (!loading && !user) {
+            router.replace("/login");
+        }
+    }, [loading, user, router]);
+
 
     // --- Animation Variants (Cập nhật nhẹ) ---
     const containerVariants: Variants = {
@@ -123,6 +132,7 @@ export default function DashboardPage() {
 
     // --- Fetch Data & Helpers (Giữ nguyên) ---
     useEffect(() => {
+        if (!user) return;
         const fetchAllData = async () => {
             setIsLoading(true);
             try {
@@ -172,6 +182,9 @@ export default function DashboardPage() {
             </div>
         );
     };
+    if (loading || !user) {
+        return null; // or spinner
+    }
 
     if (isLoading) {
         return (

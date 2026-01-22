@@ -16,6 +16,7 @@ import { tableContainerVariants, tableRowVariants } from "@/lib/animation-varian
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from "@/providers/auth-provider";
+import { useRouter } from "next/navigation";
 // Helper for classes
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -35,7 +36,8 @@ export default function KhoPage() {
 
     const [modalType, setModalType] = useState<'filter' | 'delete' | 'add' | 'edit' | null>(null);
     const [selectedItem, setSelectedItem] = useState<KhoHangResponse | null>(null);
-
+    const { user, loading } = useAuth();
+    const router = useRouter();
     // 3. Helper to check if filtering is active (for UI styling)
     const isFiltering = useMemo(() => {
         return (
@@ -44,7 +46,11 @@ export default function KhoPage() {
             filterValues.trangThai !== "ALL"
         );
     }, [filterValues]);
-
+    useEffect(() => {
+        if (!loading && !user) {
+            router.replace("/login");
+        }
+    }, [loading, user, router]);
     const fetchData = async () => {
         try {
             setIsLoading(true);
@@ -159,9 +165,10 @@ export default function KhoPage() {
         );
     };
 
-    const { user, loading } = useAuth();
     const userRole = user ? user.role : 'NHAN_VIEN';
-
+    if (loading || !user) {
+        return null;
+    }
     return (
         <>
             {/* Search Bar */}

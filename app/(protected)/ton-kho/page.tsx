@@ -10,7 +10,8 @@ import { KhoHangTonKho } from '@/types/inventory';
 import { motion, AnimatePresence, Variants } from 'framer-motion'; // Import Variants fix lỗi TS
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-
+import { useAuth } from '@/providers/auth-provider';
+import { useRouter } from 'next/navigation';
 // --- Utility: Merge Class ---
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -20,9 +21,10 @@ export default function InventoryPage() {
     // --- State ---
     const [searchTerm, setSearchTerm] = useState('');
     const [data, setData] = useState<KhoHangTonKho[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
     const [expandedIds, setExpandedIds] = useState<string[]>([]);
-
+    const { user, loading } = useAuth();
+    const router = useRouter();
     // --- Animation Variants (Fix lỗi TS) ---
     // Hiệu ứng cho danh sách con (Sản phẩm)
     const listVariants: Variants = {
@@ -38,11 +40,15 @@ export default function InventoryPage() {
             transition: { duration: 0.2, ease: "easeInOut" }
         }
     };
-
+    useEffect(() => {
+        if (!loading && !user) {
+            router.replace("/login");
+        }
+    }, [loading, user, router]);
     // --- Fetch Data ---
     const fetchData = async () => {
         try {
-            setLoading(true);
+            setIsLoading(true);
             const res = await inventoryService.getAll();
             setData(res);
             // Mặc định mở kho đầu tiên
@@ -52,7 +58,7 @@ export default function InventoryPage() {
         } catch (error) {
             console.error("Failed to fetch inventory:", error);
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
@@ -108,7 +114,7 @@ export default function InventoryPage() {
             </div>
         );
     };
-
+    if (loading || !user) return null;
     return (
         <div className="p-6 bg-[#eef2f6] min-h-screen relative">
             {/* --- HEADER --- */}
@@ -164,7 +170,7 @@ export default function InventoryPage() {
                     <div className="col-span-2 md:col-span-1 text-center">Tồn kho</div>
                 </div>
 
-                {loading ? (
+                {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-12 text-slate-400">
                         <Loader2 className="animate-spin mb-2 text-emerald-500" size={32} />
                         <p>Đang tải dữ liệu kho...</p>
