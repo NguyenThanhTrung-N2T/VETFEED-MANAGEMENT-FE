@@ -35,4 +35,4 @@ jobs:
         run: npm run build
         env:
           # Add environment variables needed for build
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:5186' }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'https://undelineative-nodous-sasha.ngrok-free.dev' }}
