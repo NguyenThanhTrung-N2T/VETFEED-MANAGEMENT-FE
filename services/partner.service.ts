@@ -1,4 +1,4 @@
-import apiClient from '@/lib/axios';
+import apiClient from "@/lib/axios";
 
 export interface Partner {
   maNCC: string;
@@ -13,7 +13,7 @@ export interface Partner {
 export const partnerService = {
   getAll: async () => {
     // Gọi API lấy danh sách nhà cung cấp
-    const res = await apiClient.get<Partner[]>('/api/NhaCungCaps');
-    return res.data;
-  }
+    const res = await apiClient.get<Partner[]>("/api/NhaCungCaps");
+    return res.data || [];
+  },
 };

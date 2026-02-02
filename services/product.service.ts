@@ -1,4 +1,4 @@
-import apiClient from '@/lib/axios';
+import apiClient from "@/lib/axios";
 
 // Định nghĩa kiểu dữ liệu dựa trên Swagger
 export interface Product {
@@ -21,8 +21,15 @@ export interface PagedResult<T> {
 
 export const productService = {
   // Hàm lấy danh sách có hỗ trợ filter
-  getProducts: async (params?: { Keyword?: string; LoaiSanPham?: string; Page?: number; PageSize?: number }) => {
-    const res = await apiClient.get<PagedResult<Product>>('/api/SanPhams', { params });
-    return res.data;
-  }
+  getProducts: async (params?: {
+    Keyword?: string;
+    LoaiSanPham?: string;
+    Page?: number;
+    PageSize?: number;
+  }) => {
+    const res = await apiClient.get<PagedResult<Product>>("/api/SanPhams", {
+      params,
+    });
+    return res.data || { items: [], total: 0, page: 1, pageSize: 10 };
+  },
 };
