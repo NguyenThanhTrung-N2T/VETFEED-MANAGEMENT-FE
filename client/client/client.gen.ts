@@ -24,7 +24,7 @@ export const createClient = (config: Config = {}): Client => {
   if (_config.axios && !('Axios' in _config.axios)) {
     instance = _config.axios;
   } else {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     // const { auth, ...configWithoutAuth } = _config;
     // instance = axios.create(configWithoutAuth);
     instance = apiClient;
