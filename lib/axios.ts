@@ -7,6 +7,7 @@ const apiClient = axios.create({
     "https://undelineative-nodous-sasha.ngrok-free.dev",
   headers: {
     "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true",
   },
 });
 
