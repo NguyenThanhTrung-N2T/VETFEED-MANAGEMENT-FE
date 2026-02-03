@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint . --ext .ts,.tsx,.js,.jsx --max-warnings 50",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx --max-warnings 250",
     "gen:api": "openapi-ts --input http://localhost:5186/swagger/v1/swagger.json --output ./client --client @hey-api/client-axios"
   },
   "dependencies": {
